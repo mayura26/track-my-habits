@@ -39,3 +39,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Playwright
+/playwright-report/
+/test-results/
+e2e/.auth/
+prisma/test.db
+prisma/test.db-journal
+
+# Local env files
+.env.local
+prisma/*.db
+prisma/*.db-journal
+prisma/prisma/

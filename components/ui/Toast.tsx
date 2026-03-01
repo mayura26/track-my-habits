@@ -1,0 +1,73 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { X, CheckCircle, AlertCircle, Info } from "lucide-react";
+
+export interface ToastData {
+  id: string;
+  message: string;
+  type?: "success" | "error" | "info";
+  duration?: number;
+}
+
+interface ToastProps {
+  toast: ToastData;
+  onDismiss: (id: string) => void;
+}
+
+const icons = {
+  success: <CheckCircle className="h-4 w-4 text-green-400" />,
+  error: <AlertCircle className="h-4 w-4 text-red-400" />,
+  info: <Info className="h-4 w-4 text-blue-400" />,
+};
+
+export function Toast({ toast, onDismiss }: ToastProps) {
+  useEffect(() => {
+    const timer = setTimeout(() => onDismiss(toast.id), toast.duration ?? 4000);
+    return () => clearTimeout(timer);
+  }, [toast, onDismiss]);
+
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] px-4 py-3 shadow-lg animate-in slide-in-from-right-5">
+      {icons[toast.type ?? "info"]}
+      <p className="flex-1 text-sm text-[#f5f5f5]">{toast.message}</p>
+      <button
+        onClick={() => onDismiss(toast.id)}
+        className="text-[#888888] hover:text-[#f5f5f5]"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
+interface ToastContainerProps {
+  toasts: ToastData[];
+  onDismiss: (id: string) => void;
+}
+
+export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
+  return (
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full">
+      {toasts.map((t) => (
+        <Toast key={t.id} toast={t} onDismiss={onDismiss} />
+      ))}
+    </div>
+  );
+}
+
+// Hook for managing toasts
+export function useToast() {
+  const [toasts, setToasts] = useState<ToastData[]>([]);
+
+  const addToast = (message: string, type: ToastData["type"] = "info") => {
+    const id = Math.random().toString(36).slice(2);
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+
+  const dismiss = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  return { toasts, addToast, dismiss };
+}
