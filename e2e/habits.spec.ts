@@ -11,8 +11,8 @@ test.describe("Habits CRUD", () => {
 
     await page.fill('[name="name"]', "Morning Meditation E2E");
     await page.selectOption('[name="categoryId"]', { label: "Health" });
-    await page.selectOption('[name="trackingType"]', "BOOLEAN");
-    await page.selectOption('[name="thresholdType"]', "DAILY");
+    // trackingType defaults to BOOLEAN — no click needed
+    // thresholdType defaults to DAILY — no click needed
 
     await page.getByRole("button", { name: "Create Habit" }).click();
     await expect(page).toHaveURL("/habits");
@@ -26,8 +26,8 @@ test.describe("Habits CRUD", () => {
 
     await page.fill('[name="name"]', "Drink Water E2E");
     await page.selectOption('[name="categoryId"]', { label: "Health" });
-    await page.selectOption('[name="trackingType"]', "COUNT");
-    await page.selectOption('[name="thresholdType"]', "ROLLING_WINDOW");
+    await page.getByRole("button", { name: "Count toward a goal" }).click();
+    await page.getByRole("button", { name: "Rolling window" }).click();
     await page.fill('[name="thresholdValue"]', "3");
     await page.fill('[name="thresholdWindow"]', "5");
 

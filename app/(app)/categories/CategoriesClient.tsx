@@ -115,7 +115,7 @@ export function CategoriesClient({
                 label="Category Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., Mindfulness"
+                placeholder="Mindfulness"
                 required
               />
 

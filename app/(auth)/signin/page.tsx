@@ -48,10 +48,9 @@ export default function SignInPage() {
       </div>
 
       <ArtworkPlaceholder
-        artifactId="signinJourney"
         src="/artifacts/signin-journey.png"
         alt="Lantern-lit stone path through misty hills"
-        eyebrow="Hero Artwork"
+        eyebrow="Mood"
         title="Quiet reset"
       />
     </div>

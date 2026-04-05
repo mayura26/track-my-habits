@@ -2,7 +2,6 @@
 
 import {
   BarChart2,
-  Brush,
   ClipboardList,
   LayoutDashboard,
   ListChecks,
@@ -13,7 +12,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { artworkBriefList, featuredArtworkBriefs } from "@/lib/artwork";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -27,7 +25,6 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const featuredBriefs = featuredArtworkBriefs;
 
   return (
     <aside className="app-shell hidden h-screen w-64 shrink-0 flex-col border-r border-[rgba(216,196,160,0.14)] bg-[rgba(9,13,12,0.8)] px-3 py-3 backdrop-blur-xl md:sticky md:top-0 md:flex">
@@ -72,40 +69,6 @@ export function Sidebar() {
             );
           })}
         </nav>
-
-        <div className="mx-3 mb-3 rounded-[24px] border border-[rgba(216,196,160,0.14)] bg-[linear-gradient(180deg,rgba(53,71,61,0.28),rgba(18,26,23,0.78))] p-4">
-          <div className="flex items-center gap-2 text-[#e6c48b]">
-            <Brush className="h-4 w-4" />
-            <p className="section-kicker">Artifact Briefs</p>
-          </div>
-          <p className="mt-2 text-sm leading-6 text-[#f7f0e1]">
-            {artworkBriefList.length} image prompts are ready for consistent AI
-            generation.
-          </p>
-          <div className="mt-4 grid gap-2">
-            {featuredBriefs.map((brief) => (
-              <div
-                key={brief.id}
-                className="rounded-[16px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] px-3 py-2"
-              >
-                <p className="text-sm font-semibold text-[#f7f0e1]">
-                  {brief.title}
-                </p>
-                <p className="mt-1 text-xs leading-5 text-[#b4a58a]">
-                  {brief.intendedUse}
-                </p>
-              </div>
-            ))}
-            <div className="rounded-[16px] border border-dashed border-[rgba(216,196,160,0.14)] px-3 py-2">
-              <p className="text-xs uppercase tracking-[0.18em] text-[#b4a58a]">
-                Direction
-              </p>
-              <p className="mt-1 text-xs leading-5 text-[#d8c4a0]">
-                Painterly, calm, grounded, with room for overlays.
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </aside>
   );

@@ -90,7 +90,7 @@ export default async function HabitsPage({ searchParams }: HabitsPageProps) {
           </div>
           <div className="rounded-[24px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-[#b4a58a]">
-              Filter state
+              View
             </p>
             <p className="mt-2 text-sm font-semibold text-[#f7f0e1]">
               {params.category || params.q ? "Focused list" : "All rituals"}

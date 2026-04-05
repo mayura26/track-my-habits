@@ -97,7 +97,7 @@ export function HabitForm({
           label="Short note"
           name="description"
           id="description"
-          placeholder="Why this matters to you"
+          placeholder="What keeps you coming back"
           defaultValue={defaultValues?.description ?? ""}
         />
 

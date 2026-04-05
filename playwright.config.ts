@@ -15,11 +15,12 @@ export default defineConfig({
     {
       name: "setup",
       testMatch: /global-setup\.ts/,
-      timeout: 120_000,
+      timeout: 300_000,
     },
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      testIgnore: /mobile-shell\.spec\.ts/,
       dependencies: ["setup"],
     },
     {

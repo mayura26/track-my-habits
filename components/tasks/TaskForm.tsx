@@ -97,7 +97,7 @@ export function TaskForm({ defaultValues, taskId }: TaskFormProps) {
           label="Task name"
           name="name"
           id="name"
-          placeholder="Food shopping"
+          placeholder="Weekly groceries"
           defaultValue={defaultValues?.name}
           required
         />
@@ -106,7 +106,7 @@ export function TaskForm({ defaultValues, taskId }: TaskFormProps) {
           label="Short note"
           name="description"
           id="description"
-          placeholder="Any extra context"
+          placeholder="Optional note"
           defaultValue={defaultValues?.description ?? ""}
         />
       </section>

@@ -163,7 +163,6 @@ export default async function DashboardPage() {
         </Card>
 
         <ArtworkPlaceholder
-          artifactId="dashboardHero"
           src="/artifacts/dashboard-hero.png"
           alt="Solitary figure at dawn overlooking a misty valley"
           eyebrow="Mood"

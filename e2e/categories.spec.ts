@@ -12,7 +12,7 @@ test.describe("Categories", () => {
     await page.goto("/categories");
     await page.getByRole("button", { name: /New Category/i }).click();
 
-    await page.fill('[placeholder="e.g., Mindfulness"]', "My E2E Category");
+    await page.fill('[placeholder="Mindfulness"]', "My E2E Category");
     await page.getByRole("button", { name: "Create" }).click();
 
     await expect(page.getByText("My E2E Category")).toBeVisible({
@@ -35,7 +35,7 @@ test.describe("Categories", () => {
     // Create category first
     await page.goto("/categories");
     await page.getByRole("button", { name: /New Category/i }).click();
-    await page.fill('[placeholder="e.g., Mindfulness"]', "Form Test Cat");
+    await page.fill('[placeholder="Mindfulness"]', "Form Test Cat");
     await page.getByRole("button", { name: "Create" }).click();
     await expect(page.getByText("Form Test Cat").first()).toBeVisible({
       timeout: 5000,
