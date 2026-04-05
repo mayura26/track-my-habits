@@ -69,7 +69,6 @@ export default async function AchievementsPage() {
               key={badge.id}
               name={badge.name}
               description={badge.description}
-              icon={badge.icon}
               earned={!!earnedAt}
               earnedAt={earnedAt?.toISOString()}
             />

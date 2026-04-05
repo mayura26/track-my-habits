@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/Input";
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 interface Prefs {
   bucketMorningStart: number;
@@ -64,7 +64,9 @@ export function BucketSettingsForm({ defaultValues }: BucketSettingsFormProps) {
           min="0"
           max="23"
           value={values.bucketMorningStart}
-          onChange={(e) => setField("bucketMorningStart", Number(e.target.value) || 0)}
+          onChange={(e) =>
+            setField("bucketMorningStart", Number(e.target.value) || 0)
+          }
         />
         <Input
           label="Day start (hour)"
@@ -74,7 +76,9 @@ export function BucketSettingsForm({ defaultValues }: BucketSettingsFormProps) {
           min="0"
           max="23"
           value={values.bucketDayStart}
-          onChange={(e) => setField("bucketDayStart", Number(e.target.value) || 0)}
+          onChange={(e) =>
+            setField("bucketDayStart", Number(e.target.value) || 0)
+          }
         />
         <Input
           label="Evening start (hour)"
@@ -84,7 +88,9 @@ export function BucketSettingsForm({ defaultValues }: BucketSettingsFormProps) {
           min="0"
           max="23"
           value={values.bucketEveningStart}
-          onChange={(e) => setField("bucketEveningStart", Number(e.target.value) || 0)}
+          onChange={(e) =>
+            setField("bucketEveningStart", Number(e.target.value) || 0)
+          }
         />
         <Input
           label="Before bed start (hour)"
@@ -94,7 +100,9 @@ export function BucketSettingsForm({ defaultValues }: BucketSettingsFormProps) {
           min="0"
           max="23"
           value={values.bucketBeforeBedStart}
-          onChange={(e) => setField("bucketBeforeBedStart", Number(e.target.value) || 0)}
+          onChange={(e) =>
+            setField("bucketBeforeBedStart", Number(e.target.value) || 0)
+          }
         />
       </div>
 
@@ -102,14 +110,32 @@ export function BucketSettingsForm({ defaultValues }: BucketSettingsFormProps) {
         <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#e6c48b]">
           Preview
         </p>
-        <p>Morning: {fmt(values.bucketMorningStart)}–{fmt(values.bucketDayStart)}</p>
-        <p>Day: {fmt(values.bucketDayStart)}–{fmt(values.bucketEveningStart)}</p>
-        <p>Evening: {fmt(values.bucketEveningStart)}–{fmt(values.bucketBeforeBedStart)}</p>
-        <p>Before Bed: {fmt(values.bucketBeforeBedStart)}–{fmt(values.bucketMorningStart)}</p>
+        <p>
+          Morning: {fmt(values.bucketMorningStart)}–{fmt(values.bucketDayStart)}
+        </p>
+        <p>
+          Day: {fmt(values.bucketDayStart)}–{fmt(values.bucketEveningStart)}
+        </p>
+        <p>
+          Evening: {fmt(values.bucketEveningStart)}–
+          {fmt(values.bucketBeforeBedStart)}
+        </p>
+        <p>
+          Before Bed: {fmt(values.bucketBeforeBedStart)}–
+          {fmt(values.bucketMorningStart)}
+        </p>
       </div>
 
-      {error && <p className="rounded-lg bg-red-900/20 p-3 text-sm text-red-400">{error}</p>}
-      {saved && <p className="rounded-lg bg-green-900/20 p-3 text-sm text-green-400">Saved</p>}
+      {error && (
+        <p className="rounded-lg bg-red-900/20 p-3 text-sm text-red-400">
+          {error}
+        </p>
+      )}
+      {saved && (
+        <p className="rounded-lg bg-green-900/20 p-3 text-sm text-green-400">
+          Saved
+        </p>
+      )}
 
       <Button type="submit" disabled={loading}>
         {loading ? "Saving..." : "Save"}

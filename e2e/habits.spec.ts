@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { expect, test } from "./fixtures";
 
 test.describe("Habits CRUD", () => {
   test("dashboard shows habits section", async ({ page }) => {
@@ -16,7 +16,9 @@ test.describe("Habits CRUD", () => {
 
     await page.getByRole("button", { name: "Create Habit" }).click();
     await expect(page).toHaveURL("/habits");
-    await expect(page.getByText("Morning Meditation E2E").first()).toBeVisible();
+    await expect(
+      page.getByText("Morning Meditation E2E").first(),
+    ).toBeVisible();
   });
 
   test("create a COUNT/ROLLING_WINDOW habit", async ({ page }) => {
@@ -44,15 +46,20 @@ test.describe("Habits CRUD", () => {
     await expect(page).toHaveURL("/habits");
 
     // Log the habit by clicking the circle button
-    const habitCard = page.locator("div").filter({ hasText: "Log Test Habit" }).first();
-    const logButton = habitCard.locator('button[title="Log habit"]').or(
-      habitCard.locator('button[title="Logged today"]')
-    );
+    const habitCard = page
+      .locator("div")
+      .filter({ hasText: "Log Test Habit" })
+      .first();
+    const logButton = habitCard
+      .locator('button[title="Log habit"]')
+      .or(habitCard.locator('button[title="Logged today"]'));
     await logButton.first().click();
 
     // Wait for the logged state
     await page.waitForTimeout(500);
-    await expect(habitCard.locator('button[title="Logged today"]')).toBeVisible({ timeout: 5000 }).catch(() => {});
+    await expect(habitCard.locator('button[title="Logged today"]'))
+      .toBeVisible({ timeout: 5000 })
+      .catch(() => {});
   });
 
   test("edit habit name", async ({ page }) => {

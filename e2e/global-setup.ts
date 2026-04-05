@@ -1,6 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
 import { chromium, test as setup } from "@playwright/test";
-import fs from "fs";
-import path from "path";
 
 const authDir = path.join(__dirname, ".auth");
 const authFile = path.join(authDir, "user.json");

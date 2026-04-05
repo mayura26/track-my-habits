@@ -12,7 +12,12 @@ const variantClasses = {
   info: "bg-[rgba(112,138,119,0.24)] text-[#cfe6d3]",
 };
 
-export function Badge({ variant = "default", className = "", children, ...props }: BadgeProps) {
+export function Badge({
+  variant = "default",
+  className = "",
+  children,
+  ...props
+}: BadgeProps) {
   return (
     <span
       className={`inline-flex items-center rounded-full border border-[rgba(255,244,224,0.08)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${variantClasses[variant]} ${className}`}

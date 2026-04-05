@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { expect, test } from "./fixtures";
 
 test.describe("Stats", () => {
   test("stats page loads without JS errors", async ({ page }) => {

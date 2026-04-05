@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { createHabitSchema } from "@/lib/validations";
@@ -11,7 +11,10 @@ export async function GET() {
 
   const habits = await db.habit.findMany({
     where: { userId: session.user.id, isActive: true },
-    include: { category: true, logs: { orderBy: { loggedAt: "desc" }, take: 30 } },
+    include: {
+      category: true,
+      logs: { orderBy: { loggedAt: "desc" }, take: 30 },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -27,7 +30,10 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const parsed = createHabitSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json(
+      { error: parsed.error.flatten() },
+      { status: 400 },
+    );
   }
 
   const habit = await db.habit.create({

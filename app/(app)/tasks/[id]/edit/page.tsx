@@ -1,8 +1,8 @@
-import { requireAuth } from "@/lib/auth-helpers";
-import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { TaskForm } from "@/components/tasks/TaskForm";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { requireAuth } from "@/lib/auth-helpers";
+import { db } from "@/lib/db";
 
 export default async function EditTaskPage({
   params,

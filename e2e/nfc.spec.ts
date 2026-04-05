@@ -26,26 +26,31 @@ authTest.describe("NFC (authenticated)", () => {
     await expect(page.locator("text=/NFC URL/")).toBeVisible({ timeout: 5000 });
   });
 
-  authTest("NFC trigger via API creates log with NFC source", async ({ page }) => {
-    const createRes = await page.request.post("/api/habits", {
-      data: {
-        name: "API NFC Habit",
-        categoryId: "default-health",
-        trackingType: "BOOLEAN",
-        thresholdType: "DAILY",
-        thresholdValue: 1,
-      },
-    });
+  authTest(
+    "NFC trigger via API creates log with NFC source",
+    async ({ page }) => {
+      const createRes = await page.request.post("/api/habits", {
+        data: {
+          name: "API NFC Habit",
+          categoryId: "default-health",
+          trackingType: "BOOLEAN",
+          thresholdType: "DAILY",
+          thresholdValue: 1,
+        },
+      });
 
-    if (createRes.ok()) {
-      const habit = await createRes.json();
-      const nfcRes = await page.request.post(`/api/habits/${habit.id}/nfc`);
-      if (nfcRes.ok()) {
-        const { token } = await nfcRes.json();
-        await page.goto(`/nfc/${token}`);
-        await expect(page.getByText("API NFC Habit")).toBeVisible({ timeout: 5000 });
-        await expect(page.getByText(/Logged via NFC/i)).toBeVisible();
+      if (createRes.ok()) {
+        const habit = await createRes.json();
+        const nfcRes = await page.request.post(`/api/habits/${habit.id}/nfc`);
+        if (nfcRes.ok()) {
+          const { token } = await nfcRes.json();
+          await page.goto(`/nfc/${token}`);
+          await expect(page.getByText("API NFC Habit")).toBeVisible({
+            timeout: 5000,
+          });
+          await expect(page.getByText(/Logged via NFC/i)).toBeVisible();
+        }
       }
-    }
-  });
+    },
+  );
 });

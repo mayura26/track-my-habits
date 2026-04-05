@@ -1,22 +1,22 @@
+import { Calendar, Edit, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { CategoryBadge } from "@/components/categories/CategoryBadge";
+import { StreakBadge } from "@/components/habits/StreakBadge";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { StreakBadge } from "@/components/habits/StreakBadge";
-import { NfcTokenCard } from "@/components/nfc/NfcTokenCard";
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { Edit, Trash2, Calendar } from "lucide-react";
-import { redirect } from "next/navigation";
-import { CategoryBadge } from "@/components/categories/CategoryBadge";
 import { HabitDetailClient } from "./HabitDetailClient";
 
 interface HabitDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function HabitDetailPage({ params }: HabitDetailPageProps) {
+export default async function HabitDetailPage({
+  params,
+}: HabitDetailPageProps) {
   const session = await requireAuth();
   const { id } = await params;
 
@@ -46,7 +46,10 @@ export default async function HabitDetailPage({ params }: HabitDetailPageProps) 
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="mb-2 flex items-center gap-2">
-            <CategoryBadge name={habit.category.name} color={habit.category.color} />
+            <CategoryBadge
+              name={habit.category.name}
+              color={habit.category.color}
+            />
             {habit.nfcToken && <Badge variant="info">NFC</Badge>}
           </div>
           <h1 className="text-2xl font-bold text-[#f7f0e1]">{habit.name}</h1>
@@ -148,7 +151,9 @@ export default async function HabitDetailPage({ params }: HabitDetailPageProps) 
                   <div className="flex items-center gap-2">
                     <span className="text-[#f7f0e1]">{log.value}</span>
                     {log.source === "NFC" && (
-                      <Badge variant="info" className="text-xs">NFC</Badge>
+                      <Badge variant="info" className="text-xs">
+                        NFC
+                      </Badge>
                     )}
                   </div>
                 </div>

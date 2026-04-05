@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { NfcTokenCard } from "@/components/nfc/NfcTokenCard";
 
 interface HabitDetailClientProps {
@@ -10,7 +10,11 @@ interface HabitDetailClientProps {
   nfcValue: string | null;
 }
 
-export function HabitDetailClient({ habitId, nfcToken, nfcValue }: HabitDetailClientProps) {
+export function HabitDetailClient({
+  habitId,
+  nfcToken,
+  nfcValue,
+}: HabitDetailClientProps) {
   const [token, setToken] = useState(nfcToken);
   const [value, setValue] = useState(nfcValue);
   const router = useRouter();

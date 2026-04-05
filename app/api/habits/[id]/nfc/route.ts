@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import { customAlphabet } from "nanoid";
+import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { customAlphabet } from "nanoid";
 
 const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 8);
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -31,12 +31,15 @@ export async function POST(
     data: { nfcToken: token, nfcValue },
   });
 
-  return NextResponse.json({ token, nfcValue, habit: updated }, { status: 201 });
+  return NextResponse.json(
+    { token, nfcValue, habit: updated },
+    { status: 201 },
+  );
 }
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await auth();
   if (!session?.user?.id) {

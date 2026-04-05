@@ -8,7 +8,8 @@ interface StreakBadgeProps {
 export function StreakBadge({ streak, size = "md" }: StreakBadgeProps) {
   if (streak === 0) return null;
 
-  const sizeClasses = size === "sm" ? "text-xs gap-1 px-2 py-0.5" : "text-sm gap-1.5 px-3 py-1";
+  const sizeClasses =
+    size === "sm" ? "text-xs gap-1 px-2 py-0.5" : "text-sm gap-1.5 px-3 py-1";
 
   return (
     <span
@@ -16,8 +17,8 @@ export function StreakBadge({ streak, size = "md" }: StreakBadgeProps) {
         streak >= 7
           ? "bg-orange-900/40 text-orange-400"
           : streak >= 3
-          ? "bg-yellow-900/40 text-yellow-400"
-          : "bg-[rgba(247,240,225,0.06)] text-[#b4a58a]"
+            ? "bg-yellow-900/40 text-yellow-400"
+            : "bg-[rgba(247,240,225,0.06)] text-[#b4a58a]"
       }`}
     >
       <Flame className={size === "sm" ? "h-3 w-3" : "h-4 w-4"} />

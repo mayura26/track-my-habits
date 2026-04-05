@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 interface DialogProps {
   open: boolean;
@@ -33,6 +33,7 @@ export function Dialog({ open, onClose, title, children }: DialogProps) {
         <div className="flex items-center justify-between border-b border-[#2a2a2a] px-6 py-4">
           <h2 className="text-lg font-semibold">{title}</h2>
           <button
+            type="button"
             onClick={onClose}
             className="rounded-lg p-1 text-[#b4a58a] hover:bg-[rgba(247,240,225,0.06)] hover:text-[#f7f0e1]"
           >

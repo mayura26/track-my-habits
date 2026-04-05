@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { awardXP } from "@/lib/gamification";
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -34,5 +34,8 @@ export async function POST(
     select: { xp: true, level: true },
   });
 
-  return NextResponse.json({ log, xp: user?.xp, level: user?.level }, { status: 201 });
+  return NextResponse.json(
+    { log, xp: user?.xp, level: user?.level },
+    { status: 201 },
+  );
 }

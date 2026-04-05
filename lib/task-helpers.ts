@@ -21,7 +21,10 @@ export interface BucketPrefs {
   bucketBeforeBedStart: number;
 }
 
-export function getPeriodRange(frequency: string, now: Date = new Date()): { start: Date; end: Date } {
+export function getPeriodRange(
+  frequency: string,
+  now: Date = new Date(),
+): { start: Date; end: Date } {
   if (frequency === "DAILY") {
     const start = new Date(now);
     start.setHours(0, 0, 0, 0);
@@ -46,16 +49,28 @@ export function getPeriodRange(frequency: string, now: Date = new Date()): { sta
   if (frequency === "FORTNIGHTLY") {
     const startOfToday = new Date(now);
     startOfToday.setHours(0, 0, 0, 0);
-    const daysSinceEpoch = Math.floor((startOfToday.getTime() - FORTNIGHT_EPOCH.getTime()) / MS_PER_DAY);
+    const daysSinceEpoch = Math.floor(
+      (startOfToday.getTime() - FORTNIGHT_EPOCH.getTime()) / MS_PER_DAY,
+    );
     const fortnightIndex = Math.floor(daysSinceEpoch / 14);
-    const start = new Date(FORTNIGHT_EPOCH.getTime() + fortnightIndex * 14 * MS_PER_DAY);
+    const start = new Date(
+      FORTNIGHT_EPOCH.getTime() + fortnightIndex * 14 * MS_PER_DAY,
+    );
     const end = new Date(start.getTime() + 14 * MS_PER_DAY - 1);
     return { start, end };
   }
 
   // MONTHLY
   const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  const end = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
   return { start, end };
 }
 
@@ -76,14 +91,16 @@ export function periodLengthDays(frequency: string): number {
   return Math.round((end.getTime() - start.getTime()) / MS_PER_DAY);
 }
 
-export function autoGapDays(task: Pick<Task, "frequency" | "frequencyValue">): number {
+export function autoGapDays(
+  task: Pick<Task, "frequency" | "frequencyValue">,
+): number {
   const len = periodLengthDays(task.frequency);
   const fv = Math.max(1, task.frequencyValue);
   return Math.max(1, Math.floor(len / fv));
 }
 
 export function effectiveGapDays(
-  task: Pick<Task, "frequency" | "frequencyValue" | "minGapDays">
+  task: Pick<Task, "frequency" | "frequencyValue" | "minGapDays">,
 ): number {
   if (task.minGapDays != null) return task.minGapDays;
   if (task.frequencyValue <= 1) return 0;
@@ -102,7 +119,10 @@ function latestLogDate(logs: TaskLog[]): Date | null {
   return latest;
 }
 
-export function isLogicallyDue(task: TaskWithLogs, now: Date = new Date()): boolean {
+export function isLogicallyDue(
+  task: TaskWithLogs,
+  now: Date = new Date(),
+): boolean {
   const count = logsInPeriod(task.logs, task.frequency);
   if (count >= task.frequencyValue) return false;
   const gap = effectiveGapDays(task);
@@ -118,7 +138,10 @@ export function isDue(task: TaskWithLogs): boolean {
   return isLogicallyDue(task);
 }
 
-export function nextDueAt(task: TaskWithLogs, now: Date = new Date()): Date | null {
+export function nextDueAt(
+  task: TaskWithLogs,
+  now: Date = new Date(),
+): Date | null {
   if (isLogicallyDue(task, now)) return null;
   const count = logsInPeriod(task.logs, task.frequency);
   // Gated by period cap → next period start
@@ -133,7 +156,10 @@ export function nextDueAt(task: TaskWithLogs, now: Date = new Date()): Date | nu
   return new Date(last.getTime() + gap * MS_PER_DAY);
 }
 
-export function getCurrentBucket(prefs: BucketPrefs, now: Date = new Date()): Bucket {
+export function getCurrentBucket(
+  prefs: BucketPrefs,
+  now: Date = new Date(),
+): Bucket {
   const hour = now.getHours() + now.getMinutes() / 60;
   const rawEntries: { b: Bucket; s: number }[] = [
     { b: "MORNING", s: prefs.bucketMorningStart },
@@ -152,7 +178,10 @@ export function getCurrentBucket(prefs: BucketPrefs, now: Date = new Date()): Bu
   return current;
 }
 
-export function bucketOrderFromNow(prefs: BucketPrefs, now: Date = new Date()): Bucket[] {
+export function bucketOrderFromNow(
+  prefs: BucketPrefs,
+  now: Date = new Date(),
+): Bucket[] {
   const current = getCurrentBucket(prefs, now);
   const idx = BUCKETS.indexOf(current);
   return [...BUCKETS.slice(idx), ...BUCKETS.slice(0, idx)];
@@ -160,7 +189,7 @@ export function bucketOrderFromNow(prefs: BucketPrefs, now: Date = new Date()): 
 
 export function isReminderDue(
   task: Task & { logs?: TaskLog[] },
-  now: Date = new Date()
+  now: Date = new Date(),
 ): boolean {
   if (!task.reminderEnabled || !task.reminderTime) return false;
 
@@ -179,7 +208,10 @@ export function isReminderDue(
   return now >= reminderDate;
 }
 
-export function frequencyLabel(frequency: string, frequencyValue: number): string {
+export function frequencyLabel(
+  frequency: string,
+  frequencyValue: number,
+): string {
   const unit =
     frequency === "DAILY"
       ? "day"

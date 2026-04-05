@@ -1,7 +1,7 @@
 "use client";
 
-import { useOptimistic, useTransition } from "react";
 import { CheckCircle, Circle, Loader2 } from "lucide-react";
+import { useOptimistic, useTransition } from "react";
 
 interface HabitLogButtonProps {
   habitId: string;
@@ -9,7 +9,11 @@ interface HabitLogButtonProps {
   onLog?: (result: unknown) => void;
 }
 
-export function HabitLogButton({ habitId, isLoggedToday, onLog }: HabitLogButtonProps) {
+export function HabitLogButton({
+  habitId,
+  isLoggedToday,
+  onLog,
+}: HabitLogButtonProps) {
   const [optimisticLogged, setOptimisticLogged] = useOptimistic(isLoggedToday);
   const [isPending, startTransition] = useTransition();
 
@@ -28,6 +32,7 @@ export function HabitLogButton({ habitId, isLoggedToday, onLog }: HabitLogButton
 
   return (
     <button
+      type="button"
       onClick={handleLog}
       disabled={isPending}
       className="rounded-lg p-1 transition-colors hover:bg-[#2a2a2a] disabled:cursor-not-allowed"

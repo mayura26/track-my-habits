@@ -20,7 +20,13 @@ export async function GET() {
     }),
     db.habit.findMany({
       where: { userId, isActive: true },
-      select: { id: true, name: true, currentStreak: true, bestStreak: true, category: { select: { color: true, name: true } } },
+      select: {
+        id: true,
+        name: true,
+        currentStreak: true,
+        bestStreak: true,
+        category: { select: { color: true, name: true } },
+      },
     }),
     db.habitLog.findMany({
       where: { userId, loggedAt: { gte: oneYearAgo } },

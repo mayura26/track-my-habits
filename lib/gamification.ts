@@ -217,7 +217,7 @@ interface ProcessResult {
 export async function processHabitLog(
   habitId: string,
   userId: string,
-  source: string
+  source: string,
 ): Promise<ProcessResult> {
   const habit = await db.habit.findUniqueOrThrow({ where: { id: habitId } });
 

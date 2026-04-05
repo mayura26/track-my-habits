@@ -1,7 +1,7 @@
 "use client";
 
+import { Check, Copy, Nfc, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { Nfc, Copy, Trash2, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 
@@ -12,7 +12,12 @@ interface NfcTokenCardProps {
   onUpdate: () => void;
 }
 
-export function NfcTokenCard({ habitId, nfcToken, nfcValue, onUpdate }: NfcTokenCardProps) {
+export function NfcTokenCard({
+  habitId,
+  nfcToken,
+  nfcValue,
+  onUpdate,
+}: NfcTokenCardProps) {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -58,11 +63,25 @@ export function NfcTokenCard({ habitId, nfcToken, nfcValue, onUpdate }: NfcToken
               <p className="text-xs text-[#f7f0e1] break-all">{nfcValue}</p>
             </div>
             <div className="flex gap-2">
-              <Button variant="secondary" size="sm" onClick={copy} className="flex-1">
-                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={copy}
+                className="flex-1"
+              >
+                {copied ? (
+                  <Check className="h-3.5 w-3.5" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
                 {copied ? "Copied!" : "Copy URL"}
               </Button>
-              <Button variant="danger" size="sm" onClick={revoke} disabled={loading}>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={revoke}
+                disabled={loading}
+              >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -70,7 +89,8 @@ export function NfcTokenCard({ habitId, nfcToken, nfcValue, onUpdate }: NfcToken
         ) : (
           <div className="text-center py-4">
             <p className="text-sm text-[#b4a58a] mb-4">
-              Generate an NFC token to log this habit by tapping a physical NFC tag.
+              Generate an NFC token to log this habit by tapping a physical NFC
+              tag.
             </p>
             <Button onClick={generate} disabled={loading} variant="secondary">
               <Nfc className="h-4 w-4" />

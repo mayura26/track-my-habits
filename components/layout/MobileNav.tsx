@@ -34,23 +34,23 @@ export function MobileNav() {
 
       <nav className="fixed bottom-0 left-0 right-0 z-10 flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-2 md:hidden">
         <div className="flex w-full max-w-[min(100%,28rem)] items-center rounded-[30px] border border-[rgba(216,196,160,0.16)] bg-[rgba(9,13,12,0.86)] px-2 py-2 shadow-[0_24px_50px_rgba(0,0,0,0.32)] backdrop-blur-xl">
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname === href || pathname.startsWith(href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex min-h-16 flex-1 flex-col items-center justify-center gap-1 rounded-[22px] px-1 text-[11px] font-semibold transition-colors ${
-                isActive
-                  ? "bg-[linear-gradient(180deg,rgba(230,196,139,0.16),rgba(125,156,115,0.12))] text-[#f3ddb0]"
-                  : "text-[#b4a58a]"
-              }`}
-            >
-              <Icon className="h-5 w-5" />
-              {label}
-            </Link>
-          );
-        })}
+          {navItems.map(({ href, label, icon: Icon }) => {
+            const isActive = pathname === href || pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex min-h-16 flex-1 flex-col items-center justify-center gap-1 rounded-[22px] px-1 text-[11px] font-semibold transition-colors ${
+                  isActive
+                    ? "bg-[linear-gradient(180deg,rgba(230,196,139,0.16),rgba(125,156,115,0.12))] text-[#f3ddb0]"
+                    : "text-[#b4a58a]"
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                {label}
+              </Link>
+            );
+          })}
         </div>
       </nav>
     </>

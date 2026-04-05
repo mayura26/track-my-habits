@@ -1,8 +1,8 @@
 "use client";
 
+import type { Task } from "@prisma/client";
 import { useEffect } from "react";
 import { isReminderDue } from "@/lib/task-helpers";
-import type { Task } from "@prisma/client";
 
 type TaskWithDue = Task & { isDue?: boolean };
 

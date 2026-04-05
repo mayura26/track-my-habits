@@ -20,14 +20,17 @@ const cormorant = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title: "Track My Habits",
-  description: "An atmospheric habit tracker for rituals, streaks, and steady progress.",
+  description:
+    "An atmospheric habit tracker for rituals, streaks, and steady progress.",
   applicationName: "Track My Habits",
   icons: {
     icon: [
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
   },
   appleWebApp: {
     capable: true,
@@ -51,7 +54,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${manrope.variable} ${geistMono.variable} ${cormorant.variable} antialiased`}>
+      <body
+        className={`${manrope.variable} ${geistMono.variable} ${cormorant.variable} antialiased`}
+      >
         {children}
       </body>
     </html>

@@ -1,9 +1,9 @@
 "use client";
 
+import type { Task, TaskLog } from "@prisma/client";
 import Link from "next/link";
 import { TaskCard } from "@/components/tasks/TaskCard";
-import { BUCKET_LABELS, logsInPeriod, type Bucket } from "@/lib/task-helpers";
-import type { Task, TaskLog } from "@prisma/client";
+import { BUCKET_LABELS, type Bucket, logsInPeriod } from "@/lib/task-helpers";
 
 type TaskWithLogs = Task & { logs: TaskLog[] };
 
@@ -13,13 +13,22 @@ interface DueTasksSectionProps {
   currentBucket: Bucket;
 }
 
-export function DueTasksSection({ grouped, orderedBuckets, currentBucket }: DueTasksSectionProps) {
-  const totalDue = orderedBuckets.reduce((sum, b) => sum + grouped[b].length, 0);
+export function DueTasksSection({
+  grouped,
+  orderedBuckets,
+  currentBucket,
+}: DueTasksSectionProps) {
+  const totalDue = orderedBuckets.reduce(
+    (sum, b) => sum + grouped[b].length,
+    0,
+  );
 
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="display-title text-3xl font-semibold text-[#fff7ea]">Due Tasks</h2>
+        <h2 className="display-title text-3xl font-semibold text-[#fff7ea]">
+          Due Tasks
+        </h2>
         <Link
           href="/tasks"
           className="text-xs uppercase tracking-[0.2em] text-[#e6c48b] hover:underline"
@@ -29,7 +38,9 @@ export function DueTasksSection({ grouped, orderedBuckets, currentBucket }: DueT
       </div>
 
       {totalDue === 0 ? (
-        <p className="text-sm text-[#b4a58a]">All caught up. Keep the rhythm going.</p>
+        <p className="text-sm text-[#b4a58a]">
+          All caught up. Keep the rhythm going.
+        </p>
       ) : (
         <div className="space-y-5">
           {orderedBuckets.map((bucket) => {
@@ -59,7 +70,9 @@ export function DueTasksSection({ grouped, orderedBuckets, currentBucket }: DueT
                 </div>
 
                 {tasks.length === 0 ? (
-                  <p className="text-sm text-[#8d826d]">Nothing due right now.</p>
+                  <p className="text-sm text-[#8d826d]">
+                    Nothing due right now.
+                  </p>
                 ) : (
                   <div className="space-y-2">
                     {tasks.map((task) => (

@@ -14,7 +14,9 @@ export function ProgressBar({
   const height = size === "sm" ? "h-1" : "h-2";
 
   return (
-    <div className={`w-full overflow-hidden rounded-full bg-[rgba(247,240,225,0.08)] ${height} ${className}`}>
+    <div
+      className={`w-full overflow-hidden rounded-full bg-[rgba(247,240,225,0.08)] ${height} ${className}`}
+    >
       <div
         className={`${height} rounded-full transition-all duration-500`}
         style={{

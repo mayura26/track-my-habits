@@ -31,7 +31,12 @@ export type UpdateHabitInput = z.infer<typeof updateHabitSchema>;
 export type LogHabitInput = z.infer<typeof logHabitSchema>;
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
 
-export const BUCKET_VALUES = ["MORNING", "DAY", "EVENING", "BEFORE_BED"] as const;
+export const BUCKET_VALUES = [
+  "MORNING",
+  "DAY",
+  "EVENING",
+  "BEFORE_BED",
+] as const;
 
 export const createTaskSchema = z.object({
   name: z.string().min(1).max(100),
@@ -41,7 +46,10 @@ export const createTaskSchema = z.object({
   bucket: z.enum(BUCKET_VALUES).optional().default("DAY"),
   minGapDays: z.number().int().min(0).max(365).nullable().optional(),
   reminderEnabled: z.boolean().optional().default(false),
-  reminderTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+  reminderTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .optional(),
 });
 
 export const updateTaskSchema = createTaskSchema.partial().extend({

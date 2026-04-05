@@ -1,8 +1,8 @@
-import { requireAuth } from "@/lib/auth-helpers";
-import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { HabitForm } from "@/components/habits/HabitForm";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { requireAuth } from "@/lib/auth-helpers";
+import { db } from "@/lib/db";
 
 interface EditHabitPageProps {
   params: Promise<{ id: string }>;

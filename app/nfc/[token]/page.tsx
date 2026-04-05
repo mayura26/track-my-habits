@@ -1,5 +1,6 @@
 import { CheckCircle, Flame, XCircle, Zap } from "lucide-react";
 import Link from "next/link";
+import { NfcAutoRedirect } from "@/components/nfc/NfcAutoRedirect";
 import { SectionArtwork } from "@/components/ui/SectionArtwork";
 import { db } from "@/lib/db";
 import { processHabitLog } from "@/lib/gamification";
@@ -129,17 +130,7 @@ export default async function NfcLandingPage({ params }: NfcPageProps) {
         </Link>
       </div>
 
-      <NfcRedirect />
+      <NfcAutoRedirect />
     </div>
-  );
-}
-
-function NfcRedirect() {
-  return (
-    <script
-      dangerouslySetInnerHTML={{
-        __html: `setTimeout(() => { window.location.href = "/dashboard"; }, 5000);`,
-      }}
-    />
   );
 }

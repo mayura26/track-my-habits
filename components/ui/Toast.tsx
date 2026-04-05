@@ -1,7 +1,7 @@
 "use client";
 
+import { AlertCircle, CheckCircle, Info, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { X, CheckCircle, AlertCircle, Info } from "lucide-react";
 
 export interface ToastData {
   id: string;
@@ -32,6 +32,7 @@ export function Toast({ toast, onDismiss }: ToastProps) {
       {icons[toast.type ?? "info"]}
       <p className="flex-1 text-sm text-[#f7f0e1]">{toast.message}</p>
       <button
+        type="button"
         onClick={() => onDismiss(toast.id)}
         className="text-[#b4a58a] hover:text-[#f7f0e1]"
       >

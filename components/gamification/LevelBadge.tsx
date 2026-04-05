@@ -25,12 +25,16 @@ export function LevelBadge({ level, size = "md" }: LevelBadgeProps) {
 interface AchievementCardProps {
   name: string;
   description: string;
-  icon: string;
   earned: boolean;
   earnedAt?: string;
 }
 
-export function AchievementCard({ name, description, icon, earned, earnedAt }: AchievementCardProps) {
+export function AchievementCard({
+  name,
+  description,
+  earned,
+  earnedAt,
+}: AchievementCardProps) {
   return (
     <div
       className={`flex items-center gap-4 rounded-xl border border-[rgba(216,196,160,0.14)] p-4 transition-colors ${

@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { expect, test } from "./fixtures";
 
 test.describe("Gamification", () => {
   test("XP bar is visible on dashboard", async ({ page }) => {
@@ -9,7 +9,9 @@ test.describe("Gamification", () => {
 
   test("achievements page shows badges", async ({ page }) => {
     await page.goto("/achievements");
-    await expect(page.getByRole("heading", { name: "Achievements" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Achievements" }),
+    ).toBeVisible();
     // Should show level card
     await expect(page.getByText(/Level \d+/).first()).toBeVisible();
     // Should show badge list
@@ -33,7 +35,6 @@ test.describe("Gamification", () => {
 
     // Go to dashboard and log it
     await page.goto("/dashboard");
-    const xpBefore = await page.locator('text=/\\d+ XP/').first().textContent().catch(() => "0 XP");
 
     const logBtn = page.locator('button[title="Log habit"]').first();
     if (await logBtn.isVisible()) {
@@ -44,6 +45,6 @@ test.describe("Gamification", () => {
     // Refresh and check XP
     await page.reload();
     // XP section should still be visible
-    await expect(page.locator('text=/Level \\d+/')).toBeVisible();
+    await expect(page.locator("text=/Level \\d+/")).toBeVisible();
   });
 });

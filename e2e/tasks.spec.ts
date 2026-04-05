@@ -1,9 +1,11 @@
-import { test, expect } from "./fixtures";
+import { expect, test } from "./fixtures";
 
 test.describe("Tasks", () => {
   test("tasks nav link is visible on sidebar", async ({ page }) => {
     await page.goto("/dashboard");
-    await expect(page.getByRole("link", { name: "Tasks" }).first()).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Tasks" }).first(),
+    ).toBeVisible();
   });
 
   test("create a weekly task", async ({ page }) => {
@@ -38,7 +40,9 @@ test.describe("Tasks", () => {
     await page.getByRole("button", { name: "Create Task" }).click();
 
     await page.goto("/dashboard");
-    await expect(page.getByRole("heading", { name: "Due Tasks" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Due Tasks" }),
+    ).toBeVisible();
     await expect(page.getByText("Dashboard Task E2E").first()).toBeVisible();
   });
 
@@ -52,18 +56,29 @@ test.describe("Tasks", () => {
     await expect(page).toHaveURL("/tasks");
 
     // Get XP before completing
-    const xpBefore = await page.locator("[data-testid='xp-value']").textContent().catch(() => null);
+    const xpBefore = await page
+      .locator("[data-testid='xp-value']")
+      .textContent()
+      .catch(() => null);
 
     // Complete the task
-    const taskCard = page.locator(".surface-panel").filter({ hasText: "XP Task E2E" }).first();
+    const taskCard = page
+      .locator(".surface-panel")
+      .filter({ hasText: "XP Task E2E" })
+      .first();
     await taskCard.locator('button[title="Complete task"]').click();
 
     // Wait for completion
     await page.waitForTimeout(500);
-    await expect(taskCard.locator('button[title="Already done"]')).toBeVisible({ timeout: 5000 }).catch(() => {});
+    await expect(taskCard.locator('button[title="Already done"]'))
+      .toBeVisible({ timeout: 5000 })
+      .catch(() => {});
 
     // XP should have increased (just verify no error occurred)
-    const xpAfter = await page.locator("[data-testid='xp-value']").textContent().catch(() => null);
+    const xpAfter = await page
+      .locator("[data-testid='xp-value']")
+      .textContent()
+      .catch(() => null);
     if (xpBefore !== null && xpAfter !== null) {
       expect(Number(xpAfter)).toBeGreaterThanOrEqual(Number(xpBefore));
     }
@@ -79,7 +94,10 @@ test.describe("Tasks", () => {
     await expect(page).toHaveURL("/tasks");
 
     // Complete it
-    const taskCard = page.locator(".surface-panel").filter({ hasText: "Complete Me E2E" }).first();
+    const taskCard = page
+      .locator(".surface-panel")
+      .filter({ hasText: "Complete Me E2E" })
+      .first();
     await taskCard.locator('button[title="Complete task"]').click();
     await page.waitForTimeout(600);
 
@@ -88,7 +106,10 @@ test.describe("Tasks", () => {
     const dueSection = page.locator("text=Due Tasks").first();
     if (await dueSection.isVisible()) {
       // Task might still show if other tasks exist; check Done badge
-      const completedCard = page.locator(".surface-panel").filter({ hasText: "Complete Me E2E" }).first();
+      const completedCard = page
+        .locator(".surface-panel")
+        .filter({ hasText: "Complete Me E2E" })
+        .first();
       if (await completedCard.isVisible()) {
         await expect(completedCard.getByText("Done")).toBeVisible();
       }
@@ -121,16 +142,24 @@ test.describe("Tasks", () => {
     await page.getByRole("button", { name: "Create Task" }).click();
 
     await page.goto("/dashboard");
-    await expect(page.getByRole("heading", { name: "Due Tasks" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Due Tasks" }),
+    ).toBeVisible();
     // Both tasks should appear under their bucket sections
     await expect(page.getByText("Morning Routine E2E").first()).toBeVisible();
     await expect(page.getByText("Evening Routine E2E").first()).toBeVisible();
     // Bucket headers render
-    await expect(page.getByRole("heading", { name: "Morning" }).first()).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Evening" }).first()).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Morning" }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Evening" }).first(),
+    ).toBeVisible();
   });
 
-  test("spacing gate disables second completion for multi-per-day task", async ({ page }) => {
+  test("spacing gate disables second completion for multi-per-day task", async ({
+    page,
+  }) => {
     // DAILY with frequencyValue=2: auto gap = max(1, floor(1/2)) = 1 day
     // → after one completion, the second is blocked until tomorrow.
     await page.goto("/tasks/new");
@@ -141,7 +170,10 @@ test.describe("Tasks", () => {
 
     await expect(page).toHaveURL("/tasks");
 
-    const card = page.locator(".surface-panel").filter({ hasText: "Spacing Gate E2E" }).first();
+    const card = page
+      .locator(".surface-panel")
+      .filter({ hasText: "Spacing Gate E2E" })
+      .first();
     await Promise.all([
       page.waitForResponse((r) => r.url().includes("/complete") && r.ok()),
       card.locator('button[title="Complete task"]').click(),
@@ -149,8 +181,13 @@ test.describe("Tasks", () => {
 
     // Complete button should now be disabled with title "Not yet due"
     await page.reload();
-    const reloadedCard = page.locator(".surface-panel").filter({ hasText: "Spacing Gate E2E" }).first();
-    await expect(reloadedCard.locator('button[title="Not yet due"]')).toBeVisible();
+    const reloadedCard = page
+      .locator(".surface-panel")
+      .filter({ hasText: "Spacing Gate E2E" })
+      .first();
+    await expect(
+      reloadedCard.locator('button[title="Not yet due"]'),
+    ).toBeVisible();
   });
 
   test("settings page persists bucket hour changes", async ({ page }) => {
@@ -182,7 +219,10 @@ test.describe("Tasks", () => {
     await expect(page).toHaveURL("/tasks");
 
     // Click edit button
-    const taskCard = page.locator(".surface-panel").filter({ hasText: "Edit Task E2E" }).first();
+    const taskCard = page
+      .locator(".surface-panel")
+      .filter({ hasText: "Edit Task E2E" })
+      .first();
     await taskCard.locator('a[href*="/edit"]').click();
 
     // Update name

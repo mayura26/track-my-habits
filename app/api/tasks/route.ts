@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { createTaskSchema } from "@/lib/validations";
 import { getPeriodRange, isLogicallyDue, nextDueAt } from "@/lib/task-helpers";
+import { createTaskSchema } from "@/lib/validations";
 
 export async function GET() {
   const session = await auth();
@@ -35,7 +35,7 @@ export async function GET() {
         isDue: isLogicallyDue(withLogs),
         nextDueAt: nextDueAt(withLogs),
       };
-    })
+    }),
   );
 
   return NextResponse.json(tasksWithMeta);
@@ -50,7 +50,10 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const parsed = createTaskSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json(
+      { error: parsed.error.flatten() },
+      { status: 400 },
+    );
   }
 
   const task = await db.task.create({

@@ -10,7 +10,8 @@ const variantClasses = {
     "border border-[rgba(230,196,139,0.5)] bg-[linear-gradient(135deg,#c79a52,#8c6737)] text-[#fff9ef] shadow-[0_18px_40px_rgba(130,95,45,0.35)] hover:-translate-y-0.5 hover:brightness-110 disabled:opacity-50",
   secondary:
     "surface-panel text-[#f7f0e1] hover:border-[rgba(230,196,139,0.34)] hover:bg-[rgba(34,44,39,0.95)]",
-  ghost: "text-[#b4a58a] hover:bg-[rgba(247,240,225,0.05)] hover:text-[#f7f0e1]",
+  ghost:
+    "text-[#b4a58a] hover:bg-[rgba(247,240,225,0.05)] hover:text-[#f7f0e1]",
   danger: "bg-red-600 text-white hover:bg-red-700 disabled:opacity-50",
 };
 
@@ -21,7 +22,10 @@ const sizeClasses = {
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "primary", size = "md", className = "", children, ...props }, ref) => {
+  (
+    { variant = "primary", size = "md", className = "", children, ...props },
+    ref,
+  ) => {
     return (
       <button
         ref={ref}
@@ -31,7 +35,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {children}
       </button>
     );
-  }
+  },
 );
 
 Button.displayName = "Button";
