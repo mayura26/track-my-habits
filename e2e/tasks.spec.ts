@@ -12,7 +12,7 @@ test.describe("Tasks", () => {
     await page.goto("/tasks/new");
 
     await page.fill('[name="name"]', "Food Shopping E2E");
-    await page.selectOption('[name="frequency"]', "WEEKLY");
+    // Frequency defaults to WEEKLY — no click needed
     await page.fill('[name="frequencyValue"]', "1");
 
     await page.getByRole("button", { name: "Create Task" }).click();
@@ -24,7 +24,7 @@ test.describe("Tasks", () => {
     // Create a task first
     await page.goto("/tasks/new");
     await page.fill('[name="name"]', "Vacuum House E2E");
-    await page.selectOption('[name="frequency"]', "WEEKLY");
+    // Frequency defaults to WEEKLY
     await page.getByRole("button", { name: "Create Task" }).click();
 
     await expect(page).toHaveURL("/tasks");
@@ -36,7 +36,7 @@ test.describe("Tasks", () => {
     // Create a task
     await page.goto("/tasks/new");
     await page.fill('[name="name"]', "Dashboard Task E2E");
-    await page.selectOption('[name="frequency"]', "DAILY");
+    await page.getByRole("button", { name: "Daily" }).click();
     await page.getByRole("button", { name: "Create Task" }).click();
 
     await page.goto("/dashboard");
@@ -50,7 +50,7 @@ test.describe("Tasks", () => {
     // Create task
     await page.goto("/tasks/new");
     await page.fill('[name="name"]', "XP Task E2E");
-    await page.selectOption('[name="frequency"]', "DAILY");
+    await page.getByRole("button", { name: "Daily" }).click();
     await page.getByRole("button", { name: "Create Task" }).click();
 
     await expect(page).toHaveURL("/tasks");
@@ -88,7 +88,7 @@ test.describe("Tasks", () => {
     // Create a daily task
     await page.goto("/tasks/new");
     await page.fill('[name="name"]', "Complete Me E2E");
-    await page.selectOption('[name="frequency"]', "DAILY");
+    await page.getByRole("button", { name: "Daily" }).click();
     await page.getByRole("button", { name: "Create Task" }).click();
 
     await expect(page).toHaveURL("/tasks");
@@ -119,7 +119,7 @@ test.describe("Tasks", () => {
   test("create a fortnightly task", async ({ page }) => {
     await page.goto("/tasks/new");
     await page.fill('[name="name"]', "Fortnightly Task E2E");
-    await page.selectOption('[name="frequency"]', "FORTNIGHTLY");
+    await page.getByRole("button", { name: "Fortnightly" }).click();
     await page.fill('[name="frequencyValue"]', "1");
     await page.getByRole("button", { name: "Create Task" }).click();
 
@@ -131,14 +131,14 @@ test.describe("Tasks", () => {
   test("bucket grouping renders on dashboard", async ({ page }) => {
     await page.goto("/tasks/new");
     await page.fill('[name="name"]', "Morning Routine E2E");
-    await page.selectOption('[name="frequency"]', "DAILY");
-    await page.selectOption('[name="bucket"]', "MORNING");
+    await page.getByRole("button", { name: "Daily" }).click();
+    await page.getByRole("button", { name: "Morning" }).click();
     await page.getByRole("button", { name: "Create Task" }).click();
 
     await page.goto("/tasks/new");
     await page.fill('[name="name"]', "Evening Routine E2E");
-    await page.selectOption('[name="frequency"]', "DAILY");
-    await page.selectOption('[name="bucket"]', "EVENING");
+    await page.getByRole("button", { name: "Daily" }).click();
+    await page.getByRole("button", { name: "Evening" }).click();
     await page.getByRole("button", { name: "Create Task" }).click();
 
     await page.goto("/dashboard");
@@ -164,7 +164,7 @@ test.describe("Tasks", () => {
     // → after one completion, the second is blocked until tomorrow.
     await page.goto("/tasks/new");
     await page.fill('[name="name"]', "Spacing Gate E2E");
-    await page.selectOption('[name="frequency"]', "DAILY");
+    await page.getByRole("button", { name: "Daily" }).click();
     await page.fill('[name="frequencyValue"]', "2");
     await page.getByRole("button", { name: "Create Task" }).click();
 
@@ -213,7 +213,7 @@ test.describe("Tasks", () => {
     // Create a task
     await page.goto("/tasks/new");
     await page.fill('[name="name"]', "Edit Task E2E");
-    await page.selectOption('[name="frequency"]', "WEEKLY");
+    // Frequency defaults to WEEKLY
     await page.getByRole("button", { name: "Create Task" }).click();
 
     await expect(page).toHaveURL("/tasks");

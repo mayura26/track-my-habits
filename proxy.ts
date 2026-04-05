@@ -15,6 +15,7 @@ export default auth((req) => {
     pathname.startsWith("/api/test/") ||
     pathname.startsWith("/artifacts/") ||
     pathname === "/signin" ||
+    pathname === "/manifest.webmanifest" ||
     isStaticPublicAsset;
 
   if (!isPublic && !req.auth) {

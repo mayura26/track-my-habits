@@ -73,8 +73,8 @@ Avoid: stock-photo look, harsh contrast, purple accents.`,
   habitsLibrary: {
     id: "habitsLibrary",
     title: "Ritual shelf",
-    assetPath: "/artifacts/habits-library-placeholder.svg",
-    status: "placeholder",
+    assetPath: "/artifacts/habits-library.png",
+    status: "ready",
     intendedUse: "Habits list / rituals header strip",
     alt: "Soft-lit shelf of journals and stones suggesting ordered daily rituals",
     promptSummary:
@@ -82,7 +82,7 @@ Avoid: stock-photo look, harsh contrast, purple accents.`,
     visualDirection:
       "Grounded wellness editorial, tactile materials, forest green and brushed gold accents.",
     generationPrompt: `Use case: section-banner
-Asset type: wide habits / rituals header (replace habits-library-placeholder.svg → habits-library.png)
+Asset type: wide habits / rituals header
 Primary request: Create a wide panoramic illustration for a habits list screen in a habit tracking app.
 Scene/backdrop: a quiet study-nook meets forest veranda—wood shelf, folded cloth, stacked stones, small plants, soft morning haze.
 Subject: symbolic of repeatable rituals (not a busy character scene); optional silhouette in deep background, out of focus.
@@ -96,8 +96,8 @@ Avoid: neon, clutter, motivational poster clichés, clocks with harsh glare.`,
   tasksFlow: {
     id: "tasksFlow",
     title: "Rhythm strip",
-    assetPath: "/artifacts/tasks-flow-placeholder.svg",
-    status: "placeholder",
+    assetPath: "/artifacts/tasks-flow.png",
+    status: "ready",
     intendedUse: "Tasks area — motion and clarity",
     alt: "Abstract flowing lines suggesting spaced recurring tasks",
     promptSummary:
@@ -119,8 +119,8 @@ Avoid: clip-art checkmarks, neon greens, chaotic scatter.`,
   statsReflection: {
     id: "statsReflection",
     title: "Quiet metrics",
-    assetPath: "/artifacts/stats-reflection-placeholder.svg",
-    status: "placeholder",
+    assetPath: "/artifacts/stats-reflection.png",
+    status: "ready",
     intendedUse: "Progress / stats — reflection behind charts",
     alt: "Abstract horizon with soft curves suggesting trends over time",
     promptSummary:
@@ -142,8 +142,8 @@ Avoid: bright competing focal points, stock arrow graphics, purple analytics cli
   categoriesGarden: {
     id: "categoriesGarden",
     title: "Grouped paths",
-    assetPath: "/artifacts/categories-garden-placeholder.svg",
-    status: "placeholder",
+    assetPath: "/artifacts/categories-garden.png",
+    status: "ready",
     intendedUse: "Categories — grouping and order",
     alt: "Garden paths branching into labeled-feeling zones without text",
     promptSummary:
@@ -165,8 +165,8 @@ Avoid: infographic grids, harsh neon category colors.`,
   settingsSanctuary: {
     id: "settingsSanctuary",
     title: "Calm control",
-    assetPath: "/artifacts/settings-sanctuary-placeholder.svg",
-    status: "placeholder",
+    assetPath: "/artifacts/settings-sanctuary.png",
+    status: "ready",
     intendedUse: "Settings — minimal focal, very subtle",
     alt: "Minimal still life: candle, stone, and linen in soft focus",
     promptSummary:
@@ -188,8 +188,8 @@ Avoid: clutter, office supplies pile, futuristic HUD motifs.`,
   achievementsGlow: {
     id: "achievementsGlow",
     title: "Quiet triumph",
-    assetPath: "/artifacts/achievements-glow-placeholder.svg",
-    status: "placeholder",
+    assetPath: "/artifacts/achievements-glow.png",
+    status: "ready",
     intendedUse: "Achievements / XP — restrained celebration",
     alt: "Soft glow around a simple laurel or stone medal, not casino gold",
     promptSummary:
@@ -210,8 +210,8 @@ Avoid: confetti, casino lighting, purple loot glow, 3D game badges.`,
   emptyStateDawn: {
     id: "emptyStateDawn",
     title: "First light",
-    assetPath: "/artifacts/empty-state-dawn-placeholder.svg",
-    status: "placeholder",
+    assetPath: "/artifacts/empty-state-dawn.png",
+    status: "ready",
     intendedUse: "Generic empty state (no habits/tasks yet)",
     alt: "Open horizon at dawn inviting a first small step",
     promptSummary:
@@ -233,8 +233,8 @@ Avoid: crowded scenes, dark defeatist mood.`,
   onboardingSteps: {
     id: "onboardingSteps",
     title: "Stepping stones",
-    assetPath: "/artifacts/onboarding-steps-placeholder.svg",
-    status: "placeholder",
+    assetPath: "/artifacts/onboarding-steps.png",
+    status: "ready",
     intendedUse: "First-run / how it works — journey metaphor",
     alt: "Stepping stones across calm water toward distant hills",
     promptSummary:
@@ -256,8 +256,8 @@ Avoid: rushing motion, stormy weather metaphors, cluttered stepping stones.`,
   nfcTap: {
     id: "nfcTap",
     title: "Near touch",
-    assetPath: "/artifacts/nfc-tap-placeholder.svg",
-    status: "placeholder",
+    assetPath: "/artifacts/nfc-tap.png",
+    status: "ready",
     intendedUse: "NFC habit logging — physical token and soft glow",
     alt: "NFC tag hovering over a warm glow with forest bokeh",
     promptSummary:

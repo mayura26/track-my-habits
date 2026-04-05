@@ -2,7 +2,7 @@
 
 Structured brief source: `lib/artwork.ts`
 
-These placeholders are already wired into the app and can be replaced later with generated raster artwork.
+Raster assets live under `public/artifacts/`; filenames match each brief’s `assetPath` in `lib/artwork.ts`.
 
 ## Dashboard hero
 

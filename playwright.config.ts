@@ -15,6 +15,7 @@ export default defineConfig({
     {
       name: "setup",
       testMatch: /global-setup\.ts/,
+      timeout: 120_000,
     },
     {
       name: "chromium",
@@ -24,7 +25,7 @@ export default defineConfig({
     {
       name: "mobile",
       testMatch: /mobile-shell\.spec\.ts/,
-      use: { ...devices["iPhone 13"] },
+      use: { ...devices["Pixel 5"] },
       dependencies: ["setup"],
     },
   ],
