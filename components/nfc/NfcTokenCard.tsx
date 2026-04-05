@@ -44,18 +44,18 @@ export function NfcTokenCard({ habitId, nfcToken, nfcValue, onUpdate }: NfcToken
       <CardContent>
         <div className="flex items-center gap-3 mb-4">
           <Nfc className="h-5 w-5 text-[#7c3aed]" />
-          <h3 className="font-medium text-[#f5f5f5]">NFC Token</h3>
+          <h3 className="font-medium text-[#f7f0e1]">NFC Token</h3>
         </div>
 
         {nfcToken ? (
           <div className="space-y-3">
             <div className="rounded-lg bg-[#0d0d0d] p-3">
-              <p className="text-xs text-[#888888] mb-1">Token</p>
-              <p className="font-mono text-sm text-[#f5f5f5]">{nfcToken}</p>
+              <p className="text-xs text-[#b4a58a] mb-1">Token</p>
+              <p className="font-mono text-sm text-[#f7f0e1]">{nfcToken}</p>
             </div>
             <div className="rounded-lg bg-[#0d0d0d] p-3">
-              <p className="text-xs text-[#888888] mb-1">NFC URL</p>
-              <p className="text-xs text-[#f5f5f5] break-all">{nfcValue}</p>
+              <p className="text-xs text-[#b4a58a] mb-1">NFC URL</p>
+              <p className="text-xs text-[#f7f0e1] break-all">{nfcValue}</p>
             </div>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" onClick={copy} className="flex-1">
@@ -69,7 +69,7 @@ export function NfcTokenCard({ habitId, nfcToken, nfcValue, onUpdate }: NfcToken
           </div>
         ) : (
           <div className="text-center py-4">
-            <p className="text-sm text-[#888888] mb-4">
+            <p className="text-sm text-[#b4a58a] mb-4">
               Generate an NFC token to log this habit by tapping a physical NFC tag.
             </p>
             <Button onClick={generate} disabled={loading} variant="secondary">

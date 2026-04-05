@@ -17,7 +17,7 @@ export function StreakBadge({ streak, size = "md" }: StreakBadgeProps) {
           ? "bg-orange-900/40 text-orange-400"
           : streak >= 3
           ? "bg-yellow-900/40 text-yellow-400"
-          : "bg-[#2a2a2a] text-[#888888]"
+          : "bg-[rgba(247,240,225,0.06)] text-[#b4a58a]"
       }`}
     >
       <Flame className={size === "sm" ? "h-3 w-3" : "h-4 w-4"} />

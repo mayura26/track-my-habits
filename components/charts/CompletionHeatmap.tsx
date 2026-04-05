@@ -5,11 +5,11 @@ interface CompletionHeatmapProps {
 }
 
 function getColor(count: number): string {
-  if (count === 0) return "#1c1c1c";
-  if (count === 1) return "#3b1f6e";
-  if (count <= 3) return "#6d28d9";
-  if (count <= 6) return "#7c3aed";
-  return "#8b5cf6";
+  if (count === 0) return "rgba(247,240,225,0.06)";
+  if (count === 1) return "#495b50";
+  if (count <= 3) return "#7d9c73";
+  if (count <= 6) return "#c79a52";
+  return "#e6c48b";
 }
 
 export function CompletionHeatmap({ heatmap }: CompletionHeatmapProps) {
@@ -37,26 +37,41 @@ export function CompletionHeatmap({ heatmap }: CompletionHeatmapProps) {
     weeks.push(week);
   }
 
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   const days = ["S", "M", "T", "W", "T", "F", "S"];
 
   return (
     <div className="overflow-x-auto">
       <div className="inline-flex gap-3">
         <div className="flex flex-col justify-around pt-5">
-          {days.map((d, i) => (
-            <span key={i} className="text-xs text-[#888888] leading-[10px]">{d}</span>
+          {days.map((d) => (
+            <span key={d} className="text-xs leading-[10px] text-[#8d826d]">
+              {d}
+            </span>
           ))}
         </div>
         <div>
           <div className="mb-1 flex gap-1">
-            {weeks.map((week, wi) => {
+            {weeks.map((week) => {
               const firstDay = new Date(week[0].date);
               const showMonth = firstDay.getDate() <= 7;
               return (
-                <div key={wi} className="w-[10px] text-center">
+                <div key={week[0].date} className="w-[10px] text-center">
                   {showMonth && (
-                    <span className="text-[10px] text-[#888888]">
+                    <span className="text-[10px] text-[#8d826d]">
                       {months[firstDay.getMonth()]}
                     </span>
                   )}
@@ -65,8 +80,8 @@ export function CompletionHeatmap({ heatmap }: CompletionHeatmapProps) {
             })}
           </div>
           <div className="flex gap-1">
-            {weeks.map((week, wi) => (
-              <div key={wi} className="flex flex-col gap-1">
+            {weeks.map((week) => (
+              <div key={week[0].date} className="flex flex-col gap-1">
                 {week.map(({ date, count }) => (
                   <div
                     key={date}

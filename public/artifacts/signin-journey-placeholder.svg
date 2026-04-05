@@ -1,0 +1,22 @@
+<svg width="960" height="1200" viewBox="0 0 960 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="960" height="1200" fill="#0C1110"/>
+  <rect width="960" height="1200" fill="url(#paint0_linear)"/>
+  <circle cx="656" cy="210" r="142" fill="#E6C48B" fill-opacity="0.18"/>
+  <circle cx="238" cy="350" r="228" fill="#617A66" fill-opacity="0.22"/>
+  <path d="M140 1016C236 854 358 710 506 585C615 492 724 412 834 345" stroke="#F7F0E1" stroke-opacity="0.16" stroke-width="2" stroke-dasharray="8 10"/>
+  <circle cx="140" cy="1016" r="10" fill="#E6C48B"/>
+  <circle cx="386" cy="744" r="10" fill="#E6C48B"/>
+  <circle cx="626" cy="498" r="10" fill="#E6C48B"/>
+  <circle cx="834" cy="345" r="10" fill="#E6C48B"/>
+  <rect x="76" y="84" width="320" height="42" rx="21" fill="#101816" stroke="#E6C48B" stroke-opacity="0.28"/>
+  <text x="236" y="111" fill="#F4E5C5" font-family="Arial, sans-serif" font-size="16" letter-spacing="5.12" text-anchor="middle">AI ART PLACEHOLDER</text>
+  <text x="78" y="910" fill="#F9F1E2" font-family="Georgia, serif" font-size="74" font-weight="600">Journey</text>
+  <text x="78" y="990" fill="#F9F1E2" font-family="Georgia, serif" font-size="74" font-weight="600">illustration</text>
+  <text x="78" y="1052" fill="#D8C4A0" font-family="Arial, sans-serif" font-size="24">Replace with generated sign-in hero artwork.</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="480" y1="0" x2="480" y2="1200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#17201D"/>
+      <stop offset="1" stop-color="#090D0D"/>
+    </linearGradient>
+  </defs>
+</svg>

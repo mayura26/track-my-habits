@@ -49,9 +49,9 @@ export default async function HabitDetailPage({ params }: HabitDetailPageProps) 
             <CategoryBadge name={habit.category.name} color={habit.category.color} />
             {habit.nfcToken && <Badge variant="info">NFC</Badge>}
           </div>
-          <h1 className="text-2xl font-bold text-[#f5f5f5]">{habit.name}</h1>
+          <h1 className="text-2xl font-bold text-[#f7f0e1]">{habit.name}</h1>
           {habit.description && (
-            <p className="mt-1 text-[#888888]">{habit.description}</p>
+            <p className="mt-1 text-[#b4a58a]">{habit.description}</p>
           )}
         </div>
         <div className="flex shrink-0 gap-2">
@@ -73,13 +73,13 @@ export default async function HabitDetailPage({ params }: HabitDetailPageProps) 
         <Card>
           <CardContent className="py-4 text-center">
             <StreakBadge streak={habit.currentStreak} />
-            <p className="mt-2 text-xs text-[#888888]">Current Streak</p>
+            <p className="mt-2 text-xs text-[#b4a58a]">Current Streak</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="py-4 text-center">
             <StreakBadge streak={habit.bestStreak} />
-            <p className="mt-2 text-xs text-[#888888]">Best Streak</p>
+            <p className="mt-2 text-xs text-[#b4a58a]">Best Streak</p>
           </CardContent>
         </Card>
       </div>
@@ -87,26 +87,26 @@ export default async function HabitDetailPage({ params }: HabitDetailPageProps) 
       {/* Config */}
       <Card>
         <CardHeader>
-          <h2 className="font-medium text-[#f5f5f5]">Configuration</h2>
+          <h2 className="font-medium text-[#f7f0e1]">Configuration</h2>
         </CardHeader>
         <CardContent>
           <dl className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <dt className="text-[#888888]">Tracking</dt>
-              <dd className="text-[#f5f5f5]">{habit.trackingType}</dd>
+              <dt className="text-[#b4a58a]">Tracking</dt>
+              <dd className="text-[#f7f0e1]">{habit.trackingType}</dd>
             </div>
             <div>
-              <dt className="text-[#888888]">Goal Type</dt>
-              <dd className="text-[#f5f5f5]">{habit.thresholdType}</dd>
+              <dt className="text-[#b4a58a]">Goal Type</dt>
+              <dd className="text-[#f7f0e1]">{habit.thresholdType}</dd>
             </div>
             <div>
-              <dt className="text-[#888888]">Target</dt>
-              <dd className="text-[#f5f5f5]">{habit.thresholdValue}</dd>
+              <dt className="text-[#b4a58a]">Target</dt>
+              <dd className="text-[#f7f0e1]">{habit.thresholdValue}</dd>
             </div>
             {habit.thresholdWindow && (
               <div>
-                <dt className="text-[#888888]">Window</dt>
-                <dd className="text-[#f5f5f5]">{habit.thresholdWindow} days</dd>
+                <dt className="text-[#b4a58a]">Window</dt>
+                <dd className="text-[#f7f0e1]">{habit.thresholdWindow} days</dd>
               </div>
             )}
           </dl>
@@ -124,13 +124,13 @@ export default async function HabitDetailPage({ params }: HabitDetailPageProps) 
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-[#888888]" />
-            <h2 className="font-medium text-[#f5f5f5]">Recent Logs</h2>
+            <Calendar className="h-4 w-4 text-[#b4a58a]" />
+            <h2 className="font-medium text-[#f7f0e1]">Recent Logs</h2>
           </div>
         </CardHeader>
         <CardContent>
           {habit.logs.length === 0 ? (
-            <p className="text-center text-sm text-[#888888]">No logs yet.</p>
+            <p className="text-center text-sm text-[#b4a58a]">No logs yet.</p>
           ) : (
             <div className="space-y-2">
               {habit.logs.slice(0, 20).map((log) => (
@@ -138,7 +138,7 @@ export default async function HabitDetailPage({ params }: HabitDetailPageProps) 
                   key={log.id}
                   className="flex items-center justify-between text-sm"
                 >
-                  <span className="text-[#888888]">
+                  <span className="text-[#b4a58a]">
                     {new Date(log.loggedAt).toLocaleDateString("en-US", {
                       weekday: "short",
                       month: "short",
@@ -146,7 +146,7 @@ export default async function HabitDetailPage({ params }: HabitDetailPageProps) 
                     })}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[#f5f5f5]">{log.value}</span>
+                    <span className="text-[#f7f0e1]">{log.value}</span>
                     {log.source === "NFC" && (
                       <Badge variant="info" className="text-xs">NFC</Badge>
                     )}

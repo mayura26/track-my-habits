@@ -1,9 +1,10 @@
-import { requireAuth } from "@/lib/auth-helpers";
-import { db } from "@/lib/db";
+import { Trophy } from "lucide-react";
 import { AchievementCard } from "@/components/gamification/LevelBadge";
 import { XPBar } from "@/components/gamification/XPBar";
 import { Card, CardContent } from "@/components/ui/Card";
-import { Trophy } from "lucide-react";
+import { SectionArtwork } from "@/components/ui/SectionArtwork";
+import { requireAuth } from "@/lib/auth-helpers";
+import { db } from "@/lib/db";
 
 export default async function AchievementsPage() {
   const session = await requireAuth();
@@ -26,18 +27,24 @@ export default async function AchievementsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-[#f5f5f5]">Achievements</h1>
+      <h1 className="display-title text-2xl font-semibold text-[#f7f0e1]">
+        Achievements
+      </h1>
+
+      <SectionArtwork artifactId="achievementsGlow" variant="banner" />
 
       {/* Level card */}
       {user && (
         <Card>
           <CardContent className="py-6">
             <div className="flex items-center gap-6">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#3b1f6e] text-2xl font-bold text-[#8b5cf6]">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-[rgba(230,196,139,0.35)] bg-[rgba(199,154,82,0.2)] text-2xl font-bold text-[#f3ddb0]">
                 {user.level}
               </div>
-              <div className="flex-1">
-                <p className="text-lg font-semibold text-[#f5f5f5]">Level {user.level}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-lg font-semibold text-[#f7f0e1]">
+                  Level {user.level}
+                </p>
                 <XPBar xp={user.xp} level={user.level} className="mt-2" />
               </div>
             </div>
@@ -46,9 +53,11 @@ export default async function AchievementsPage() {
       )}
 
       {/* Badge progress */}
-      <div className="flex items-center gap-2 text-[#888888]">
+      <div className="flex items-center gap-2 text-[#b4a58a]">
         <Trophy className="h-4 w-4" />
-        <span className="text-sm">{earnedCount} / {allBadges.length} badges earned</span>
+        <span className="text-sm">
+          {earnedCount} / {allBadges.length} badges earned
+        </span>
       </div>
 
       {/* All badges */}

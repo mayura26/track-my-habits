@@ -28,12 +28,12 @@ export function Toast({ toast, onDismiss }: ToastProps) {
   }, [toast, onDismiss]);
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] px-4 py-3 shadow-lg animate-in slide-in-from-right-5">
+    <div className="flex items-center gap-3 rounded-xl border border-[rgba(216,196,160,0.16)] bg-[rgba(18,25,22,0.96)] px-4 py-3 shadow-lg animate-in slide-in-from-right-5">
       {icons[toast.type ?? "info"]}
-      <p className="flex-1 text-sm text-[#f5f5f5]">{toast.message}</p>
+      <p className="flex-1 text-sm text-[#f7f0e1]">{toast.message}</p>
       <button
         onClick={() => onDismiss(toast.id)}
-        className="text-[#888888] hover:text-[#f5f5f5]"
+        className="text-[#b4a58a] hover:text-[#f7f0e1]"
       >
         <X className="h-3.5 w-3.5" />
       </button>
@@ -48,7 +48,7 @@ interface ToastContainerProps {
 
 export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full">
+    <div className="fixed right-4 z-50 flex max-w-sm w-full flex-col gap-2 bottom-[calc(6.25rem+env(safe-area-inset-bottom,0px))] md:bottom-4">
       {toasts.map((t) => (
         <Toast key={t.id} toast={t} onDismiss={onDismiss} />
       ))}

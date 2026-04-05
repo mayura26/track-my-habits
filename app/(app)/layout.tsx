@@ -1,7 +1,8 @@
-import { requireAuth } from "@/lib/auth-helpers";
+import { MobileNav } from "@/components/layout/MobileNav";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopNav } from "@/components/layout/TopNav";
-import { MobileNav } from "@/components/layout/MobileNav";
+import { TaskReminderManager } from "@/components/tasks/TaskReminderManager";
+import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 
 export default async function AppLayout({
@@ -25,13 +26,19 @@ export default async function AppLayout({
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d]">
+    <div className="min-h-screen pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:flex md:items-start md:pb-0">
       <Sidebar />
-      <div className="md:ml-60">
-        <TopNav session={enrichedSession as Parameters<typeof TopNav>[0]["session"]} />
-        <main className="px-4 py-6 pb-20 md:px-8 md:pb-8">{children}</main>
+      <div className="relative min-w-0 flex-1">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_top,rgba(230,196,139,0.14),transparent_68%)]" />
+        <TopNav
+          session={enrichedSession as Parameters<typeof TopNav>[0]["session"]}
+        />
+        <main className="relative mx-auto w-full max-w-6xl px-4 py-5 md:px-8 md:py-8">
+          {children}
+        </main>
       </div>
       <MobileNav />
+      <TaskReminderManager />
     </div>
   );
 }

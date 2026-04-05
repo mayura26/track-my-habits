@@ -192,6 +192,18 @@ export async function checkAndAwardBadges(userId: string): Promise<string[]> {
   return newlyEarned;
 }
 
+// ─── Simple XP Award (for Tasks) ─────────────────────────────────────────────
+
+export async function awardXP(userId: string, amount: number): Promise<void> {
+  const user = await db.user.findUniqueOrThrow({ where: { id: userId } });
+  const newXP = user.xp + amount;
+  const newLevel = Math.max(1, calcLevel(newXP));
+  await db.user.update({
+    where: { id: userId },
+    data: { xp: newXP, level: newLevel },
+  });
+}
+
 // ─── Main Pipeline ────────────────────────────────────────────────────────────
 
 interface ProcessResult {

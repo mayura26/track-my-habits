@@ -26,7 +26,7 @@ export function Dialog({ open, onClose, title, children }: DialogProps) {
   return (
     <dialog
       ref={dialogRef}
-      className="w-full max-w-lg rounded-xl border border-[#2a2a2a] bg-[#141414] p-0 text-[#f5f5f5] backdrop:bg-black/60 open:flex open:flex-col"
+      className="w-full max-w-lg rounded-xl border border-[rgba(216,196,160,0.16)] bg-[rgba(18,25,22,0.96)] p-0 text-[#f7f0e1] backdrop:bg-black/60 open:flex open:flex-col"
       onClose={onClose}
     >
       {title && (
@@ -34,7 +34,7 @@ export function Dialog({ open, onClose, title, children }: DialogProps) {
           <h2 className="text-lg font-semibold">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-[#888888] hover:bg-[#2a2a2a] hover:text-[#f5f5f5]"
+            className="rounded-lg p-1 text-[#b4a58a] hover:bg-[rgba(247,240,225,0.06)] hover:text-[#f7f0e1]"
           >
             <X className="h-4 w-4" />
           </button>

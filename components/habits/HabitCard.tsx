@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { StreakBadge } from "./StreakBadge";
-import { HabitLogButton } from "./HabitLogButton";
-import { Badge } from "@/components/ui/Badge";
 import type { Habit, HabitCategory, HabitLog } from "@prisma/client";
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { Badge } from "@/components/ui/Badge";
+import { HabitLogButton } from "./HabitLogButton";
+import { StreakBadge } from "./StreakBadge";
 
 type HabitWithRelations = Habit & {
   category: HabitCategory;
@@ -28,40 +29,63 @@ export function HabitCard({ habit, onLog }: HabitCardProps) {
   const logged = isLoggedToday(habit.logs, habit.thresholdValue);
 
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-[#2a2a2a] bg-[#141414] p-4 transition-colors hover:border-[#3b1f6e]">
-      <HabitLogButton habitId={habit.id} isLoggedToday={logged} onLog={onLog} />
-
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <Link
-            href={`/habits/${habit.id}`}
-            className="font-medium text-[#f5f5f5] hover:text-[#8b5cf6] truncate"
-          >
-            {habit.name}
-          </Link>
-          {logged && <Badge variant="success">Done</Badge>}
-        </div>
-        <div className="mt-1 flex items-center gap-2">
-          <span
-            className="text-xs font-medium"
-            style={{ color: habit.category.color }}
-          >
-            {habit.category.name}
-          </span>
-          <span className="text-xs text-[#888888]">·</span>
-          <span className="text-xs text-[#888888]">
-            {habit.trackingType === "COUNT"
-              ? `${habit.thresholdValue} ${habit.thresholdType.toLowerCase()}`
-              : habit.thresholdType.toLowerCase()}
-          </span>
-        </div>
+    <div className="surface-panel flex items-center gap-4 rounded-[28px] p-4 hover:border-[rgba(230,196,139,0.3)] sm:p-5">
+      <div className="shrink-0">
+        <HabitLogButton
+          habitId={habit.id}
+          isLoggedToday={logged}
+          onLog={onLog}
+        />
       </div>
 
-      <StreakBadge streak={habit.currentStreak} size="sm" />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className="rounded-full border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]"
+                style={{ color: habit.category.color }}
+              >
+                {habit.category.name}
+              </span>
+              {logged && <Badge variant="success">Done</Badge>}
+              {habit.nfcToken && <Badge variant="info">NFC</Badge>}
+            </div>
+            <Link
+              href={`/habits/${habit.id}`}
+              className="mt-2 block truncate text-base font-semibold text-[#f7f0e1] hover:text-[#f3ddb0] sm:text-lg"
+            >
+              {habit.name}
+            </Link>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="text-xs text-[#b4a58a]">
+                {habit.trackingType === "COUNT"
+                  ? `${habit.thresholdValue} ${habit.thresholdType.toLowerCase()}`
+                  : habit.thresholdType.toLowerCase()}
+              </span>
+              <span className="text-xs text-[#8d826d]">•</span>
+              <span className="text-xs text-[#8d826d]">
+                {logged ? "Logged for today" : "Ready to log"}
+              </span>
+            </div>
+          </div>
 
-      {habit.nfcToken && (
-        <Badge variant="info" className="hidden sm:inline-flex">NFC</Badge>
-      )}
+          <div className="hidden shrink-0 sm:block">
+            <StreakBadge streak={habit.currentStreak} size="sm" />
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between sm:hidden">
+          <StreakBadge streak={habit.currentStreak} size="sm" />
+          <Link
+            href={`/habits/${habit.id}`}
+            className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#d8c4a0]"
+          >
+            Details
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

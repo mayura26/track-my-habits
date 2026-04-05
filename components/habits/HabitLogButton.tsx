@@ -34,11 +34,11 @@ export function HabitLogButton({ habitId, isLoggedToday, onLog }: HabitLogButton
       title={optimisticLogged ? "Logged today" : "Log habit"}
     >
       {isPending ? (
-        <Loader2 className="h-6 w-6 animate-spin text-[#888888]" />
+        <Loader2 className="h-6 w-6 animate-spin text-[#b4a58a]" />
       ) : optimisticLogged ? (
-        <CheckCircle className="h-6 w-6 text-[#8b5cf6]" />
+        <CheckCircle className="h-6 w-6 text-[#7d9c73]" />
       ) : (
-        <Circle className="h-6 w-6 text-[#2a2a2a] hover:text-[#888888]" />
+        <Circle className="h-6 w-6 text-[#2a2a2a] hover:text-[#b4a58a]" />
       )}
     </button>
   );

@@ -9,9 +9,9 @@ test.describe("Gamification", () => {
 
   test("achievements page shows badges", async ({ page }) => {
     await page.goto("/achievements");
-    await expect(page.getByText("Achievements")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Achievements" })).toBeVisible();
     // Should show level card
-    await expect(page.getByText(/Level \d+/)).toBeVisible();
+    await expect(page.getByText(/Level \d+/).first()).toBeVisible();
     // Should show badge list
     await expect(page.getByText("First Step")).toBeVisible();
     await expect(page.getByText("Century Club")).toBeVisible();
@@ -28,7 +28,7 @@ test.describe("Gamification", () => {
     await page.goto("/habits/new");
     await page.fill('[name="name"]', "XP Test Habit");
     await page.selectOption('[name="categoryId"]', { label: "Health" });
-    await page.click('button[type="submit"]');
+    await page.getByRole("button", { name: "Create Habit" }).click();
     await expect(page).toHaveURL("/habits");
 
     // Go to dashboard and log it

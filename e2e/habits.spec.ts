@@ -14,9 +14,9 @@ test.describe("Habits CRUD", () => {
     await page.selectOption('[name="trackingType"]', "BOOLEAN");
     await page.selectOption('[name="thresholdType"]', "DAILY");
 
-    await page.click('button[type="submit"]');
+    await page.getByRole("button", { name: "Create Habit" }).click();
     await expect(page).toHaveURL("/habits");
-    await expect(page.getByText("Morning Meditation E2E")).toBeVisible();
+    await expect(page.getByText("Morning Meditation E2E").first()).toBeVisible();
   });
 
   test("create a COUNT/ROLLING_WINDOW habit", async ({ page }) => {
@@ -29,9 +29,9 @@ test.describe("Habits CRUD", () => {
     await page.fill('[name="thresholdValue"]', "3");
     await page.fill('[name="thresholdWindow"]', "5");
 
-    await page.click('button[type="submit"]');
+    await page.getByRole("button", { name: "Create Habit" }).click();
     await expect(page).toHaveURL("/habits");
-    await expect(page.getByText("Drink Water E2E")).toBeVisible();
+    await expect(page.getByText("Drink Water E2E").first()).toBeVisible();
   });
 
   test("log a habit and see streak update", async ({ page }) => {
@@ -39,7 +39,7 @@ test.describe("Habits CRUD", () => {
     await page.goto("/habits/new");
     await page.fill('[name="name"]', "Log Test Habit");
     await page.selectOption('[name="categoryId"]', { label: "Fitness" });
-    await page.click('button[type="submit"]');
+    await page.getByRole("button", { name: "Create Habit" }).click();
 
     await expect(page).toHaveURL("/habits");
 
@@ -60,17 +60,17 @@ test.describe("Habits CRUD", () => {
     await page.goto("/habits/new");
     await page.fill('[name="name"]', "Edit Me Habit");
     await page.selectOption('[name="categoryId"]', { label: "Personal" });
-    await page.click('button[type="submit"]');
+    await page.getByRole("button", { name: "Create Habit" }).click();
 
     await expect(page).toHaveURL("/habits");
-    await page.getByText("Edit Me Habit").click();
+    await page.getByText("Edit Me Habit").first().click();
     await page.locator('a[href*="/edit"]').click();
 
     await page.fill('[name="name"]', "Edited Habit Name");
-    await page.click('button[type="submit"]');
+    await page.getByRole("button", { name: "Update Habit" }).click();
 
     await expect(page).toHaveURL("/habits");
-    await expect(page.getByText("Edited Habit Name")).toBeVisible();
+    await expect(page.getByText("Edited Habit Name").first()).toBeVisible();
   });
 
   test("dashboard sorts incomplete habits first", async ({ page }) => {

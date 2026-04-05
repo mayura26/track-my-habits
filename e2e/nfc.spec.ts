@@ -15,11 +15,11 @@ authTest.describe("NFC (authenticated)", () => {
     await page.goto("/habits/new");
     await page.fill('[name="name"]', "NFC Test Habit");
     await page.selectOption('[name="categoryId"]', { label: "Health" });
-    await page.click('button[type="submit"]');
+    await page.getByRole("button", { name: "Create Habit" }).click();
     await expect(page).toHaveURL("/habits");
 
     // Navigate to habit detail
-    await page.getByText("NFC Test Habit").click();
+    await page.getByText("NFC Test Habit").first().click();
 
     // Generate NFC token
     await page.getByRole("button", { name: /Generate Token/i }).click();

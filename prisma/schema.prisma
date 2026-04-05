@@ -16,6 +16,10 @@ model User {
   xp             Int       @default(0)
   level          Int       @default(1)
   totalLogsCount Int       @default(0)
+  bucketMorningStart   Int @default(5)
+  bucketDayStart       Int @default(11)
+  bucketEveningStart   Int @default(17)
+  bucketBeforeBedStart Int @default(21)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -25,6 +29,8 @@ model User {
   habitLogs  HabitLog[]
   badges     UserBadge[]
   categories HabitCategory[]
+  tasks      Task[]
+  taskLogs   TaskLog[]
 }
 
 model Account {
@@ -136,4 +142,37 @@ model UserBadge {
   badge Badge @relation(fields: [badgeId], references: [id])
 
   @@unique([userId, badgeId])
+}
+
+model Task {
+  id              String   @id @default(cuid())
+  userId          String
+  name            String
+  description     String?
+  frequency       String   @default("WEEKLY")
+  frequencyValue  Int      @default(1)
+  bucket          String?  @default("DAY")
+  minGapDays      Int?
+  reminderEnabled Boolean  @default(false)
+  reminderTime    String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs TaskLog[]
+}
+
+model TaskLog {
+  id          String   @id @default(cuid())
+  taskId      String
+  userId      String
+  completedAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([userId])
+  @@index([completedAt])
 }

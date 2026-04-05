@@ -1,3 +1,4 @@
+import { SectionArtwork } from "@/components/ui/SectionArtwork";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { CategoriesClient } from "./CategoriesClient";
@@ -13,7 +14,23 @@ export default async function CategoriesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-[#f5f5f5]">Categories</h1>
+      <div className="max-w-2xl">
+        <p className="section-kicker">Organization</p>
+        <h1 className="display-title mt-3 text-4xl font-semibold text-[#fff7ea]">
+          Categories that make scanning effortless.
+        </h1>
+        <p className="mt-3 text-sm leading-6 text-[#b4a58a]">
+          Keep the color system tight so habits feel recognizable at a glance on
+          mobile.
+        </p>
+      </div>
+
+      <SectionArtwork
+        artifactId="categoriesGarden"
+        variant="banner"
+        className="max-w-4xl"
+      />
+
       <CategoriesClient categories={categories} />
     </div>
   );

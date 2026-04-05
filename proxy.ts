@@ -5,11 +5,17 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
 
   // Allow public routes
+  const isStaticPublicAsset =
+    !pathname.startsWith("/api/") &&
+    /\.(?:png|jpg|jpeg|gif|webp|ico|woff2?)$/i.test(pathname);
+
   const isPublic =
     pathname.startsWith("/nfc/") ||
     pathname.startsWith("/api/auth/") ||
     pathname.startsWith("/api/test/") ||
-    pathname === "/signin";
+    pathname.startsWith("/artifacts/") ||
+    pathname === "/signin" ||
+    isStaticPublicAsset;
 
   if (!isPublic && !req.auth) {
     const signInUrl = new URL("/signin", req.url);

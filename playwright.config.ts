@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  globalSetup: "./e2e/db-setup.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -20,14 +21,23 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
       dependencies: ["setup"],
     },
+    {
+      name: "mobile",
+      testMatch: /mobile-shell\.spec\.ts/,
+      use: { ...devices["iPhone 13"] },
+      dependencies: ["setup"],
+    },
   ],
   webServer: {
     command: "npm run dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
+    timeout: 180_000,
     env: {
-      DATABASE_URL: process.env.DATABASE_URL ?? "file:./prisma/test.db",
+      DATABASE_URL: "file:./prisma/test.db",
       TEST_AUTH_BYPASS: "true",
+      NEXTAUTH_SECRET: "test-secret-for-playwright",
+      NEXTAUTH_URL: "http://localhost:3000",
     },
   },
 });

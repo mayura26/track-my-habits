@@ -26,10 +26,10 @@ export default async function EditHabitPage({ params }: EditHabitPageProps) {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="mb-6 text-2xl font-bold text-[#f5f5f5]">Edit Habit</h1>
+      <h1 className="mb-6 text-2xl font-bold text-[#f7f0e1]">Edit Habit</h1>
       <Card>
         <CardHeader>
-          <h2 className="font-medium text-[#f5f5f5]">{habit.name}</h2>
+          <h2 className="font-medium text-[#f7f0e1]">{habit.name}</h2>
         </CardHeader>
         <CardContent>
           <HabitForm

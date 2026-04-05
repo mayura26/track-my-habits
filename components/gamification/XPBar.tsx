@@ -14,7 +14,7 @@ export function XPBar({ xp, level, className }: XPBarProps) {
 
   return (
     <div className={className}>
-      <div className="mb-1.5 flex justify-between text-xs text-[#888888]">
+      <div className="mb-2 flex justify-between text-xs uppercase tracking-[0.18em] text-[#b4a58a]">
         <span>Level {level}</span>
         <span>{xp} / {nextLevelXP} XP</span>
       </div>
