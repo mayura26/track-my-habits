@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  CalendarClock,
   CheckCircle,
   Compass,
   Flame,
@@ -29,6 +30,10 @@ export default async function DashboardPage() {
   const session = await requireAuth();
   const userId = session.user.id;
 
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
   const [user, habits, totalBadges, activeTasks] = await Promise.all([
     db.user.findUnique({
       where: { id: userId },
@@ -49,9 +54,7 @@ export default async function DashboardPage() {
         category: true,
         logs: {
           where: {
-            loggedAt: {
-              gte: new Date(new Date().setHours(0, 0, 0, 0)),
-            },
+            loggedAt: { gte: sevenDaysAgo },
           },
         },
       },
@@ -97,15 +100,53 @@ export default async function DashboardPage() {
     BUCKETS.map((b) => [b, dueTasks.filter((t) => (t.bucket ?? "DAY") === b)]),
   ) as Record<Bucket, typeof dueTasks>;
 
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  function todaySum(logs: { loggedAt: Date; value: number }[]) {
+    return logs
+      .filter((l) => new Date(l.loggedAt) >= todayStart)
+      .reduce((s, l) => s + l.value, 0);
+  }
+
+  // Compute missing days for DAILY habits (last 7 days, excluding today)
+  let totalMissingDays = 0;
+  let habitsWithGaps = 0;
+  for (const habit of habits) {
+    if (habit.thresholdType !== "DAILY") continue;
+    const startBound = new Date(
+      Math.max(new Date(habit.startDate).setHours(0, 0, 0, 0), sevenDaysAgo.getTime()),
+    );
+    const logsByDate = new Map<string, number>();
+    for (const log of habit.logs) {
+      const d = new Date(log.loggedAt);
+      d.setHours(0, 0, 0, 0);
+      const key = d.toISOString();
+      logsByDate.set(key, (logsByDate.get(key) ?? 0) + log.value);
+    }
+    let missing = 0;
+    const cursor = new Date(todayStart);
+    cursor.setDate(cursor.getDate() - 1);
+    while (cursor >= startBound) {
+      const key = new Date(cursor).toISOString();
+      if ((logsByDate.get(key) ?? 0) < habit.thresholdValue) missing++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    if (missing > 0) {
+      totalMissingDays += missing;
+      habitsWithGaps++;
+    }
+  }
+
   const sortedHabits = [...habits].sort((a, b) => {
-    const aLogged = a.logs.reduce((s, l) => s + l.value, 0) >= a.thresholdValue;
-    const bLogged = b.logs.reduce((s, l) => s + l.value, 0) >= b.thresholdValue;
+    const aLogged = todaySum(a.logs) >= a.thresholdValue;
+    const bLogged = todaySum(b.logs) >= b.thresholdValue;
     if (aLogged === bLogged) return b.currentStreak - a.currentStreak;
     return aLogged ? 1 : -1;
   });
 
   const completedToday = habits.filter(
-    (h) => h.logs.reduce((s, l) => s + l.value, 0) >= h.thresholdValue,
+    (h) => todaySum(h.logs) >= h.thresholdValue,
   ).length;
   const topStreak = Math.max(0, ...habits.map((h) => h.currentStreak));
 
@@ -179,6 +220,28 @@ export default async function DashboardPage() {
           orderedBuckets={orderedBuckets}
           currentBucket={currentBucket}
         />
+      )}
+
+      {totalMissingDays > 0 && (
+        <Link
+          href="/habits/backfill"
+          className="flex items-center gap-4 rounded-[28px] border border-[rgba(230,196,139,0.28)] bg-[rgba(199,154,82,0.08)] p-4 transition-[border-color,background-color] duration-150 hover:border-[rgba(230,196,139,0.42)] hover:bg-[rgba(199,154,82,0.12)] md:p-5"
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgba(230,196,139,0.14)]">
+            <CalendarClock className="h-5 w-5 text-[#e6c48b]" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-[#f7f0e1]">
+              {totalMissingDays} missing day
+              {totalMissingDays > 1 ? "s" : ""} across {habitsWithGaps} habit
+              {habitsWithGaps > 1 ? "s" : ""}
+            </p>
+            <p className="mt-0.5 text-xs text-[#b4a58a]">
+              Tap to backfill your recent logs and keep streaks accurate.
+            </p>
+          </div>
+          <ArrowRight className="h-4 w-4 shrink-0 text-[#e6c48b]" />
+        </Link>
       )}
 
       <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">

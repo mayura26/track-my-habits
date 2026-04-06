@@ -43,6 +43,7 @@ export default async function EditHabitPage({ params }: EditHabitPageProps) {
               thresholdType: habit.thresholdType,
               thresholdValue: habit.thresholdValue,
               thresholdWindow: habit.thresholdWindow ?? undefined,
+              countIncrement: habit.countIncrement,
             }}
           />
         </CardContent>

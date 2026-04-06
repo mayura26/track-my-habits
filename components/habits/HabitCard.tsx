@@ -4,6 +4,7 @@ import type { Habit, HabitCategory, HabitLog } from "@prisma/client";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
+import { HabitCountLogControl } from "./HabitCountLogControl";
 import { HabitLogButton } from "./HabitLogButton";
 import { StreakBadge } from "./StreakBadge";
 
@@ -17,25 +18,41 @@ interface HabitCardProps {
   onLog?: (result: unknown) => void;
 }
 
-function isLoggedToday(logs: HabitLog[], thresholdValue: number): boolean {
+function todayLogsSum(logs: HabitLog[]): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayLogs = logs.filter((l) => new Date(l.loggedAt) >= today);
-  const todaySum = todayLogs.reduce((s, l) => s + l.value, 0);
-  return todaySum >= thresholdValue;
+  return logs
+    .filter((l) => new Date(l.loggedAt) >= today)
+    .reduce((s, l) => s + l.value, 0);
+}
+
+function isLoggedToday(logs: HabitLog[], thresholdValue: number): boolean {
+  return todayLogsSum(logs) >= thresholdValue;
 }
 
 export function HabitCard({ habit, onLog }: HabitCardProps) {
   const logged = isLoggedToday(habit.logs, habit.thresholdValue);
+  const todaySum = todayLogsSum(habit.logs);
+  const isCount = habit.trackingType === "COUNT";
 
   return (
     <div className="surface-panel flex items-center gap-4 rounded-[28px] p-4 transition-[border-color,background-color] duration-150 hover:border-[rgba(230,196,139,0.3)] hover:bg-[rgba(247,240,225,0.02)] sm:p-5">
-      <div className="shrink-0">
-        <HabitLogButton
-          habitId={habit.id}
-          isLoggedToday={logged}
-          onLog={onLog}
-        />
+      <div className="shrink-0 self-center">
+        {isCount ? (
+          <HabitCountLogControl
+            habitId={habit.id}
+            logs={habit.logs}
+            thresholdValue={habit.thresholdValue}
+            countIncrement={habit.countIncrement ?? null}
+            onLog={onLog}
+          />
+        ) : (
+          <HabitLogButton
+            habitId={habit.id}
+            isLoggedToday={logged}
+            onLog={onLog}
+          />
+        )}
       </div>
 
       <div className="min-w-0 flex-1">
@@ -59,9 +76,20 @@ export function HabitCard({ habit, onLog }: HabitCardProps) {
             </Link>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className="text-xs text-[#b4a58a]">
-                {habit.trackingType === "COUNT"
-                  ? `${habit.thresholdValue} ${habit.thresholdType.toLowerCase()}`
-                  : habit.thresholdType.toLowerCase()}
+                {isCount ? (
+                  <>
+                    {Number.isInteger(todaySum)
+                      ? Math.round(todaySum)
+                      : todaySum.toFixed(1)}
+                    {" / "}
+                    {Number.isInteger(habit.thresholdValue)
+                      ? Math.round(habit.thresholdValue)
+                      : habit.thresholdValue.toFixed(1)}{" "}
+                    {habit.thresholdType.toLowerCase()}
+                  </>
+                ) : (
+                  habit.thresholdType.toLowerCase()
+                )}
               </span>
               <span className="text-xs text-[#8d826d]">•</span>
               <span className="text-xs text-[#8d826d]">

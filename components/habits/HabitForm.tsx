@@ -18,6 +18,7 @@ interface HabitFormProps {
     thresholdType?: string;
     thresholdValue?: number;
     thresholdWindow?: number;
+    countIncrement?: number | null;
   };
   habitId?: string;
 }
@@ -43,6 +44,19 @@ export function HabitForm({
     setError("");
 
     const formData = new FormData(e.currentTarget);
+    const startDateVal = formData.get("startDate") as string | null;
+    const ciRaw = formData.get("countIncrement");
+    let countIncrement: number | null | undefined;
+    if (trackingType === "COUNT") {
+      if (ciRaw === "" || ciRaw == null) {
+        countIncrement = habitId ? null : undefined;
+      } else {
+        const n = Number(ciRaw);
+        countIncrement =
+          Number.isFinite(n) && n > 0 ? n : habitId ? null : undefined;
+      }
+    }
+
     const body = {
       name: formData.get("name"),
       description: formData.get("description") || undefined,
@@ -53,6 +67,13 @@ export function HabitForm({
       thresholdWindow: formData.get("thresholdWindow")
         ? Number(formData.get("thresholdWindow"))
         : undefined,
+      ...(startDateVal
+        ? { startDate: new Date(startDateVal).toISOString() }
+        : {}),
+      ...(trackingType === "COUNT" && countIncrement !== undefined
+        ? { countIncrement }
+        : {}),
+      ...(trackingType === "BOOLEAN" ? { countIncrement: null } : {}),
     };
 
     const url = habitId ? `/api/habits/${habitId}` : "/api/habits";
@@ -101,6 +122,16 @@ export function HabitForm({
           placeholder="What keeps you coming back"
           defaultValue={defaultValues?.description ?? ""}
         />
+
+        {!habitId && (
+          <Input
+            label="Start date"
+            name="startDate"
+            id="startDate"
+            type="date"
+            defaultValue={new Date().toISOString().split("T")[0]}
+          />
+        )}
 
         <Select
           label="Category"
@@ -172,22 +203,42 @@ export function HabitForm({
         </div>
 
         {trackingType === "COUNT" && (
-          <Input
-            label={
-              thresholdType === "DAILY"
-                ? "Target per day"
-                : thresholdType === "WEEKLY_TOTAL"
-                  ? "Target per week"
-                  : "Times required"
-            }
-            name="thresholdValue"
-            id="thresholdValue"
-            type="number"
-            min="1"
-            step="any"
-            defaultValue={defaultValues?.thresholdValue ?? 1}
-            required
-          />
+          <>
+            <Input
+              label={
+                thresholdType === "DAILY"
+                  ? "Target per day"
+                  : thresholdType === "WEEKLY_TOTAL"
+                    ? "Target per week"
+                    : "Times required"
+              }
+              name="thresholdValue"
+              id="thresholdValue"
+              type="number"
+              min="1"
+              step="any"
+              defaultValue={defaultValues?.thresholdValue ?? 1}
+              required
+            />
+            <Input
+              label="Add per tap (optional)"
+              name="countIncrement"
+              id="countIncrement"
+              type="number"
+              min="0.1"
+              step="any"
+              placeholder="Auto from goal"
+              defaultValue={
+                defaultValues?.countIncrement != null
+                  ? String(defaultValues.countIncrement)
+                  : ""
+              }
+            />
+            <p className="text-xs text-[#8d826d]">
+              Leave blank to pick step size on the habit card (recommended), or
+              set a fixed amount for every + tap.
+            </p>
+          </>
         )}
 
         {thresholdType === "ROLLING_WINDOW" && (

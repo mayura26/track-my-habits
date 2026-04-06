@@ -230,8 +230,8 @@ export async function processHabitLog(
     data: { currentStreak: newStreak, bestStreak },
   });
 
-  // Award XP
-  const xpGained = calcXPGain(newStreak, source);
+  // Award XP (skip for backfilled logs)
+  const xpGained = source === "BACKFILL" ? 0 : calcXPGain(newStreak, source);
   const user = await db.user.findUniqueOrThrow({ where: { id: userId } });
   const oldLevel = user.level;
   const newXP = user.xp + xpGained;
@@ -242,7 +242,7 @@ export async function processHabitLog(
     data: {
       xp: newXP,
       level: newLevel,
-      totalLogsCount: { increment: 1 },
+      ...(source !== "BACKFILL" ? { totalLogsCount: { increment: 1 } } : {}),
     },
   });
 

@@ -54,7 +54,7 @@ export async function POST(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await auth();
@@ -70,15 +70,21 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // Find today's most recent log
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Support date-specific deletion via ?loggedAt= query param
+  const url = new URL(req.url);
+  const loggedAtParam = url.searchParams.get("loggedAt");
+
+  const targetDate = loggedAtParam ? new Date(loggedAtParam) : new Date();
+  const dayStart = new Date(targetDate);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setDate(dayEnd.getDate() + 1);
 
   const latestLog = await db.habitLog.findFirst({
     where: {
       habitId: id,
       userId: session.user.id,
-      loggedAt: { gte: today },
+      loggedAt: { gte: dayStart, lt: dayEnd },
     },
     orderBy: { loggedAt: "desc" },
   });
@@ -87,14 +93,24 @@ export async function DELETE(
     return NextResponse.json({ error: "No log to undo" }, { status: 404 });
   }
 
-  // Reverse XP from that log (base 10 + streak bonus, approximate with fixed 10)
-  const user = await db.user.findUniqueOrThrow({
-    where: { id: session.user.id },
-  });
-  const newXP = Math.max(0, user.xp - 10);
-  const newLevel = Math.max(1, calcLevel(newXP));
-
   await db.habitLog.delete({ where: { id: latestLog.id } });
+
+  // Skip XP reversal for backfill logs (no XP was awarded)
+  if (latestLog.source !== "BACKFILL") {
+    const user = await db.user.findUniqueOrThrow({
+      where: { id: session.user.id },
+    });
+    const newXP = Math.max(0, user.xp - 10);
+    const newLevel = Math.max(1, calcLevel(newXP));
+    await db.user.update({
+      where: { id: session.user.id },
+      data: {
+        xp: newXP,
+        level: newLevel,
+        totalLogsCount: { decrement: 1 },
+      },
+    });
+  }
 
   // Recalculate streak after removing the log
   const newStreak = await calculateStreak(habit);
@@ -103,19 +119,5 @@ export async function DELETE(
     data: { currentStreak: newStreak },
   });
 
-  await db.user.update({
-    where: { id: session.user.id },
-    data: {
-      xp: newXP,
-      level: newLevel,
-      totalLogsCount: { decrement: 1 },
-    },
-  });
-
-  return NextResponse.json({
-    undone: true,
-    streak: newStreak,
-    xp: newXP,
-    level: newLevel,
-  });
+  return NextResponse.json({ undone: true, streak: newStreak });
 }

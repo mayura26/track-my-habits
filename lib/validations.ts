@@ -8,6 +8,8 @@ export const createHabitSchema = z.object({
   thresholdType: z.enum(["DAILY", "WEEKLY_TOTAL", "ROLLING_WINDOW"]),
   thresholdValue: z.number().positive(),
   thresholdWindow: z.number().int().positive().optional(),
+  countIncrement: z.number().positive().nullable().optional(),
+  startDate: z.string().datetime().optional(),
 });
 
 export const updateHabitSchema = createHabitSchema.partial().extend({
@@ -17,7 +19,7 @@ export const updateHabitSchema = createHabitSchema.partial().extend({
 export const logHabitSchema = z.object({
   value: z.number().positive().optional().default(1),
   loggedAt: z.string().datetime().optional(),
-  source: z.enum(["MANUAL", "NFC"]).optional().default("MANUAL"),
+  source: z.enum(["MANUAL", "NFC", "BACKFILL"]).optional().default("MANUAL"),
 });
 
 export const createCategorySchema = z.object({

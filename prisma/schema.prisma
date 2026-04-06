@@ -93,10 +93,13 @@ model Habit {
   thresholdType   String   @default("DAILY")
   thresholdValue  Float    @default(1)
   thresholdWindow Int?
+  /// Manual + tap size for COUNT habits; null = use automatic default from goal
+  countIncrement  Float?
   nfcToken        String?  @unique
   nfcValue        String?
   currentStreak   Int      @default(0)
   bestStreak      Int      @default(0)
+  startDate       DateTime @default(now())
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

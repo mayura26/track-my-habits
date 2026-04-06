@@ -34,9 +34,6 @@ export default async function HabitsPage({ searchParams }: HabitsPageProps) {
     }),
   ]);
 
-  const statCell =
-    "rounded-[24px] border border-[rgba(216,196,160,0.2)] bg-[rgba(5,9,8,0.45)] p-4 backdrop-blur-sm";
-
   return (
     <div className="space-y-6">
       <SectionArtwork artifactId="habitsLibrary" variant="banner">
@@ -68,31 +65,25 @@ export default async function HabitsPage({ searchParams }: HabitsPageProps) {
           </div>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <div className={statCell}>
-            <p className="text-xs uppercase tracking-[0.18em] text-[#d8c4a0]">
-              Active
-            </p>
-            <p className="display-title mt-2 text-3xl font-semibold text-[#fff7ea]">
-              {habits.length}
-            </p>
-          </div>
-          <div className={statCell}>
-            <p className="text-xs uppercase tracking-[0.18em] text-[#d8c4a0]">
-              Categories
-            </p>
-            <p className="display-title mt-2 text-3xl font-semibold text-[#fff7ea]">
-              {categories.length}
-            </p>
-          </div>
-          <div className={statCell}>
-            <p className="text-xs uppercase tracking-[0.18em] text-[#d8c4a0]">
-              View
-            </p>
-            <p className="mt-2 text-sm font-semibold text-[#f7f0e1]">
-              {params.category || params.q ? "Focused list" : "All rituals"}
-            </p>
-          </div>
+        <div className="mt-6 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[#e8dcc8]">
+          <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
+            {habits.length}
+          </span>
+          <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
+            active
+          </span>
+          <span
+            className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
+            aria-hidden
+          >
+            ·
+          </span>
+          <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
+            {categories.length}
+          </span>
+          <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
+            categories
+          </span>
         </div>
       </SectionArtwork>
 

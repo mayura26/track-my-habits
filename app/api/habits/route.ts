@@ -36,10 +36,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const { startDate: startDateStr, ...rest } = parsed.data;
   const habit = await db.habit.create({
     data: {
       userId: session.user.id,
-      ...parsed.data,
+      ...rest,
+      ...(startDateStr ? { startDate: new Date(startDateStr) } : {}),
     },
     include: { category: true },
   });
