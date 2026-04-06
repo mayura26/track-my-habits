@@ -26,14 +26,14 @@ export default async function AppLayout({
   };
 
   return (
-    <div className="min-h-screen pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:flex md:items-start md:pb-0">
+    <div className="min-h-screen md:flex md:items-start">
       <Sidebar />
-      <div className="relative min-w-0 flex-1">
+      <div className="relative min-w-0 flex-1 max-md:pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_top,rgba(230,196,139,0.14),transparent_68%)]" />
         <TopNav
           session={enrichedSession as Parameters<typeof TopNav>[0]["session"]}
         />
-        <main className="relative mx-auto w-full max-w-6xl px-4 py-5 md:px-8 md:py-8">
+        <main className="relative mx-auto w-full max-w-6xl px-4 pt-3 pb-[calc(7.75rem+env(safe-area-inset-bottom,0px))] md:px-8 md:py-8 md:pb-8">
           {children}
         </main>
       </div>

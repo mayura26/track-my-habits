@@ -7,11 +7,11 @@ import {
   Sparkles,
   Star,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { XPBar } from "@/components/gamification/XPBar";
 import { HabitCard } from "@/components/habits/HabitCard";
 import { DueTasksSection } from "@/components/tasks/DueTasksSection";
-import { ArtworkPlaceholder } from "@/components/ui/ArtworkPlaceholder";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { SectionArtwork } from "@/components/ui/SectionArtwork";
@@ -110,64 +110,70 @@ export default async function DashboardPage() {
   const topStreak = Math.max(0, ...habits.map((h) => h.currentStreak));
 
   return (
-    <div className="space-y-8">
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card className="overflow-hidden">
-          <CardContent className="relative px-6 py-6 md:px-8 md:py-8">
-            <div className="absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,rgba(230,196,139,0.16),transparent_70%)]" />
-            <div className="relative space-y-6">
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div className="max-w-2xl">
-                  <p className="section-kicker">Today</p>
-                  <h1 className="display-title mt-3 text-4xl font-semibold leading-none text-[#fff7ea] md:text-6xl">
-                    Good {getTimeOfDay()},{" "}
-                    {user?.name?.split(" ")[0] ?? "there"}.
-                  </h1>
-                  <p className="mt-4 max-w-xl text-base leading-7 text-[#d8c4a0] text-balance">
-                    Start with what is due now, then keep the rest of the day
-                    easy to maintain.
-                  </p>
+    <div className="space-y-6 md:space-y-8">
+      <section>
+        <Card className="overflow-hidden ring-1 ring-inset ring-[rgba(216,196,160,0.14)]">
+          <div className="relative isolate min-h-[280px] md:min-h-[300px]">
+            <Image
+              src="/artifacts/dashboard-hero.png"
+              alt=""
+              fill
+              className="object-cover object-[center_28%]"
+              sizes="(max-width: 1280px) 100vw, 1152px"
+              priority
+            />
+            <div
+              className="absolute inset-0 bg-[linear-gradient(135deg,rgba(8,12,11,0.94)_0%,rgba(8,12,11,0.82)_38%,rgba(8,12,11,0.42)_62%,rgba(8,12,11,0.72)_100%)]"
+              aria-hidden
+            />
+            <CardContent className="relative px-6 py-6 md:px-8 md:py-8">
+              <div className="space-y-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div className="max-w-2xl">
+                    <p className="section-kicker">Today</p>
+                    <h1 className="display-title mt-3 text-4xl font-semibold leading-none text-[#fff7ea] md:text-6xl">
+                      Good {getTimeOfDay()},{" "}
+                      {user?.name?.split(" ")[0] ?? "there"}.
+                    </h1>
+                    <p className="mt-4 max-w-xl text-base leading-7 text-[#e8dcc8] text-balance drop-shadow-[0_1px_12px_rgba(0,0,0,0.45)]">
+                      Start with what is due now, then keep the rest of the day
+                      easy to maintain.
+                    </p>
+                  </div>
+                  <Link href="/habits/new">
+                    <Button className="w-full md:w-auto">
+                      <Plus className="h-4 w-4" />
+                      Add a habit
+                    </Button>
+                  </Link>
                 </div>
-                <Link href="/habits/new">
-                  <Button className="w-full md:w-auto">
-                    <Plus className="h-4 w-4" />
-                    Add a habit
-                  </Button>
-                </Link>
-              </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <HeroMetric
-                  icon={<Compass className="h-4 w-4" />}
-                  label="Due now"
-                  value={dueTasks.length}
-                />
-                <HeroMetric
-                  icon={<CheckCircle className="h-4 w-4" />}
-                  label="Done today"
-                  value={`${completedToday}/${habits.length || 0}`}
-                />
-                <HeroMetric
-                  icon={<Flame className="h-4 w-4" />}
-                  label="Top streak"
-                  value={topStreak}
-                />
-                <HeroMetric
-                  icon={<Star className="h-4 w-4" />}
-                  label="Level"
-                  value={user?.level ?? 1}
-                />
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <HeroMetric
+                    icon={<Compass className="h-4 w-4" />}
+                    label="Due now"
+                    value={dueTasks.length}
+                  />
+                  <HeroMetric
+                    icon={<CheckCircle className="h-4 w-4" />}
+                    label="Done today"
+                    value={`${completedToday}/${habits.length || 0}`}
+                  />
+                  <HeroMetric
+                    icon={<Flame className="h-4 w-4" />}
+                    label="Top streak"
+                    value={topStreak}
+                  />
+                  <HeroMetric
+                    icon={<Star className="h-4 w-4" />}
+                    label="Level"
+                    value={user?.level ?? 1}
+                  />
+                </div>
               </div>
-            </div>
-          </CardContent>
+            </CardContent>
+          </div>
         </Card>
-
-        <ArtworkPlaceholder
-          src="/artifacts/dashboard-hero.png"
-          alt="Solitary figure at dawn overlooking a misty valley"
-          eyebrow="Mood"
-          title="Dawn momentum"
-        />
       </section>
 
       {activeTasks.length > 0 && (
@@ -309,7 +315,7 @@ function HeroMetric({
   value: string | number;
 }) {
   return (
-    <div className="rounded-[22px] border border-[rgba(216,196,160,0.12)] bg-[rgba(8,12,10,0.22)] p-4">
+    <div className="rounded-[22px] border border-[rgba(216,196,160,0.16)] bg-[rgba(6,10,9,0.58)] p-4 backdrop-blur-sm">
       <div className="flex items-center gap-2 text-[#e6c48b]">
         {icon}
         <span className="text-xs uppercase tracking-[0.18em] text-[#b4a58a]">

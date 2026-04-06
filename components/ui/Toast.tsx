@@ -49,7 +49,7 @@ interface ToastContainerProps {
 
 export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
   return (
-    <div className="fixed right-4 z-50 flex max-w-sm w-full flex-col gap-2 bottom-[calc(6.25rem+env(safe-area-inset-bottom,0px))] md:bottom-4">
+    <div className="fixed right-4 z-50 flex max-w-sm w-full flex-col gap-2 bottom-[calc(12rem+env(safe-area-inset-bottom,0px))] md:bottom-4">
       {toasts.map((t) => (
         <Toast key={t.id} toast={t} onDismiss={onDismiss} />
       ))}

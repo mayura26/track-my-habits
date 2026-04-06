@@ -21,11 +21,11 @@ export function TopNav({ session }: TopNavProps) {
   );
 
   return (
-    <header className="sticky top-0 z-20 mx-4 mt-[max(1rem,env(safe-area-inset-top,0px))] flex min-h-[72px] items-center justify-between rounded-[28px] border border-[rgba(216,196,160,0.14)] bg-[rgba(12,17,16,0.78)] px-4 py-3 shadow-[0_20px_45px_rgba(0,0,0,0.22)] backdrop-blur-xl md:mx-8 md:mt-4 md:px-6 md:py-0">
+    <header className="sticky top-0 z-20 mx-4 mt-3 flex min-h-[76px] items-center justify-between rounded-[28px] border border-[rgba(216,196,160,0.14)] bg-[rgba(12,17,16,0.78)] px-4 py-4 shadow-[0_20px_45px_rgba(0,0,0,0.22)] backdrop-blur-xl md:mx-8 md:mt-4 md:px-6">
       <div className="flex min-w-0 items-center gap-3 md:gap-4">
         <div className="min-w-0">
           <p className="section-kicker">Today</p>
-          <span className="display-title block text-[1.15rem] font-semibold leading-tight text-[#f7f0e1] md:text-2xl">
+          <span className="display-title mt-1 block text-[1.15rem] font-semibold leading-tight text-[#f7f0e1] md:text-2xl">
             Track My Habits
           </span>
         </div>

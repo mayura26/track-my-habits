@@ -26,7 +26,7 @@ export function MobileNav() {
     <>
       <Link
         href="/habits/new"
-        className="fixed right-4 z-20 inline-flex h-14 min-h-[3.5rem] w-14 min-w-[3.5rem] items-center justify-center rounded-full border border-[rgba(230,196,139,0.42)] bg-[linear-gradient(135deg,#d8b16b,#7d9c73)] text-[#111814] shadow-[0_20px_40px_rgba(0,0,0,0.28)] md:hidden bottom-[calc(6rem+env(safe-area-inset-bottom,0px))]"
+        className="fixed right-4 z-20 inline-flex h-14 min-h-[3.5rem] w-14 min-w-[3.5rem] items-center justify-center rounded-full border border-[rgba(230,196,139,0.42)] bg-[linear-gradient(135deg,#d8b16b,#7d9c73)] text-[#111814] shadow-[0_20px_40px_rgba(0,0,0,0.28)] md:hidden bottom-[calc(7.75rem+env(safe-area-inset-bottom,0px))]"
         aria-label="Create habit"
       >
         <Plus className="h-6 w-6" />

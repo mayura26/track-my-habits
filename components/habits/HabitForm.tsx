@@ -4,6 +4,7 @@ import type { HabitCategory } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { ChoiceCard } from "@/components/ui/ChoiceCard";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 
@@ -221,32 +222,5 @@ export function HabitForm({
         </Button>
       </div>
     </form>
-  );
-}
-
-function ChoiceCard({
-  title,
-  body,
-  active,
-  onClick,
-}: {
-  title: string;
-  body: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-[22px] border p-4 text-left transition-colors ${
-        active
-          ? "border-[rgba(230,196,139,0.42)] bg-[rgba(199,154,82,0.16)]"
-          : "border-[rgba(216,196,160,0.14)] bg-[rgba(12,17,16,0.45)]"
-      }`}
-    >
-      <p className="font-semibold text-[#f7f0e1]">{title}</p>
-      <p className="mt-2 text-sm leading-6 text-[#b4a58a]">{body}</p>
-    </button>
   );
 }

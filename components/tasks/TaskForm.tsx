@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { ChoiceCard } from "@/components/ui/ChoiceCard";
 import { Input } from "@/components/ui/Input";
 import { autoGapDays } from "@/lib/task-helpers";
 
@@ -30,18 +31,23 @@ export function TaskForm({ defaultValues, taskId }: TaskFormProps) {
   const [frequency, setFrequency] = useState(
     defaultValues?.frequency ?? "WEEKLY",
   );
-  const [frequencyValue, setFrequencyValue] = useState(
-    defaultValues?.frequencyValue ?? 1,
+  const [frequencyValueInput, setFrequencyValueInput] = useState(() =>
+    String(defaultValues?.frequencyValue ?? 1),
   );
   const [bucket, setBucket] = useState(defaultValues?.bucket ?? "DAY");
   const [customGap, setCustomGap] = useState(defaultValues?.minGapDays != null);
-  const [minGapDays, setMinGapDays] = useState<number>(
-    defaultValues?.minGapDays ?? 1,
+  const [minGapDaysInput, setMinGapDaysInput] = useState(() =>
+    String(defaultValues?.minGapDays ?? 1),
+  );
+
+  const timesPerPeriod = useMemo(
+    () => parseTimesPerPeriod(frequencyValueInput),
+    [frequencyValueInput],
   );
 
   const autoGapHint = useMemo(
-    () => autoGapDays({ frequency, frequencyValue }),
-    [frequency, frequencyValue],
+    () => autoGapDays({ frequency, frequencyValue: timesPerPeriod }),
+    [frequency, timesPerPeriod],
   );
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -54,9 +60,14 @@ export function TaskForm({ defaultValues, taskId }: TaskFormProps) {
       name: formData.get("name"),
       description: (formData.get("description") as string) || undefined,
       frequency,
-      frequencyValue: Number(formData.get("frequencyValue")) || 1,
+      frequencyValue: parseTimesPerPeriod(
+        String(formData.get("frequencyValue")),
+      ),
       bucket,
-      minGapDays: customGap && frequencyValue > 1 ? minGapDays : null,
+      minGapDays:
+        customGap && timesPerPeriod > 1
+          ? parseMinGapDays(String(formData.get("minGapDays")))
+          : null,
       reminderEnabled,
       reminderTime: reminderEnabled
         ? (formData.get("reminderTime") as string) || undefined
@@ -151,12 +162,24 @@ export function TaskForm({ defaultValues, taskId }: TaskFormProps) {
           label="Times per period"
           name="frequencyValue"
           id="frequencyValue"
-          type="number"
-          min="1"
-          max="30"
-          value={frequencyValue}
-          onChange={(e) => setFrequencyValue(Number(e.target.value) || 1)}
-          required
+          type="text"
+          inputMode="numeric"
+          autoComplete="off"
+          value={frequencyValueInput}
+          onChange={(e) => {
+            const next = e.target.value;
+            if (next === "") {
+              setFrequencyValueInput("");
+              return;
+            }
+            if (!/^\d+$/.test(next)) return;
+            const n = Number.parseInt(next, 10);
+            if (n > 30) return;
+            setFrequencyValueInput(next);
+          }}
+          onBlur={() => {
+            setFrequencyValueInput((prev) => (prev === "" ? "1" : prev));
+          }}
         />
       </section>
 
@@ -186,7 +209,7 @@ export function TaskForm({ defaultValues, taskId }: TaskFormProps) {
         </div>
       </section>
 
-      {frequencyValue > 1 && (
+      {timesPerPeriod > 1 && (
         <section className="space-y-4 rounded-[26px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.03)] p-4">
           <div className="flex items-center justify-between gap-3 rounded-[22px] border border-[rgba(216,196,160,0.14)] bg-[rgba(12,17,16,0.45)] p-4">
             <div>
@@ -218,11 +241,24 @@ export function TaskForm({ defaultValues, taskId }: TaskFormProps) {
               label="Minimum days between completions"
               name="minGapDays"
               id="minGapDays"
-              type="number"
-              min="0"
-              max="365"
-              value={minGapDays}
-              onChange={(e) => setMinGapDays(Number(e.target.value) || 0)}
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              value={minGapDaysInput}
+              onChange={(e) => {
+                const next = e.target.value;
+                if (next === "") {
+                  setMinGapDaysInput("");
+                  return;
+                }
+                if (!/^\d+$/.test(next)) return;
+                const n = Number.parseInt(next, 10);
+                if (n > 365) return;
+                setMinGapDaysInput(next);
+              }}
+              onBlur={() => {
+                setMinGapDaysInput((prev) => (prev === "" ? "0" : prev));
+              }}
             />
           ) : (
             <p className="text-sm text-[#b4a58a]">
@@ -291,29 +327,14 @@ export function TaskForm({ defaultValues, taskId }: TaskFormProps) {
   );
 }
 
-function ChoiceCard({
-  title,
-  body,
-  active,
-  onClick,
-}: {
-  title: string;
-  body: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-[22px] border p-4 text-left transition-colors ${
-        active
-          ? "border-[rgba(230,196,139,0.42)] bg-[rgba(199,154,82,0.16)]"
-          : "border-[rgba(216,196,160,0.14)] bg-[rgba(12,17,16,0.45)]"
-      }`}
-    >
-      <p className="font-semibold text-[#f7f0e1]">{title}</p>
-      <p className="mt-2 text-sm leading-6 text-[#b4a58a]">{body}</p>
-    </button>
-  );
+function parseTimesPerPeriod(raw: string): number {
+  const n = Number.parseInt(raw.trim(), 10);
+  if (Number.isNaN(n) || n < 1) return 1;
+  return Math.min(30, n);
+}
+
+function parseMinGapDays(raw: string): number {
+  const n = Number.parseInt(raw.trim(), 10);
+  if (Number.isNaN(n) || n < 0) return 0;
+  return Math.min(365, n);
 }

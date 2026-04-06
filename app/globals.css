@@ -24,7 +24,7 @@ html {
 
 @media (max-width: 767px) {
   html {
-    scroll-padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+    scroll-padding-bottom: calc(7.75rem + env(safe-area-inset-bottom, 0px));
     scroll-padding-top: env(safe-area-inset-top, 0px);
   }
 }
@@ -137,6 +137,31 @@ body::after {
 
 .text-balance {
   text-wrap: balance;
+}
+
+@keyframes habit-log-check-pop {
+  0% {
+    transform: scale(0.55);
+    opacity: 0.35;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.habit-log-check-pop {
+  animation: habit-log-check-pop 0.42s cubic-bezier(0.34, 1.45, 0.64, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .habit-log-check-pop {
+    animation: none;
+  }
 }
 
 ::-webkit-scrollbar {
