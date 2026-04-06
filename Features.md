@@ -1,1 +1,0 @@
-[ ] M make the tasj cards nicer. i guess we need some AI generate image loockups perhaps to style them more. but look at stuff like layout inside the card, just the way badges are stacked etc. the use of badges where suitable etc

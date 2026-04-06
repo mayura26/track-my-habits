@@ -10,6 +10,8 @@ export const createHabitSchema = z.object({
   thresholdWindow: z.number().int().positive().optional(),
   countIncrement: z.number().positive().nullable().optional(),
   startDate: z.string().datetime().optional(),
+  imageUrl: z.string().nullable().optional(),
+  imagePrompt: z.string().max(2000).nullable().optional(),
   reminderEnabled: z.boolean().optional().default(false),
   reminderTime: z
     .string()
@@ -52,6 +54,8 @@ export const createTaskSchema = z.object({
   frequencyValue: z.number().int().min(1).max(30),
   bucket: z.enum(BUCKET_VALUES).optional().default("DAY"),
   minGapDays: z.number().int().min(0).max(365).nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
+  imagePrompt: z.string().max(2000).nullable().optional(),
   reminderEnabled: z.boolean().optional().default(false),
   reminderTime: z
     .string()

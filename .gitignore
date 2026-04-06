@@ -52,3 +52,6 @@ prisma/test.db-journal
 prisma/*.db
 prisma/*.db-journal
 prisma/prisma/
+
+# User-uploaded images
+public/uploads/

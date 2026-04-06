@@ -103,6 +103,8 @@ model Habit {
   lastReminderSentAt  DateTime?
   currentStreak       Int      @default(0)
   bestStreak          Int      @default(0)
+  imageUrl            String?
+  imagePrompt         String?
   startDate           DateTime @default(now())
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -164,6 +166,8 @@ model Task {
   reminderEnabled     Boolean   @default(false)
   reminderTime        String?
   lastReminderSentAt  DateTime?
+  imageUrl            String?
+  imagePrompt         String?
   isActive            Boolean   @default(true)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
