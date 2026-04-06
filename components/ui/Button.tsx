@@ -7,12 +7,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses = {
   primary:
-    "border border-[rgba(230,196,139,0.5)] bg-[linear-gradient(135deg,#c79a52,#8c6737)] text-[#fff9ef] shadow-[0_18px_40px_rgba(130,95,45,0.35)] hover:-translate-y-0.5 hover:brightness-110 disabled:opacity-50",
+    "border border-[rgba(230,196,139,0.5)] bg-[linear-gradient(135deg,#c79a52,#8c6737)] text-[#fff9ef] shadow-[0_18px_40px_rgba(130,95,45,0.35)] hover:-translate-y-0.5 hover:brightness-110 active:scale-[0.97] disabled:opacity-50",
   secondary:
-    "surface-panel text-[#f7f0e1] hover:border-[rgba(230,196,139,0.34)] hover:bg-[rgba(34,44,39,0.95)]",
+    "surface-panel text-[#f7f0e1] hover:border-[rgba(230,196,139,0.34)] hover:bg-[rgba(34,44,39,0.95)] active:scale-[0.97]",
   ghost:
-    "text-[#b4a58a] hover:bg-[rgba(247,240,225,0.05)] hover:text-[#f7f0e1]",
-  danger: "bg-red-600 text-white hover:bg-red-700 disabled:opacity-50",
+    "text-[#b4a58a] hover:bg-[rgba(247,240,225,0.05)] hover:text-[#f7f0e1] active:scale-[0.97]",
+  danger:
+    "bg-red-600 text-white hover:bg-red-700 active:scale-[0.97] disabled:opacity-50",
 };
 
 const sizeClasses = {
@@ -29,7 +30,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
-        className={`inline-flex items-center justify-center gap-2 rounded-full font-medium focus:outline-none focus:ring-2 focus:ring-[rgba(230,196,139,0.5)] focus:ring-offset-2 focus:ring-offset-[#111814] disabled:cursor-not-allowed ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+        className={`inline-flex items-center justify-center gap-2 rounded-full font-medium focus:outline-none focus:ring-2 focus:ring-[rgba(230,196,139,0.5)] focus:ring-offset-2 focus:ring-offset-[#111814] disabled:cursor-not-allowed motion-reduce:active:scale-100 ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
         {...props}
       >
         {children}

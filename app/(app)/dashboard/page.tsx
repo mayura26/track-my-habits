@@ -118,15 +118,12 @@ export default async function DashboardPage() {
               src="/artifacts/dashboard-hero.png"
               alt=""
               fill
-              className="object-cover object-[center_28%]"
+              className="dashboard-hero-photo object-cover object-[center_28%]"
               sizes="(max-width: 1280px) 100vw, 1152px"
               priority
             />
-            <div
-              className="absolute inset-0 bg-[linear-gradient(135deg,rgba(8,12,11,0.94)_0%,rgba(8,12,11,0.82)_38%,rgba(8,12,11,0.42)_62%,rgba(8,12,11,0.72)_100%)]"
-              aria-hidden
-            />
-            <CardContent className="relative px-6 py-6 md:px-8 md:py-8">
+            <div className="dashboard-hero-scrim" aria-hidden />
+            <CardContent className="relative z-[2] px-6 py-6 md:px-8 md:py-8">
               <div className="space-y-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div className="max-w-2xl">
@@ -207,20 +204,19 @@ export default async function DashboardPage() {
             </div>
 
             {sortedHabits.length === 0 ? (
-              <div className="overflow-hidden rounded-[28px] border border-dashed border-[rgba(216,196,160,0.18)] bg-[rgba(12,17,16,0.5)]">
-                <SectionArtwork
-                  artifactId="emptyStateDawn"
-                  variant="banner"
-                  dimmed={false}
-                  className="rounded-none border-0"
-                />
-                <div className="border-t border-[rgba(216,196,160,0.12)] p-10 text-center md:p-12">
-                  <p className="text-[#b4a58a]">No habits yet.</p>
-                  <Link href="/habits/new" className="mt-3 inline-block">
+              <SectionArtwork
+                artifactId="emptyStateDawn"
+                variant="banner"
+                dimmed
+                className="border border-dashed border-[rgba(216,196,160,0.22)]"
+              >
+                <div className="flex flex-col items-center py-8 text-center md:py-10">
+                  <p className="text-[#e8dcc8]">No habits yet.</p>
+                  <Link href="/habits/new" className="mt-4 inline-block">
                     <Button>Create your first habit</Button>
                   </Link>
                 </div>
-              </div>
+              </SectionArtwork>
             ) : (
               <div className="space-y-2">
                 {sortedHabits.map((habit) => (

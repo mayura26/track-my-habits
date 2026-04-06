@@ -19,24 +19,25 @@ export default async function NfcLandingPage({ params }: NfcPageProps) {
 
   if (!habit || !habit.isActive) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#0c1110] px-6 py-10">
-        <div className="w-full max-w-lg">
-          <SectionArtwork
-            artifactId="nfcTap"
-            variant="card"
-            dimmed={false}
-            className="w-full"
-          />
-        </div>
-        <div className="text-center">
-          <XCircle className="mx-auto h-16 w-16 text-red-500" />
-          <h1 className="mt-4 text-2xl font-bold text-[#f7f0e1]">
-            Invalid Token
-          </h1>
-          <p className="mt-2 text-[#b4a58a]">
-            This NFC tag is not linked to an active habit.
-          </p>
-        </div>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#0c1110] px-6 py-10">
+        <SectionArtwork
+          artifactId="nfcTap"
+          variant="card"
+          dimmed
+          className="w-full max-w-lg"
+        >
+          <div className="flex flex-col items-center gap-4 text-center">
+            <XCircle className="h-16 w-16 text-red-400" />
+            <div>
+              <h1 className="text-2xl font-bold text-[#fff7ea]">
+                Invalid Token
+              </h1>
+              <p className="mt-2 text-sm text-[#e8dcc8]">
+                This NFC tag is not linked to an active habit.
+              </p>
+            </div>
+          </div>
+        </SectionArtwork>
       </div>
     );
   }

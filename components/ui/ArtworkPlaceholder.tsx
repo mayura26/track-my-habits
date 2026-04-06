@@ -22,12 +22,15 @@ export function ArtworkPlaceholder({
       className={`surface-panel overflow-hidden rounded-[32px] ${className}`}
     >
       <div className="relative aspect-[4/5] overflow-hidden">
-        <Image src={src} alt={alt} fill className="object-cover" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(7,9,9,0.22)_55%,rgba(7,9,9,0.84))]" />
-        <div className="absolute inset-x-0 bottom-0 p-5">
-          {eyebrow ? (
-            <p className="section-kicker">{eyebrow}</p>
-          ) : null}
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          className="artwork-placeholder-photo object-cover"
+        />
+        <div className="artwork-placeholder-scrim" aria-hidden />
+        <div className="absolute inset-x-0 bottom-0 z-[1] p-5">
+          {eyebrow ? <p className="section-kicker">{eyebrow}</p> : null}
           <p
             className={`display-title text-3xl font-semibold text-[#fff7ea] ${eyebrow ? "mt-2" : ""}`}
           >

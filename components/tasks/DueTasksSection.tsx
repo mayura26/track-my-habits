@@ -2,6 +2,7 @@
 
 import type { Task, TaskLog } from "@prisma/client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { BUCKET_LABELS, type Bucket, logsInPeriod } from "@/lib/task-helpers";
 
@@ -18,6 +19,9 @@ export function DueTasksSection({
   orderedBuckets,
   currentBucket,
 }: DueTasksSectionProps) {
+  const router = useRouter();
+  const handleComplete = () => router.refresh();
+
   const totalDue = orderedBuckets.reduce(
     (sum, b) => sum + grouped[b].length,
     0,
@@ -80,6 +84,7 @@ export function DueTasksSection({
                         key={task.id}
                         task={task}
                         periodCount={logsInPeriod(task.logs, task.frequency)}
+                        onComplete={handleComplete}
                       />
                     ))}
                   </div>

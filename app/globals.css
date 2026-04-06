@@ -139,6 +139,89 @@ body::after {
   text-wrap: balance;
 }
 
+/* Hero / artwork: filters + scrims in plain CSS so readability tweaks always apply */
+.dashboard-hero-photo {
+  z-index: 0;
+  filter: brightness(0.68) saturate(0.88);
+}
+
+.dashboard-hero-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-color: rgba(5, 9, 8, 0.35);
+  background-image: linear-gradient(
+    135deg,
+    rgba(5, 9, 8, 0.78) 0%,
+    rgba(5, 9, 8, 0.58) 32%,
+    rgba(5, 9, 8, 0.52) 56%,
+    rgba(5, 9, 8, 0.72) 100%
+  );
+}
+
+.section-artwork-photo-dimmed {
+  filter: brightness(0.76) saturate(0.9);
+}
+
+.section-artwork-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    rgba(4, 7, 6, 0.82) 0%,
+    rgba(4, 7, 6, 0.35) 44%,
+    rgba(4, 7, 6, 0.55) 100%
+  );
+}
+
+/* Artwork as full card background (content overlaid) */
+.section-artwork-card-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-color: rgba(4, 8, 7, 0.42);
+  background-image: linear-gradient(
+    180deg,
+    rgba(5, 10, 9, 0.82) 0%,
+    rgba(5, 10, 9, 0.48) 45%,
+    rgba(5, 10, 9, 0.74) 100%
+  );
+}
+
+.section-artwork-card-scrim-soft {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-color: rgba(4, 8, 7, 0.28);
+  background-image: linear-gradient(
+    180deg,
+    rgba(5, 10, 9, 0.58) 0%,
+    rgba(5, 10, 9, 0.36) 50%,
+    rgba(5, 10, 9, 0.62) 100%
+  );
+}
+
+.artwork-placeholder-photo {
+  filter: brightness(0.74) saturate(0.9);
+}
+
+.artwork-placeholder-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgba(4, 7, 6, 0.28) 0%,
+    rgba(4, 7, 6, 0.5) 48%,
+    rgba(4, 7, 6, 0.92) 100%
+  );
+}
+
 @keyframes habit-log-check-pop {
   0% {
     transform: scale(0.55);
@@ -161,6 +244,90 @@ body::after {
 @media (prefers-reduced-motion: reduce) {
   .habit-log-check-pop {
     animation: none;
+  }
+}
+
+/* Toast enter / exit */
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateX(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toast-exit {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(1.25rem);
+  }
+}
+
+.toast-enter {
+  animation: toast-enter 200ms ease both;
+}
+
+.toast-exit {
+  animation: toast-exit 200ms ease both;
+}
+
+/* Dialog open / close */
+dialog {
+  opacity: 0;
+  transform: scale(0.96) translateY(8px);
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease,
+    overlay 200ms ease allow-discrete,
+    display 200ms ease allow-discrete;
+}
+
+dialog[open] {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+@starting-style {
+  dialog[open] {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+}
+
+dialog::backdrop {
+  opacity: 0;
+  transition:
+    opacity 200ms ease,
+    overlay 200ms ease allow-discrete,
+    display 200ms ease allow-discrete;
+}
+
+dialog[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-enter,
+  .toast-exit {
+    animation: none;
+  }
+
+  dialog,
+  dialog::backdrop {
+    transition: none;
   }
 }
 

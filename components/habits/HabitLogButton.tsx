@@ -23,27 +23,44 @@ export function HabitLogButton({
   );
   const [isPending, startTransition] = useTransition();
 
-  const handleLog = () => {
+  const handleToggle = () => {
     if (isPending) return;
-    setPlayPop(true);
-    startTransition(async () => {
-      addOptimistic(true);
-      try {
+
+    if (optimisticLogged) {
+      // Undo
+      startTransition(async () => {
+        addOptimistic(false);
+        setPlayPop(false);
         const res = await fetch(`/api/habits/${habitId}/log`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ source: "MANUAL" }),
+          method: "DELETE",
         });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          return;
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          onLog?.(data);
         }
-        onLog?.(data);
         await router.refresh();
-      } catch {
-        /* network error — optimistic state clears when transition ends */
-      }
-    });
+      });
+    } else {
+      // Log
+      setPlayPop(true);
+      startTransition(async () => {
+        addOptimistic(true);
+        try {
+          const res = await fetch(`/api/habits/${habitId}/log`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source: "MANUAL" }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok) {
+            onLog?.(data);
+          }
+        } catch {
+          /* network error */
+        }
+        await router.refresh();
+      });
+    }
   };
 
   const showDone = optimisticLogged;
@@ -51,10 +68,10 @@ export function HabitLogButton({
   return (
     <button
       type="button"
-      onClick={handleLog}
+      onClick={handleToggle}
       disabled={isPending}
       className="rounded-lg p-1 transition-[transform,background-color] duration-150 hover:bg-[rgba(247,240,225,0.06)] active:scale-95 disabled:cursor-wait disabled:opacity-90"
-      title={showDone ? "Logged today" : "Log habit"}
+      title={showDone ? "Undo log" : "Log habit"}
     >
       {showDone ? (
         <CheckCircle

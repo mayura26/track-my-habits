@@ -42,16 +42,19 @@ export default async function TasksPage() {
     (task) => task.reminderEnabled,
   ).length;
 
+  const statCell =
+    "rounded-[24px] border border-[rgba(216,196,160,0.2)] bg-[rgba(5,9,8,0.45)] p-4 backdrop-blur-sm";
+
   return (
     <div className="space-y-6">
-      <section className="surface-panel rounded-[32px] p-6 md:p-8">
+      <SectionArtwork artifactId="tasksFlow" variant="banner">
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <p className="section-kicker">Recurring Work</p>
             <h1 className="display-title mt-3 text-4xl font-semibold text-[#fff7ea] md:text-5xl">
               Tasks that fit the rhythm of the day.
             </h1>
-            <p className="mt-3 text-sm leading-6 text-[#b4a58a] md:text-base">
+            <p className="mt-3 text-sm leading-6 text-[#e8dcc8] md:text-base">
               Keep chores visible, spaced, and easy to check off when they are
               actually due.
             </p>
@@ -65,33 +68,27 @@ export default async function TasksPage() {
           </Link>
         </div>
 
-        <SectionArtwork
-          artifactId="tasksFlow"
-          variant="banner"
-          className="mt-6"
-        />
-
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-[24px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-[#b4a58a]">
+          <div className={statCell}>
+            <p className="text-xs uppercase tracking-[0.18em] text-[#d8c4a0]">
               Active tasks
             </p>
             <p className="display-title mt-2 text-3xl font-semibold text-[#fff7ea]">
               {tasksWithLogs.length}
             </p>
           </div>
-          <div className="rounded-[24px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-[#b4a58a]">
+          <div className={statCell}>
+            <p className="text-xs uppercase tracking-[0.18em] text-[#d8c4a0]">
               Due now
             </p>
             <p className="display-title mt-2 text-3xl font-semibold text-[#fff7ea]">
               {dueNowCount}
             </p>
           </div>
-          <div className="rounded-[24px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] p-4">
+          <div className={statCell}>
             <div className="flex items-center gap-2 text-[#d8c4a0]">
               <Bell className="h-4 w-4" />
-              <p className="text-xs uppercase tracking-[0.18em] text-[#b4a58a]">
+              <p className="text-xs uppercase tracking-[0.18em] text-[#d8c4a0]">
                 Reminders
               </p>
             </div>
@@ -102,7 +99,7 @@ export default async function TasksPage() {
             </p>
           </div>
         </div>
-      </section>
+      </SectionArtwork>
 
       <TasksClient tasks={tasksWithLogs} />
     </div>

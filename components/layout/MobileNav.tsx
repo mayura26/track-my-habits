@@ -26,7 +26,7 @@ export function MobileNav() {
     <>
       <Link
         href="/habits/new"
-        className="fixed right-4 z-20 inline-flex h-14 min-h-[3.5rem] w-14 min-w-[3.5rem] items-center justify-center rounded-full border border-[rgba(230,196,139,0.42)] bg-[linear-gradient(135deg,#d8b16b,#7d9c73)] text-[#111814] shadow-[0_20px_40px_rgba(0,0,0,0.28)] md:hidden bottom-[calc(7.75rem+env(safe-area-inset-bottom,0px))]"
+        className="fixed right-4 z-20 inline-flex h-14 min-h-[3.5rem] w-14 min-w-[3.5rem] items-center justify-center rounded-full border border-[rgba(230,196,139,0.42)] bg-[linear-gradient(135deg,#d8b16b,#7d9c73)] text-[#111814] shadow-[0_20px_40px_rgba(0,0,0,0.28)] active:scale-90 hover:brightness-110 motion-reduce:active:scale-100 md:hidden bottom-[calc(7.75rem+env(safe-area-inset-bottom,0px))]"
         aria-label="Create habit"
       >
         <Plus className="h-6 w-6" />
@@ -40,7 +40,7 @@ export function MobileNav() {
               <Link
                 key={href}
                 href={href}
-                className={`flex min-h-16 flex-1 flex-col items-center justify-center gap-1 rounded-[22px] px-1 text-[11px] font-semibold transition-colors ${
+                className={`flex min-h-16 flex-1 flex-col items-center justify-center gap-1 rounded-[22px] px-1 text-[11px] font-semibold transition-colors active:scale-95 motion-reduce:active:scale-100 ${
                   isActive
                     ? "bg-[linear-gradient(180deg,rgba(230,196,139,0.16),rgba(125,156,115,0.12))] text-[#f3ddb0]"
                     : "text-[#b4a58a]"

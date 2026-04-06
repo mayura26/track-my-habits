@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.lifereset.com)",
+      "Bash(npx prisma:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx playwright:*)",
+      "Bash(\"/d/VSCode Projects/track-my-habits/.gitignore\":*)",
+      "Bash(npm run:*)",
+      "Bash(curl:*)",
+      "Bash(echo:*)",
+      "Bash(node:*)",
+      "Bash(netstat:*)",
+      "Bash(xargs grep:*)",
+      "Bash(sqlite3 prisma/test.db \".schema User\")",
+      "Bash(ls -la prisma/*.db)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Read(//tmp/**)",
+      "Read(//c/Users/kmviv/AppData/Local/Temp//**)",
+      "Bash(tasklist)",
+      "Bash(taskkill /F /IM \"chrome-headless-shell.exe\")",
+      "Bash(taskkill /F /IM \"chrome.exe\" /FI \"WINDOWTITLE eq *playwright*\")",
+      "Bash(xargs -I{} cmd /c \"taskkill /PID {} /F\")",
+      "Bash(grep -v \"//\")",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(TEST_AUTH_BYPASS=true npm run dev)",
+      "Read(//d/tmp/**)",
+      "Read(//c/Users/kmviv/AppData/Local/Temp/**)"
+    ]
+  }
+}

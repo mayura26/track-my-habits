@@ -14,22 +14,22 @@ export default async function CategoriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="max-w-2xl">
-        <p className="section-kicker">Organization</p>
-        <h1 className="display-title mt-3 text-4xl font-semibold text-[#fff7ea]">
-          Categories that make scanning effortless.
-        </h1>
-        <p className="mt-3 text-sm leading-6 text-[#b4a58a]">
-          Keep the color system tight so habits feel recognizable at a glance on
-          mobile.
-        </p>
-      </div>
-
       <SectionArtwork
         artifactId="categoriesGarden"
         variant="banner"
         className="max-w-4xl"
-      />
+      >
+        <div className="max-w-2xl">
+          <p className="section-kicker">Organization</p>
+          <h1 className="display-title mt-3 text-4xl font-semibold text-[#fff7ea]">
+            Categories that make scanning effortless.
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-[#e8dcc8]">
+            Keep the color system tight so habits feel recognizable at a glance
+            on mobile.
+          </p>
+        </div>
+      </SectionArtwork>
 
       <CategoriesClient categories={categories} />
     </div>

@@ -29,7 +29,7 @@ export function HabitCard({ habit, onLog }: HabitCardProps) {
   const logged = isLoggedToday(habit.logs, habit.thresholdValue);
 
   return (
-    <div className="surface-panel flex items-center gap-4 rounded-[28px] p-4 hover:border-[rgba(230,196,139,0.3)] sm:p-5">
+    <div className="surface-panel flex items-center gap-4 rounded-[28px] p-4 transition-[border-color,background-color] duration-150 hover:border-[rgba(230,196,139,0.3)] hover:bg-[rgba(247,240,225,0.02)] sm:p-5">
       <div className="shrink-0">
         <HabitLogButton
           habitId={habit.id}

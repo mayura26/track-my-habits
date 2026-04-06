@@ -27,11 +27,11 @@ export default async function AchievementsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="display-title text-2xl font-semibold text-[#f7f0e1]">
-        Achievements
-      </h1>
-
-      <SectionArtwork artifactId="achievementsGlow" variant="banner" />
+      <SectionArtwork artifactId="achievementsGlow" variant="banner">
+        <h1 className="display-title text-2xl font-semibold text-[#fff7ea]">
+          Achievements
+        </h1>
+      </SectionArtwork>
 
       {/* Level card */}
       {user && (

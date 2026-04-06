@@ -48,7 +48,7 @@ export function TopNav({ session }: TopNavProps) {
         </div>
         <Link
           href="/settings"
-          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-2 text-[#b4a58a] hover:bg-[rgba(247,240,225,0.05)] hover:text-[#f7f0e1] md:hidden"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-2 text-[#b4a58a] hover:bg-[rgba(247,240,225,0.05)] hover:text-[#f7f0e1] active:scale-90 motion-reduce:active:scale-100 md:hidden"
           title="Settings"
         >
           <Settings className="h-5 w-5" />
@@ -80,7 +80,7 @@ export function TopNav({ session }: TopNavProps) {
         >
           <button
             type="submit"
-            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-2 text-[#b4a58a] hover:bg-[rgba(247,240,225,0.05)] hover:text-[#f7f0e1] md:min-h-0 md:min-w-0"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-2 text-[#b4a58a] hover:bg-[rgba(247,240,225,0.05)] hover:text-[#f7f0e1] active:scale-90 motion-reduce:active:scale-100 md:min-h-0 md:min-w-0"
             title="Sign out"
           >
             <LogOut className="h-5 w-5 md:h-4 md:w-4" />

@@ -34,16 +34,19 @@ export default async function HabitsPage({ searchParams }: HabitsPageProps) {
     }),
   ]);
 
+  const statCell =
+    "rounded-[24px] border border-[rgba(216,196,160,0.2)] bg-[rgba(5,9,8,0.45)] p-4 backdrop-blur-sm";
+
   return (
     <div className="space-y-6">
-      <section className="surface-panel rounded-[32px] p-6 md:p-8">
+      <SectionArtwork artifactId="habitsLibrary" variant="banner">
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <p className="section-kicker">Rituals</p>
             <h1 className="display-title mt-3 text-4xl font-semibold text-[#fff7ea] md:text-5xl">
               Habits that stay easy to keep.
             </h1>
-            <p className="mt-3 text-sm leading-6 text-[#b4a58a] md:text-base">
+            <p className="mt-3 text-sm leading-6 text-[#e8dcc8] md:text-base">
               Keep the list focused, see what still needs your attention, and
               make logging feel effortless on mobile.
             </p>
@@ -65,31 +68,25 @@ export default async function HabitsPage({ searchParams }: HabitsPageProps) {
           </div>
         </div>
 
-        <SectionArtwork
-          artifactId="habitsLibrary"
-          variant="banner"
-          className="mt-6"
-        />
-
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-[24px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-[#b4a58a]">
+          <div className={statCell}>
+            <p className="text-xs uppercase tracking-[0.18em] text-[#d8c4a0]">
               Active
             </p>
             <p className="display-title mt-2 text-3xl font-semibold text-[#fff7ea]">
               {habits.length}
             </p>
           </div>
-          <div className="rounded-[24px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-[#b4a58a]">
+          <div className={statCell}>
+            <p className="text-xs uppercase tracking-[0.18em] text-[#d8c4a0]">
               Categories
             </p>
             <p className="display-title mt-2 text-3xl font-semibold text-[#fff7ea]">
               {categories.length}
             </p>
           </div>
-          <div className="rounded-[24px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-[#b4a58a]">
+          <div className={statCell}>
+            <p className="text-xs uppercase tracking-[0.18em] text-[#d8c4a0]">
               View
             </p>
             <p className="mt-2 text-sm font-semibold text-[#f7f0e1]">
@@ -97,7 +94,7 @@ export default async function HabitsPage({ searchParams }: HabitsPageProps) {
             </p>
           </div>
         </div>
-      </section>
+      </SectionArtwork>
 
       <section className="space-y-3">
         <div className="flex items-center gap-2">
@@ -140,28 +137,25 @@ export default async function HabitsPage({ searchParams }: HabitsPageProps) {
       </section>
 
       {habits.length === 0 ? (
-        <div className="overflow-hidden rounded-[28px] border border-dashed border-[rgba(216,196,160,0.18)] bg-[rgba(12,17,16,0.5)]">
-          {!params.category && !params.q ? (
-            <SectionArtwork
-              artifactId="onboardingSteps"
-              variant="banner"
-              dimmed={false}
-              className="rounded-none border-0"
-            />
-          ) : null}
-          <div className="border-t border-[rgba(216,196,160,0.12)] p-10 text-center md:p-12">
-            <p className="text-[#b4a58a]">
-              {params.category || params.q
-                ? "No habits match your filter."
-                : "No habits yet."}
-            </p>
-            {!params.category && !params.q && (
-              <Link href="/habits/new" className="mt-3 inline-block">
+        !params.category && !params.q ? (
+          <SectionArtwork
+            artifactId="onboardingSteps"
+            variant="banner"
+            dimmed
+            className="border-dashed border-[rgba(216,196,160,0.22)]"
+          >
+            <div className="flex flex-col items-center py-8 text-center md:py-12">
+              <p className="text-[#e8dcc8]">No habits yet.</p>
+              <Link href="/habits/new" className="mt-4 inline-block">
                 <Button>Create your first habit</Button>
               </Link>
-            )}
+            </div>
+          </SectionArtwork>
+        ) : (
+          <div className="rounded-[28px] border border-dashed border-[rgba(216,196,160,0.18)] bg-[rgba(12,17,16,0.5)] p-10 text-center md:p-12">
+            <p className="text-[#b4a58a]">No habits match your filter.</p>
           </div>
-        </div>
+        )
       ) : (
         <div className="space-y-2">
           {habits.map((habit) => (

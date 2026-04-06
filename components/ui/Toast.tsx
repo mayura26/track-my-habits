@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, CheckCircle, Info, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export interface ToastData {
   id: string;
@@ -22,19 +22,30 @@ const icons = {
 };
 
 export function Toast({ toast, onDismiss }: ToastProps) {
+  const [exiting, setExiting] = useState(false);
+
+  const startExit = useCallback(() => {
+    setExiting(true);
+    setTimeout(() => onDismiss(toast.id), 200);
+  }, [toast.id, onDismiss]);
+
   useEffect(() => {
-    const timer = setTimeout(() => onDismiss(toast.id), toast.duration ?? 4000);
+    const timer = setTimeout(startExit, toast.duration ?? 4000);
     return () => clearTimeout(timer);
-  }, [toast, onDismiss]);
+  }, [toast, startExit]);
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-[rgba(216,196,160,0.16)] bg-[rgba(18,25,22,0.96)] px-4 py-3 shadow-lg animate-in slide-in-from-right-5">
+    <div
+      className={`flex items-center gap-3 rounded-xl border border-[rgba(216,196,160,0.16)] bg-[rgba(18,25,22,0.96)] px-4 py-3 shadow-lg ${
+        exiting ? "toast-exit" : "toast-enter"
+      }`}
+    >
       {icons[toast.type ?? "info"]}
       <p className="flex-1 text-sm text-[#f7f0e1]">{toast.message}</p>
       <button
         type="button"
-        onClick={() => onDismiss(toast.id)}
-        className="text-[#b4a58a] hover:text-[#f7f0e1]"
+        onClick={startExit}
+        className="text-[#b4a58a] hover:text-[#f7f0e1] active:scale-90 motion-reduce:active:scale-100"
       >
         <X className="h-3.5 w-3.5" />
       </button>

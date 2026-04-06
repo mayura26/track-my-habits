@@ -75,23 +75,22 @@ export default async function StatsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="surface-panel rounded-[28px] p-5 md:rounded-[32px] md:p-8">
+      <SectionArtwork
+        artifactId="statsReflection"
+        variant="banner"
+        className="rounded-[28px] md:rounded-[32px]"
+        contentClassName="p-5 md:p-8"
+      >
         <div className="max-w-2xl">
           <p className="section-kicker">Progress</p>
           <h1 className="display-title mt-3 text-2xl font-semibold leading-[0.98] text-[#fff7ea] sm:text-3xl md:text-5xl">
             Patterns you can actually use.
           </h1>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-[#b4a58a] md:text-base">
+          <p className="mt-3 max-w-xl text-sm leading-6 text-[#e8dcc8] md:text-base">
             Focus on momentum, consistency, and where your routines feel easiest
             to keep.
           </p>
         </div>
-
-        <SectionArtwork
-          artifactId="statsReflection"
-          variant="banner"
-          className="mt-6"
-        />
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <InsightCard
@@ -119,7 +118,7 @@ export default async function StatsPage() {
             note={momentumCopy}
           />
         </div>
-      </section>
+      </SectionArtwork>
 
       <Card>
         <CardHeader>
@@ -172,7 +171,7 @@ function InsightCard({
   note: string;
 }) {
   return (
-    <div className="rounded-[22px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] p-4">
+    <div className="rounded-[22px] border border-[rgba(216,196,160,0.2)] bg-[rgba(5,9,8,0.45)] p-4 backdrop-blur-sm">
       <div className="flex items-center gap-2 text-[#d8c4a0]">{icon}</div>
       <p className="display-title mt-3 text-2xl font-semibold text-[#fff7ea] md:text-3xl">
         {value}

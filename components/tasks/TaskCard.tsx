@@ -3,7 +3,8 @@
 import type { Task, TaskLog } from "@prisma/client";
 import { CheckCircle, Circle, Loader2, Pencil } from "lucide-react";
 import Link from "next/link";
-import { useOptimistic, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useOptimistic, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/Badge";
 import {
   BUCKET_LABELS,
@@ -33,48 +34,66 @@ function formatRelative(date: Date, now: Date = new Date()): string {
 }
 
 export function TaskCard({ task, periodCount, onComplete }: TaskCardProps) {
+  const router = useRouter();
   const logicallyDue = isLogicallyDue(task);
   const next = nextDueAt(task);
-  const periodFull = periodCount >= task.frequencyValue;
   const [optimisticCount, addOptimistic] = useOptimistic(
     periodCount,
-    (current) => current + 1,
+    (current: number, delta: number) => current + delta,
   );
   const [isPending, startTransition] = useTransition();
+  const [playPop, setPlayPop] = useState(false);
 
-  const handleComplete = () => {
-    if (!logicallyDue) return;
-    if (optimisticCount >= task.frequencyValue) return;
-    startTransition(async () => {
-      addOptimistic(undefined);
-      await fetch(`/api/tasks/${task.id}/complete`, { method: "POST" });
-      onComplete?.();
-    });
+  const periodFull = optimisticCount >= task.frequencyValue;
+
+  const handleToggle = () => {
+    if (isPending) return;
+
+    if (periodFull) {
+      // Undo last completion
+      setPlayPop(false);
+      startTransition(async () => {
+        addOptimistic(-1);
+        await fetch(`/api/tasks/${task.id}/complete`, { method: "DELETE" });
+        onComplete?.();
+        await router.refresh();
+      });
+    } else if (logicallyDue) {
+      // Complete
+      setPlayPop(true);
+      startTransition(async () => {
+        addOptimistic(1);
+        await fetch(`/api/tasks/${task.id}/complete`, { method: "POST" });
+        onComplete?.();
+        await router.refresh();
+      });
+    }
   };
 
-  const canComplete = logicallyDue && optimisticCount < task.frequencyValue;
+  const canAct = logicallyDue || periodFull;
   const bucket = (task.bucket as Bucket | null) ?? "DAY";
 
   return (
-    <div className="surface-panel flex items-start gap-4 rounded-[28px] p-4 hover:border-[rgba(230,196,139,0.3)] sm:items-center sm:p-5">
+    <div className="surface-panel flex items-start gap-4 rounded-[28px] p-4 transition-[border-color,background-color] duration-150 hover:border-[rgba(230,196,139,0.3)] hover:bg-[rgba(247,240,225,0.02)] sm:items-center sm:p-5">
       <button
         type="button"
-        onClick={handleComplete}
-        disabled={isPending || !canComplete}
-        className="mt-0.5 rounded-full border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] p-2.5 transition-colors hover:bg-[rgba(247,240,225,0.08)] disabled:cursor-not-allowed"
+        onClick={handleToggle}
+        disabled={isPending || !canAct}
+        className="mt-0.5 rounded-full border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] p-2.5 transition-colors hover:bg-[rgba(247,240,225,0.08)] active:scale-90 motion-reduce:active:scale-100 disabled:cursor-not-allowed"
         title={
-          canComplete
-            ? "Complete task"
-            : periodFull
-              ? "Already done"
+          periodFull
+            ? "Undo completion"
+            : logicallyDue
+              ? "Complete task"
               : "Not yet due"
         }
       >
         {isPending ? (
           <Loader2 className="h-6 w-6 animate-spin text-[#b4a58a]" />
-        ) : !canComplete &&
-          (periodFull || optimisticCount >= task.frequencyValue) ? (
-          <CheckCircle className="h-6 w-6 text-[#e6c48b]" />
+        ) : periodFull ? (
+          <CheckCircle
+            className={`h-6 w-6 text-[#e6c48b] ${playPop ? "habit-log-check-pop" : ""}`}
+          />
         ) : (
           <Circle className="h-6 w-6 text-[rgba(247,240,225,0.22)] hover:text-[#b4a58a]" />
         )}
