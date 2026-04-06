@@ -26,7 +26,9 @@
       "Bash(taskkill //F //IM node.exe)",
       "Bash(TEST_AUTH_BYPASS=true npm run dev)",
       "Read(//d/tmp/**)",
-      "Read(//c/Users/kmviv/AppData/Local/Temp/**)"
+      "Read(//c/Users/kmviv/AppData/Local/Temp/**)",
+      "Bash(ls -la \"D:/VSCode Projects/track-my-habits/.env\"*)",
+      "Bash(python3:*)"
     ]
   }
 }
