@@ -59,12 +59,16 @@ setup("create test session", async () => {
     : "";
 
   // --- 3. Pre-warm routes in parallel using Node fetch ---
+  // Consume the full response body for each route so Next.js finishes
+  // streaming the SSR payload before the test suite begins.
   await Promise.allSettled(
     ROUTES_TO_WARM.map((route) =>
       fetch(`http://localhost:3000${route}`, {
         headers: cookieHeader ? { Cookie: cookieHeader } : {},
         signal: AbortSignal.timeout(90_000),
-      }).catch(() => null),
+      })
+        .then((r) => r.text())
+        .catch(() => null),
     ),
   );
 
