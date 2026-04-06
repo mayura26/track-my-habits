@@ -24,10 +24,11 @@ export default async function SettingsPage() {
         className="w-full"
       >
         <div>
-          <h1 className="display-title text-3xl font-semibold text-[#fff7ea]">
+          <p className="section-kicker">Preferences</p>
+          <h1 className="display-title mt-3 text-3xl font-semibold text-[#fff7ea]">
             Settings
           </h1>
-          <p className="text-sm text-[#e8dcc8]">
+          <p className="mt-2 text-sm text-[#e8dcc8]">
             Tune your dashboard to match your day.
           </p>
         </div>

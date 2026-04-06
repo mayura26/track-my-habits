@@ -2,7 +2,14 @@ import { Compass, Plus, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { HabitCard } from "@/components/habits/HabitCard";
 import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
 import { SectionArtwork } from "@/components/ui/SectionArtwork";
+import {
+  StatGrid,
+  StatItem,
+  StatPanel,
+  statCellClass,
+} from "@/components/ui/StatPanel";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 
@@ -65,67 +72,66 @@ export default async function HabitsPage({ searchParams }: HabitsPageProps) {
           </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[#e8dcc8]">
-          <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
-            {habits.length}
-          </span>
-          <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
-            active
-          </span>
-          <span
-            className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
-            aria-hidden
-          >
-            ·
-          </span>
-          <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
-            {categories.length}
-          </span>
-          <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
-            categories
-          </span>
+        <div className="mt-6">
+          <StatPanel>
+            <StatGrid columns={2}>
+              <StatItem
+                value={habits.length}
+                label="active"
+                className={statCellClass(2, 0)}
+              />
+              <StatItem
+                value={categories.length}
+                label="categories"
+                className={statCellClass(2, 1)}
+              />
+            </StatGrid>
+          </StatPanel>
         </div>
       </SectionArtwork>
 
-      <section className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Compass className="h-4 w-4 text-[#d8c4a0]" />
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b4a58a]">
-            Filter by category
-          </p>
-        </div>
+      <Card>
+        <CardContent className="space-y-3 py-4 sm:space-y-3.5 sm:py-5">
+          <div className="flex items-center gap-2">
+            <Compass
+              className="h-3.5 w-3.5 shrink-0 text-[#b4a58a]"
+              aria-hidden
+            />
+            <p className="section-kicker">Filter by category</p>
+          </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/habits"
-            className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-              !params.category
-                ? "border-[rgba(230,196,139,0.36)] bg-[rgba(199,154,82,0.18)] text-[#fff2d3]"
-                : "border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] text-[#b4a58a] hover:text-[#f7f0e1]"
-            }`}
-          >
-            All
-          </Link>
-          {categories.map((cat) => (
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:gap-2 sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden">
             <Link
-              key={cat.id}
-              href={`/habits?category=${cat.id}`}
-              className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                params.category === cat.id
-                  ? "text-white"
-                  : "border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] text-[#b4a58a] hover:text-[#f7f0e1]"
+              href="/habits"
+              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:px-3.5 sm:py-2 sm:text-sm ${
+                !params.category
+                  ? "border-[rgba(230,196,139,0.36)] bg-[rgba(199,154,82,0.18)] text-[#fff2d3]"
+                  : "border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] text-[#b4a58a] hover:border-[rgba(230,196,139,0.22)] hover:text-[#f7f0e1]"
               }`}
-              style={
-                params.category === cat.id
-                  ? { backgroundColor: cat.color }
-                  : undefined
-              }
             >
-              {cat.name}
+              All
             </Link>
-          ))}
-        </div>
-      </section>
+            {categories.map((cat) => (
+              <Link
+                key={cat.id}
+                href={`/habits?category=${cat.id}`}
+                className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:px-3.5 sm:py-2 sm:text-sm ${
+                  params.category === cat.id
+                    ? "border-transparent text-white shadow-sm"
+                    : "border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] text-[#b4a58a] hover:border-[rgba(230,196,139,0.22)] hover:text-[#f7f0e1]"
+                }`}
+                style={
+                  params.category === cat.id
+                    ? { backgroundColor: cat.color }
+                    : undefined
+                }
+              >
+                {cat.name}
+              </Link>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {habits.length === 0 ? (
         !params.category && !params.q ? (
@@ -143,19 +149,33 @@ export default async function HabitsPage({ searchParams }: HabitsPageProps) {
             </div>
           </SectionArtwork>
         ) : (
-          <div className="rounded-[28px] border border-dashed border-[rgba(216,196,160,0.18)] bg-[rgba(12,17,16,0.5)] p-10 text-center md:p-12">
-            <p className="text-[#b4a58a]">No habits match your filter.</p>
-          </div>
+          <Card>
+            <CardContent className="py-10 text-center md:py-12">
+              <p className="text-[#b4a58a]">No habits match your filter.</p>
+            </CardContent>
+          </Card>
         )
       ) : (
-        <div className="space-y-2">
-          {habits.map((habit) => (
-            <HabitCard
-              key={habit.id}
-              habit={habit as Parameters<typeof HabitCard>[0]["habit"]}
-            />
-          ))}
-        </div>
+        <Card>
+          <CardContent className="space-y-4">
+            <div>
+              <h2 className="display-title text-3xl font-semibold text-[#fff7ea]">
+                Your habits
+              </h2>
+              <p className="mt-2 text-sm text-[#b4a58a]">
+                Log from here or open a habit for history and step size.
+              </p>
+            </div>
+            <div className="space-y-2">
+              {habits.map((habit) => (
+                <HabitCard
+                  key={habit.id}
+                  habit={habit as Parameters<typeof HabitCard>[0]["habit"]}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

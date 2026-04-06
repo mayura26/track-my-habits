@@ -1,7 +1,14 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
 import { SectionArtwork } from "@/components/ui/SectionArtwork";
+import {
+  StatGrid,
+  StatItem,
+  StatPanel,
+  statCellClass,
+} from "@/components/ui/StatPanel";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { getPeriodRange, isLogicallyDue } from "@/lib/task-helpers";
@@ -65,40 +72,49 @@ export default async function TasksPage() {
           </Link>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[#e8dcc8]">
-          <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
-            {tasksWithLogs.length}
-          </span>
-          <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
-            active
-          </span>
-          <span
-            className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
-            aria-hidden
-          >
-            ·
-          </span>
-          <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
-            {dueNowCount}
-          </span>
-          <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
-            due now
-          </span>
-          <span
-            className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
-            aria-hidden
-          >
-            ·
-          </span>
-          <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
-            {reminderCount > 0
-              ? `${reminderCount} reminder${reminderCount === 1 ? "" : "s"}`
-              : "no reminders"}
-          </span>
+        <div className="mt-6">
+          <StatPanel>
+            <StatGrid columns={3}>
+              <StatItem
+                value={tasksWithLogs.length}
+                label="active"
+                className={statCellClass(3, 0)}
+              />
+              <StatItem
+                value={dueNowCount}
+                label="due now"
+                className={statCellClass(3, 1)}
+              />
+              <StatItem
+                value={reminderCount}
+                label={
+                  reminderCount === 1
+                    ? "reminder on"
+                    : reminderCount === 0
+                      ? "reminders"
+                      : "reminders on"
+                }
+                className={statCellClass(3, 2)}
+              />
+            </StatGrid>
+          </StatPanel>
         </div>
       </SectionArtwork>
 
-      <TasksClient tasks={tasksWithLogs} />
+      <Card>
+        <CardContent className="space-y-4">
+          <div>
+            <h2 className="display-title text-3xl font-semibold text-[#fff7ea]">
+              Your tasks
+            </h2>
+            <p className="mt-2 text-sm text-[#b4a58a]">
+              Complete items when they are due; spacing and buckets keep the
+              list honest.
+            </p>
+          </div>
+          <TasksClient tasks={tasksWithLogs} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

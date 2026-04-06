@@ -3,6 +3,12 @@ import { HabitAreaChart } from "@/components/charts/HabitAreaChart";
 import { WeeklyBarChart } from "@/components/charts/WeeklyBarChart";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { SectionArtwork } from "@/components/ui/SectionArtwork";
+import {
+  StatGrid,
+  StatItem,
+  StatPanel,
+  statCellClass,
+} from "@/components/ui/StatPanel";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 
@@ -92,50 +98,30 @@ export default async function StatsPage() {
         </div>
 
         <div className="mt-5 space-y-3">
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[#e8dcc8]">
-            <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
-              {user?.totalLogsCount ?? 0}
-            </span>
-            <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
-              total logs
-            </span>
-            <span
-              className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
-              aria-hidden
-            >
-              ·
-            </span>
-            <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
-              {habits.length}
-            </span>
-            <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
-              active
-            </span>
-            <span
-              className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
-              aria-hidden
-            >
-              ·
-            </span>
-            <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
-              {topStreak}d
-            </span>
-            <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
-              top streak
-            </span>
-            <span
-              className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
-              aria-hidden
-            >
-              ·
-            </span>
-            <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
-              {recentWeekCount}
-            </span>
-            <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
-              this week
-            </span>
-          </div>
+          <StatPanel>
+            <StatGrid columns={4}>
+              <StatItem
+                value={user?.totalLogsCount ?? 0}
+                label="total logs"
+                className={statCellClass(4, 0)}
+              />
+              <StatItem
+                value={habits.length}
+                label="active"
+                className={statCellClass(4, 1)}
+              />
+              <StatItem
+                value={`${topStreak}d`}
+                label="top streak"
+                className={statCellClass(4, 2)}
+              />
+              <StatItem
+                value={recentWeekCount}
+                label="this week"
+                className={statCellClass(4, 3)}
+              />
+            </StatGrid>
+          </StatPanel>
           <p className="max-w-xl text-sm leading-6 text-[#b4a58a]">
             {momentumCopy} All-time best streak {bestEverStreak}d.
           </p>

@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { BackfillClient } from "@/components/habits/BackfillClient";
+import { Card, CardContent } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 
@@ -103,18 +104,22 @@ export default async function BackfillPage() {
         </div>
       </div>
 
-      {habitsData.length === 0 ? (
-        <div className="rounded-[28px] border border-dashed border-[rgba(216,196,160,0.18)] bg-[rgba(12,17,16,0.5)] p-12 text-center">
-          <p className="text-lg font-semibold text-[#f7f0e1]">
-            All caught up!
-          </p>
-          <p className="mt-2 text-sm text-[#b4a58a]">
-            No missing days in the last week.
-          </p>
-        </div>
-      ) : (
-        <BackfillClient habits={habitsData} />
-      )}
+      <Card>
+        <CardContent className="py-6 sm:py-8">
+          {habitsData.length === 0 ? (
+            <div className="py-6 text-center sm:py-10">
+              <p className="text-lg font-semibold text-[#f7f0e1]">
+                All caught up!
+              </p>
+              <p className="mt-2 text-sm text-[#b4a58a]">
+                No missing days in the last week.
+              </p>
+            </div>
+          ) : (
+            <BackfillClient habits={habitsData} />
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

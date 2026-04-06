@@ -99,17 +99,30 @@ export function CategoriesClient({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button onClick={() => setShowForm(!showForm)}>
-          <Plus className="h-4 w-4" />
-          New Category
-        </Button>
-      </div>
+    <Card>
+      <CardContent className="space-y-4 sm:space-y-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="section-kicker">Library</p>
+            <h2 className="display-title mt-2 text-3xl font-semibold text-[#fff7ea]">
+              Your categories
+            </h2>
+            <p className="mt-2 text-sm text-[#b4a58a]">
+              Colors and labels habits inherit. Keep the set small so scanning
+              stays fast.
+            </p>
+          </div>
+          <Button
+            className="w-full shrink-0 sm:w-auto"
+            onClick={() => setShowForm(!showForm)}
+          >
+            <Plus className="h-4 w-4" />
+            New category
+          </Button>
+        </div>
 
-      {showForm && (
-        <Card>
-          <CardContent>
+        {showForm && (
+          <div className="rounded-[24px] border border-[rgba(216,196,160,0.18)] bg-[rgba(12,17,16,0.35)] p-4 sm:p-5">
             <form onSubmit={handleCreate} className="space-y-4">
               <Input
                 label="Category Name"
@@ -177,44 +190,44 @@ export function CategoriesClient({
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="space-y-2">
-        {categories.map((cat) => (
-          <div
-            key={cat.id}
-            className="surface-panel flex items-center gap-4 rounded-[26px] p-4"
-          >
-            <div
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
-              style={{ backgroundColor: `${cat.color}22`, color: cat.color }}
-            >
-              <Tag className="h-5 w-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-medium text-[#f7f0e1]">{cat.name}</p>
-              <p className="text-xs text-[#b4a58a]">
-                {cat._count.habits} habits
-              </p>
-            </div>
-            {cat.isDefault ? (
-              <Badge variant="default">System</Badge>
-            ) : (
-              <button
-                type="button"
-                onClick={() => handleDelete(cat.id)}
-                className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-2 text-[#b4a58a] transition-colors hover:bg-[rgba(247,240,225,0.05)] hover:text-red-400"
-                title="Delete category"
-                disabled={cat._count.habits > 0}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            )}
           </div>
-        ))}
-      </div>
-    </div>
+        )}
+
+        <div className="space-y-2 pt-1">
+          {categories.map((cat) => (
+            <div
+              key={cat.id}
+              className="surface-panel flex items-center gap-4 rounded-[26px] p-4"
+            >
+              <div
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
+                style={{ backgroundColor: `${cat.color}22`, color: cat.color }}
+              >
+                <Tag className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-[#f7f0e1]">{cat.name}</p>
+                <p className="text-xs text-[#b4a58a]">
+                  {cat._count.habits} habits
+                </p>
+              </div>
+              {cat.isDefault ? (
+                <Badge variant="default">System</Badge>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleDelete(cat.id)}
+                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-2 text-[#b4a58a] transition-colors hover:bg-[rgba(247,240,225,0.05)] hover:text-red-400"
+                  title="Delete category"
+                  disabled={cat._count.habits > 0}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

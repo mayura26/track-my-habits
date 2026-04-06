@@ -18,6 +18,8 @@ interface HabitCountLogControlProps {
   /** Saved step; null = automatic default from goal */
   countIncrement: number | null;
   onLog?: (result: unknown) => void;
+  /** Dashboard list: only +/- using saved or auto step; step presets live on habit detail */
+  compact?: boolean;
 }
 
 function startOfToday(): Date {
@@ -65,21 +67,30 @@ export function HabitCountLogControl({
   thresholdValue,
   countIncrement,
   onLog,
+  compact = false,
 }: HabitCountLogControlProps) {
   const router = useRouter();
   const todaySum = sumTodayLogs(logs);
-  const { presets, autoDefault } = mergePresets(thresholdValue, countIncrement);
+  const { presets, autoDefault } = compact
+    ? { presets: [] as number[], autoDefault: defaultCountStep(thresholdValue) }
+    : mergePresets(thresholdValue, countIncrement);
 
   const [optimisticIncrement, addOptimisticIncrement] = useOptimistic(
     countIncrement,
     (_current, next: number | null) => next,
   );
 
-  const effectiveStep = effectiveCountStep(thresholdValue, optimisticIncrement);
+  const effectiveStep = effectiveCountStep(
+    thresholdValue,
+    compact ? countIncrement : optimisticIncrement,
+  );
 
   const [optimisticSum, addOptimistic] = useOptimistic(
     todaySum,
-    (current, update: { type: "add"; delta: number } | { type: "undo"; delta: number }) => {
+    (
+      current,
+      update: { type: "add"; delta: number } | { type: "undo"; delta: number },
+    ) => {
       if (update.type === "add") return current + update.delta;
       return Math.max(0, current - update.delta);
     },
@@ -87,7 +98,7 @@ export function HabitCountLogControl({
   const [isPending, startTransition] = useTransition();
 
   const patchIncrement = (next: number | null) => {
-    if (isPending) return;
+    if (compact || isPending) return;
     addOptimisticIncrement(next);
     startTransition(async () => {
       await fetch(`/api/habits/${habitId}`, {
@@ -144,9 +155,13 @@ export function HabitCountLogControl({
     countIncrement != null && Math.abs(countIncrement - autoDefault) < 1e-6;
 
   return (
-    <div className="flex min-w-[7.5rem] max-w-[10.5rem] shrink-0 flex-col items-stretch gap-2">
+    <div
+      className={`flex shrink-0 flex-col items-stretch gap-2 ${compact ? "min-w-[5.25rem] max-w-[6rem]" : "min-w-[7.5rem] max-w-[10.5rem]"}`}
+    >
       <div className="text-center leading-tight">
-        <p className="text-lg font-semibold tabular-nums text-[#f7f0e1]">
+        <p
+          className={`font-semibold tabular-nums text-[#f7f0e1] ${compact ? "text-base" : "text-lg"}`}
+        >
           {formatCountAmount(optimisticSum)}
         </p>
         <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-[#8d826d]">
@@ -159,7 +174,7 @@ export function HabitCountLogControl({
           type="button"
           onClick={handleUndo}
           disabled={!canUndo}
-          className="flex h-9 flex-1 items-center justify-center rounded-xl border border-[rgba(216,196,160,0.18)] bg-[rgba(247,240,225,0.04)] text-[#b4a58a] transition-[transform,background-color,border-color] duration-150 hover:border-[rgba(230,196,139,0.28)] hover:bg-[rgba(247,240,225,0.08)] hover:text-[#f7f0e1] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          className={`flex flex-1 items-center justify-center rounded-xl border border-[rgba(216,196,160,0.18)] bg-[rgba(247,240,225,0.04)] text-[#b4a58a] transition-[transform,background-color,border-color] duration-150 hover:border-[rgba(230,196,139,0.28)] hover:bg-[rgba(247,240,225,0.08)] hover:text-[#f7f0e1] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${compact ? "h-8" : "h-9"}`}
           title="Undo last entry today"
           aria-label="Undo last entry today"
         >
@@ -169,7 +184,7 @@ export function HabitCountLogControl({
           type="button"
           onClick={handleAdd}
           disabled={isPending}
-          className="flex h-9 flex-1 items-center justify-center rounded-xl border border-[rgba(125,156,115,0.35)] bg-[rgba(125,156,115,0.12)] text-[#a8c49c] transition-[transform,background-color] duration-150 hover:bg-[rgba(125,156,115,0.2)] hover:text-[#d9efcd] active:scale-95 disabled:cursor-wait disabled:opacity-90"
+          className={`flex flex-1 items-center justify-center rounded-xl border border-[rgba(125,156,115,0.35)] bg-[rgba(125,156,115,0.12)] text-[#a8c49c] transition-[transform,background-color] duration-150 hover:bg-[rgba(125,156,115,0.2)] hover:text-[#d9efcd] active:scale-95 disabled:cursor-wait disabled:opacity-90 ${compact ? "h-8" : "h-9"}`}
           title={`Add ${formatCountAmount(effectiveStep)}`}
           aria-label={`Add ${formatCountAmount(effectiveStep)} toward today total`}
         >
@@ -177,51 +192,60 @@ export function HabitCountLogControl({
         </button>
       </div>
 
-      <p className="text-center text-[9px] font-medium uppercase tracking-[0.14em] text-[#6b6358]">
-        Step size
-      </p>
-      <div className="flex flex-wrap justify-center gap-1">
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={() => patchIncrement(null)}
-          className={`rounded-lg border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors disabled:opacity-50 ${
-            isAutoMode
-              ? "border-[rgba(125,156,115,0.45)] bg-[rgba(125,156,115,0.15)] text-[#d9efcd]"
-              : "border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] text-[#8d826d] hover:border-[rgba(230,196,139,0.25)] hover:text-[#b4a58a]"
-          }`}
-          title={`Automatic (${formatCountAmount(autoDefault)} for this goal)`}
-        >
-          Auto
-        </button>
-        {presets.map((p) => {
-          const selected =
-            !isAutoMode && optimisticIncrement != null && Math.abs(optimisticIncrement - p) < 1e-6;
-          const ghostAuto = isAutoMode && Math.abs(p - autoDefault) < 1e-6 && !autoMatchesSaved;
-          return (
+      {!compact && (
+        <>
+          <p className="text-center text-[9px] font-medium uppercase tracking-[0.14em] text-[#6b6358]">
+            Step size
+          </p>
+          <div className="flex flex-wrap justify-center gap-1">
             <button
-              key={p}
               type="button"
               disabled={isPending}
-              onClick={() => patchIncrement(p)}
-              className={`min-w-[2rem] rounded-lg border px-2 py-1 text-[11px] font-semibold tabular-nums transition-colors disabled:opacity-50 ${
-                selected
+              onClick={() => patchIncrement(null)}
+              className={`rounded-lg border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors disabled:opacity-50 ${
+                isAutoMode
                   ? "border-[rgba(125,156,115,0.45)] bg-[rgba(125,156,115,0.15)] text-[#d9efcd]"
-                  : ghostAuto
-                    ? "border-[rgba(216,196,160,0.22)] bg-[rgba(247,240,225,0.06)] text-[#b4a58a]"
-                    : "border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] text-[#8d826d] hover:border-[rgba(230,196,139,0.25)] hover:text-[#b4a58a]"
+                  : "border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] text-[#8d826d] hover:border-[rgba(230,196,139,0.25)] hover:text-[#b4a58a]"
               }`}
-              title={
-                ghostAuto
-                  ? `Suggested step (${formatCountAmount(p)}); tap to save`
-                  : `Add ${formatCountAmount(p)} per + tap`
-              }
+              title={`Automatic (${formatCountAmount(autoDefault)} for this goal)`}
             >
-              {formatCountAmount(p)}
+              Auto
             </button>
-          );
-        })}
-      </div>
+            {presets.map((p) => {
+              const selected =
+                !isAutoMode &&
+                optimisticIncrement != null &&
+                Math.abs(optimisticIncrement - p) < 1e-6;
+              const ghostAuto =
+                isAutoMode &&
+                Math.abs(p - autoDefault) < 1e-6 &&
+                !autoMatchesSaved;
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => patchIncrement(p)}
+                  className={`min-w-[2rem] rounded-lg border px-2 py-1 text-[11px] font-semibold tabular-nums transition-colors disabled:opacity-50 ${
+                    selected
+                      ? "border-[rgba(125,156,115,0.45)] bg-[rgba(125,156,115,0.15)] text-[#d9efcd]"
+                      : ghostAuto
+                        ? "border-[rgba(216,196,160,0.22)] bg-[rgba(247,240,225,0.06)] text-[#b4a58a]"
+                        : "border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] text-[#8d826d] hover:border-[rgba(230,196,139,0.25)] hover:text-[#b4a58a]"
+                  }`}
+                  title={
+                    ghostAuto
+                      ? `Suggested step (${formatCountAmount(p)}); tap to save`
+                      : `Add ${formatCountAmount(p)} per + tap`
+                  }
+                >
+                  {formatCountAmount(p)}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }

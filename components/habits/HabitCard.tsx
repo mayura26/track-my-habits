@@ -32,11 +32,10 @@ function isLoggedToday(logs: HabitLog[], thresholdValue: number): boolean {
 
 export function HabitCard({ habit, onLog }: HabitCardProps) {
   const logged = isLoggedToday(habit.logs, habit.thresholdValue);
-  const todaySum = todayLogsSum(habit.logs);
   const isCount = habit.trackingType === "COUNT";
 
   return (
-    <div className="surface-panel flex items-center gap-4 rounded-[28px] p-4 transition-[border-color,background-color] duration-150 hover:border-[rgba(230,196,139,0.3)] hover:bg-[rgba(247,240,225,0.02)] sm:p-5">
+    <div className="surface-panel flex items-stretch gap-3 rounded-[28px] p-4 transition-[border-color,background-color] duration-150 hover:border-[rgba(230,196,139,0.3)] hover:bg-[rgba(247,240,225,0.02)] sm:items-center sm:gap-4 sm:p-5">
       <div className="shrink-0 self-center">
         {isCount ? (
           <HabitCountLogControl
@@ -44,6 +43,7 @@ export function HabitCard({ habit, onLog }: HabitCardProps) {
             logs={habit.logs}
             thresholdValue={habit.thresholdValue}
             countIncrement={habit.countIncrement ?? null}
+            compact
             onLog={onLog}
           />
         ) : (
@@ -76,20 +76,7 @@ export function HabitCard({ habit, onLog }: HabitCardProps) {
             </Link>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className="text-xs text-[#b4a58a]">
-                {isCount ? (
-                  <>
-                    {Number.isInteger(todaySum)
-                      ? Math.round(todaySum)
-                      : todaySum.toFixed(1)}
-                    {" / "}
-                    {Number.isInteger(habit.thresholdValue)
-                      ? Math.round(habit.thresholdValue)
-                      : habit.thresholdValue.toFixed(1)}{" "}
-                    {habit.thresholdType.toLowerCase()}
-                  </>
-                ) : (
-                  habit.thresholdType.toLowerCase()
-                )}
+                {habit.thresholdType.toLowerCase()}
               </span>
               <span className="text-xs text-[#8d826d]">•</span>
               <span className="text-xs text-[#8d826d]">

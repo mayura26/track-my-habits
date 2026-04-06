@@ -1,7 +1,7 @@
 import { Trophy } from "lucide-react";
 import { AchievementCard } from "@/components/gamification/LevelBadge";
 import { XPBar } from "@/components/gamification/XPBar";
-import { Card, CardContent } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { SectionArtwork } from "@/components/ui/SectionArtwork";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
@@ -28,9 +28,16 @@ export default async function AchievementsPage() {
   return (
     <div className="space-y-6">
       <SectionArtwork artifactId="achievementsGlow" variant="banner">
-        <h1 className="display-title text-2xl font-semibold text-[#fff7ea]">
-          Achievements
-        </h1>
+        <div className="max-w-2xl">
+          <p className="section-kicker">Recognition</p>
+          <h1 className="display-title mt-3 text-3xl font-semibold text-[#fff7ea] md:text-4xl">
+            Achievements
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-[#e8dcc8] md:text-base">
+            Milestones for streaks and consistency. Earn them as your habits
+            stick.
+          </p>
+        </div>
       </SectionArtwork>
 
       {/* Level card */}
@@ -52,29 +59,31 @@ export default async function AchievementsPage() {
         </Card>
       )}
 
-      {/* Badge progress */}
-      <div className="flex items-center gap-2 text-[#b4a58a]">
-        <Trophy className="h-4 w-4" />
-        <span className="text-sm">
-          {earnedCount} / {allBadges.length} badges earned
-        </span>
-      </div>
-
-      {/* All badges */}
-      <div className="space-y-3">
-        {allBadges.map((badge) => {
-          const earnedAt = earnedMap.get(badge.id);
-          return (
-            <AchievementCard
-              key={badge.id}
-              name={badge.name}
-              description={badge.description}
-              earned={!!earnedAt}
-              earnedAt={earnedAt?.toISOString()}
-            />
-          );
-        })}
-      </div>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-[#d8c4a0]" aria-hidden />
+            <h2 className="font-medium text-[#f7f0e1]">Badges</h2>
+          </div>
+          <p className="mt-1 text-sm text-[#b4a58a]">
+            {earnedCount} / {allBadges.length} earned
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {allBadges.map((badge) => {
+            const earnedAt = earnedMap.get(badge.id);
+            return (
+              <AchievementCard
+                key={badge.id}
+                name={badge.name}
+                description={badge.description}
+                earned={!!earnedAt}
+                earnedAt={earnedAt?.toISOString()}
+              />
+            );
+          })}
+        </CardContent>
+      </Card>
     </div>
   );
 }

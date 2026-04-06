@@ -7,6 +7,12 @@ import { DueTasksSection } from "@/components/tasks/DueTasksSection";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { SectionArtwork } from "@/components/ui/SectionArtwork";
+import {
+  StatGrid,
+  StatItem,
+  StatPanel,
+  statCellClass,
+} from "@/components/ui/StatPanel";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import {
@@ -180,55 +186,36 @@ export default async function DashboardPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[#e8dcc8]">
-                    <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
-                      {dueTasks.length}
-                    </span>
-                    <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
-                      due now
-                    </span>
-                    <span
-                      className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
-                      aria-hidden
-                    >
-                      ·
-                    </span>
-                    <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
-                      {completedToday}/{habits.length || 0}
-                    </span>
-                    <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
-                      today
-                    </span>
-                    <span
-                      className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
-                      aria-hidden
-                    >
-                      ·
-                    </span>
-                    <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
-                      {topStreak}
-                    </span>
-                    <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
-                      top streak
-                    </span>
-                    <span
-                      className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
-                      aria-hidden
-                    >
-                      ·
-                    </span>
-                    <Link
-                      href="/achievements"
-                      className="inline-flex flex-wrap items-baseline gap-x-2 text-[#f3ddb0] transition-colors hover:text-[#fff2d3]"
-                    >
-                      <span className="display-title text-2xl font-semibold tabular-nums">
-                        {totalBadges}
-                      </span>
-                      <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
-                        badges
-                      </span>
-                    </Link>
-                  </div>
+                  <StatPanel>
+                    <StatGrid columns={4}>
+                      <StatItem
+                        value={dueTasks.length}
+                        label="due now"
+                        className={statCellClass(4, 0)}
+                      />
+                      <StatItem
+                        value={`${completedToday}/${habits.length || 0}`}
+                        label="today"
+                        className={statCellClass(4, 1)}
+                      />
+                      <StatItem
+                        value={topStreak}
+                        label="top streak"
+                        className={statCellClass(4, 2)}
+                      />
+                      <Link
+                        href="/achievements"
+                        className={`group rounded-xl transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-light ${statCellClass(4, 3)}`}
+                      >
+                        <StatItem
+                          value={totalBadges}
+                          label="badges"
+                          accent
+                          className=""
+                        />
+                      </Link>
+                    </StatGrid>
+                  </StatPanel>
                   {user && (
                     <XPBar
                       xp={user.xp}

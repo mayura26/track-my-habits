@@ -2,6 +2,7 @@ import { Calendar, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CategoryBadge } from "@/components/categories/CategoryBadge";
+import { HabitDetailCountSection } from "@/components/habits/HabitDetailCountSection";
 import { StreakBadge } from "@/components/habits/StreakBadge";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -45,16 +46,21 @@ export default async function HabitDetailPage({
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="mb-2 flex items-center gap-2">
+          <p className="section-kicker">Habit</p>
+          <h1 className="display-title mt-2 text-3xl font-semibold text-[#fff7ea] md:text-4xl">
+            {habit.name}
+          </h1>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <CategoryBadge
               name={habit.category.name}
               color={habit.category.color}
             />
             {habit.nfcToken && <Badge variant="info">NFC</Badge>}
           </div>
-          <h1 className="text-2xl font-bold text-[#f7f0e1]">{habit.name}</h1>
           {habit.description && (
-            <p className="mt-1 text-[#b4a58a]">{habit.description}</p>
+            <p className="mt-2 text-sm leading-relaxed text-[#b4a58a]">
+              {habit.description}
+            </p>
           )}
         </div>
         <div className="flex shrink-0 gap-2">
@@ -86,6 +92,26 @@ export default async function HabitDetailPage({
           </CardContent>
         </Card>
       </div>
+
+      {habit.trackingType === "COUNT" && (
+        <Card>
+          <CardHeader>
+            <h2 className="font-medium text-[#f7f0e1]">Log & step size</h2>
+            <p className="mt-1 text-sm text-[#b4a58a]">
+              Log progress here and choose how large each + tap is on your
+              dashboard.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <HabitDetailCountSection
+              habitId={habit.id}
+              logs={habit.logs}
+              thresholdValue={habit.thresholdValue}
+              countIncrement={habit.countIncrement ?? null}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Config */}
       <Card>

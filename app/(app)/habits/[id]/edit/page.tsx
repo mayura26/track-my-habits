@@ -25,11 +25,22 @@ export default async function EditHabitPage({ params }: EditHabitPageProps) {
   if (!habit) notFound();
 
   return (
-    <div className="mx-auto max-w-lg">
-      <h1 className="mb-6 text-2xl font-bold text-[#f7f0e1]">Edit Habit</h1>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div className="max-w-2xl">
+        <p className="section-kicker">Edit Habit</p>
+        <h1 className="display-title mt-3 text-4xl font-semibold text-[#fff7ea]">
+          {habit.name}
+        </h1>
+        <p className="mt-3 text-sm leading-6 text-[#b4a58a]">
+          Adjust the ritual; streaks and history stay tied to this habit.
+        </p>
+      </div>
       <Card>
         <CardHeader>
-          <h2 className="font-medium text-[#f7f0e1]">{habit.name}</h2>
+          <h2 className="font-medium text-[#f7f0e1]">Details</h2>
+          <p className="mt-1 text-sm text-[#b4a58a]">
+            Update name, target, and how you track it.
+          </p>
         </CardHeader>
         <CardContent>
           <HabitForm

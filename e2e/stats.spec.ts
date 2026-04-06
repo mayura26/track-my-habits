@@ -32,8 +32,8 @@ test.describe("Stats", () => {
 
   test("stats page shows quick stats cards", async ({ page }) => {
     await page.goto("/stats");
-    await expect(page.getByText("Total logs")).toBeVisible();
-    await expect(page.getByText("Active habits")).toBeVisible();
-    await expect(page.getByText("Top streak")).toBeVisible();
+    await expect(page.getByText("total logs")).toBeVisible();
+    await expect(page.getByText("active", { exact: true })).toBeVisible();
+    await expect(page.getByText("top streak")).toBeVisible();
   });
 });
