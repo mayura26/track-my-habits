@@ -50,6 +50,14 @@ export async function POST(
 
   const result = await processHabitLog(id, session.user.id, parsed.data.source);
 
+  // Store actual XP awarded so undo can reverse the correct amount
+  if (result.xpGained > 0) {
+    await db.habitLog.update({
+      where: { id: log.id },
+      data: { xpAwarded: result.xpGained },
+    });
+  }
+
   return NextResponse.json({ log, ...result }, { status: 201 });
 }
 
@@ -100,7 +108,8 @@ export async function DELETE(
     const user = await db.user.findUniqueOrThrow({
       where: { id: session.user.id },
     });
-    const newXP = Math.max(0, user.xp - 10);
+    const xpToReverse = latestLog.xpAwarded || 10;
+    const newXP = Math.max(0, user.xp - xpToReverse);
     const newLevel = Math.max(1, calcLevel(newXP));
     await db.user.update({
       where: { id: session.user.id },

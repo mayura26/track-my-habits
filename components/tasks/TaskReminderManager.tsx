@@ -3,6 +3,11 @@
 import type { Task } from "@prisma/client";
 import { useEffect } from "react";
 import { isReminderDue } from "@/lib/task-helpers";
+import {
+  registerServiceWorker,
+  subscribeToPush,
+  sendSubscriptionToServer,
+} from "@/lib/push-client";
 
 type TaskWithDue = Task & { isDue?: boolean };
 
@@ -13,6 +18,19 @@ function getFiredKey(taskId: string): string {
 
 export function TaskReminderManager() {
   useEffect(() => {
+    async function setupPush() {
+      try {
+        const registration = await registerServiceWorker();
+        if (!registration) return;
+        const subscription = await subscribeToPush(registration);
+        if (subscription) {
+          await sendSubscriptionToServer(subscription);
+        }
+      } catch (err) {
+        console.warn("Push setup failed:", err);
+      }
+    }
+
     async function checkReminders() {
       if (!("Notification" in window)) return;
 
@@ -46,6 +64,7 @@ export function TaskReminderManager() {
       }
     }
 
+    setupPush();
     checkReminders();
   }, []);
 

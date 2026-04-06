@@ -157,7 +157,13 @@ export async function checkAndAwardBadges(userId: string): Promise<string[]> {
   for (const badge of allBadges) {
     if (earnedIds.has(badge.id)) continue;
 
-    const condition = JSON.parse(badge.condition) as BadgeCondition;
+    let condition: BadgeCondition;
+    try {
+      condition = JSON.parse(badge.condition) as BadgeCondition;
+    } catch {
+      console.warn(`Skipping badge "${badge.name}" with invalid condition`);
+      continue;
+    }
     let earned = false;
 
     switch (condition.type) {

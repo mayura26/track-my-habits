@@ -19,6 +19,8 @@ interface HabitFormProps {
     thresholdValue?: number;
     thresholdWindow?: number;
     countIncrement?: number | null;
+    reminderEnabled?: boolean;
+    reminderTime?: string;
   };
   habitId?: string;
 }
@@ -36,6 +38,9 @@ export function HabitForm({
   );
   const [thresholdType, setThresholdType] = useState(
     defaultValues?.thresholdType ?? "DAILY",
+  );
+  const [reminderEnabled, setReminderEnabled] = useState(
+    defaultValues?.reminderEnabled ?? false,
   );
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -74,6 +79,10 @@ export function HabitForm({
         ? { countIncrement }
         : {}),
       ...(trackingType === "BOOLEAN" ? { countIncrement: null } : {}),
+      reminderEnabled,
+      reminderTime: reminderEnabled
+        ? (formData.get("reminderTime") as string) || undefined
+        : undefined,
     };
 
     const url = habitId ? `/api/habits/${habitId}` : "/api/habits";
@@ -255,6 +264,43 @@ export function HabitForm({
 
         {thresholdType !== "ROLLING_WINDOW" && trackingType === "BOOLEAN" && (
           <input type="hidden" name="thresholdValue" value="1" />
+        )}
+      </section>
+
+      <section className="space-y-4 rounded-[26px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.03)] p-4">
+        <div className="flex items-center justify-between gap-3 rounded-[22px] border border-[rgba(216,196,160,0.14)] bg-[rgba(12,17,16,0.45)] p-4">
+          <div>
+            <p className="font-semibold text-[#f7f0e1]">Daily reminder</p>
+            <p className="mt-1 text-sm text-[#b4a58a]">
+              Turn on a gentle nudge so this does not fall off your radar.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setReminderEnabled((value) => !value)}
+            className={`h-8 w-14 rounded-full border transition-colors ${
+              reminderEnabled
+                ? "border-[rgba(230,196,139,0.42)] bg-[rgba(199,154,82,0.18)]"
+                : "border-[rgba(216,196,160,0.16)] bg-[rgba(247,240,225,0.04)]"
+            }`}
+            aria-pressed={reminderEnabled}
+          >
+            <span
+              className={`block h-6 w-6 rounded-full bg-[#fff7ea] transition-transform ${
+                reminderEnabled ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+
+        {reminderEnabled && (
+          <Input
+            label="Reminder time"
+            name="reminderTime"
+            id="reminderTime"
+            type="time"
+            defaultValue={defaultValues?.reminderTime ?? "09:00"}
+          />
         )}
       </section>
 

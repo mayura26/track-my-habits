@@ -10,6 +10,11 @@ export const createHabitSchema = z.object({
   thresholdWindow: z.number().int().positive().optional(),
   countIncrement: z.number().positive().nullable().optional(),
   startDate: z.string().datetime().optional(),
+  reminderEnabled: z.boolean().optional().default(false),
+  reminderTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .optional(),
 });
 
 export const updateHabitSchema = createHabitSchema.partial().extend({
@@ -63,6 +68,14 @@ export const updateSettingsSchema = z.object({
   bucketDayStart: z.number().int().min(0).max(23),
   bucketEveningStart: z.number().int().min(0).max(23),
   bucketBeforeBedStart: z.number().int().min(0).max(23),
+});
+
+export const pushSubscriptionSchema = z.object({
+  endpoint: z.string().url(),
+  keys: z.object({
+    p256dh: z.string().min(1),
+    auth: z.string().min(1),
+  }),
 });
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;

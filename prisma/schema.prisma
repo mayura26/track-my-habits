@@ -27,10 +27,11 @@ model User {
   sessions   Session[]
   habits     Habit[]
   habitLogs  HabitLog[]
-  badges     UserBadge[]
-  categories HabitCategory[]
-  tasks      Task[]
-  taskLogs   TaskLog[]
+  badges            UserBadge[]
+  categories        HabitCategory[]
+  tasks             Task[]
+  taskLogs          TaskLog[]
+  pushSubscriptions PushSubscription[]
 }
 
 model Account {
@@ -95,13 +96,16 @@ model Habit {
   thresholdWindow Int?
   /// Manual + tap size for COUNT habits; null = use automatic default from goal
   countIncrement  Float?
-  nfcToken        String?  @unique
-  nfcValue        String?
-  currentStreak   Int      @default(0)
-  bestStreak      Int      @default(0)
-  startDate       DateTime @default(now())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  nfcToken            String?  @unique
+  nfcValue            String?
+  reminderEnabled     Boolean  @default(false)
+  reminderTime        String?
+  lastReminderSentAt  DateTime?
+  currentStreak       Int      @default(0)
+  bestStreak          Int      @default(0)
+  startDate           DateTime @default(now())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   category HabitCategory @relation(fields: [categoryId], references: [id])
@@ -109,13 +113,14 @@ model Habit {
 }
 
 model HabitLog {
-  id        String   @id @default(cuid())
-  habitId   String
-  userId    String
-  value     Float    @default(1)
-  source    String   @default("MANUAL")
-  loggedAt  DateTime @default(now())
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  habitId    String
+  userId     String
+  value      Float    @default(1)
+  source     String   @default("MANUAL")
+  xpAwarded  Int      @default(0)
+  loggedAt   DateTime @default(now())
+  createdAt  DateTime @default(now())
 
   habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -156,11 +161,12 @@ model Task {
   frequencyValue  Int      @default(1)
   bucket          String?  @default("DAY")
   minGapDays      Int?
-  reminderEnabled Boolean  @default(false)
-  reminderTime    String?
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  reminderEnabled     Boolean   @default(false)
+  reminderTime        String?
+  lastReminderSentAt  DateTime?
+  isActive            Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   logs TaskLog[]
@@ -178,4 +184,17 @@ model TaskLog {
   @@index([taskId])
   @@index([userId])
   @@index([completedAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

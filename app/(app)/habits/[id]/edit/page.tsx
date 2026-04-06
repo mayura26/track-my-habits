@@ -55,6 +55,8 @@ export default async function EditHabitPage({ params }: EditHabitPageProps) {
               thresholdValue: habit.thresholdValue,
               thresholdWindow: habit.thresholdWindow ?? undefined,
               countIncrement: habit.countIncrement,
+              reminderEnabled: habit.reminderEnabled,
+              reminderTime: habit.reminderTime ?? undefined,
             }}
           />
         </CardContent>

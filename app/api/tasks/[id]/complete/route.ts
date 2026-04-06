@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { awardXP, calcLevel } from "@/lib/gamification";
+import { awardXP, calcLevel, checkAndAwardBadges } from "@/lib/gamification";
 import { getPeriodRange } from "@/lib/task-helpers";
 
 export async function POST(
@@ -29,6 +29,7 @@ export async function POST(
   });
 
   await awardXP(session.user.id, 10);
+  const newBadges = await checkAndAwardBadges(session.user.id);
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
@@ -36,7 +37,7 @@ export async function POST(
   });
 
   return NextResponse.json(
-    { log, xp: user?.xp, level: user?.level },
+    { log, xp: user?.xp, level: user?.level, newBadges },
     { status: 201 },
   );
 }
