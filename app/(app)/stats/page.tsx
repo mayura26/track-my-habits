@@ -1,4 +1,3 @@
-import { Flame, Sparkles, Target, TrendingUp } from "lucide-react";
 import { CompletionHeatmap } from "@/components/charts/CompletionHeatmap";
 import { HabitAreaChart } from "@/components/charts/HabitAreaChart";
 import { WeeklyBarChart } from "@/components/charts/WeeklyBarChart";
@@ -92,31 +91,54 @@ export default async function StatsPage() {
           </p>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <InsightCard
-            icon={<Target className="h-4 w-4" />}
-            label="Total logs"
-            value={user?.totalLogsCount ?? 0}
-            note="Everything you have shown up for so far."
-          />
-          <InsightCard
-            icon={<Sparkles className="h-4 w-4" />}
-            label="Active habits"
-            value={habits.length}
-            note="The number of rituals currently in rotation."
-          />
-          <InsightCard
-            icon={<Flame className="h-4 w-4" />}
-            label="Top streak"
-            value={`${topStreak}d`}
-            note={`Best current run. All-time best is ${bestEverStreak}d.`}
-          />
-          <InsightCard
-            icon={<TrendingUp className="h-4 w-4" />}
-            label="Momentum"
-            value={recentWeekCount}
-            note={momentumCopy}
-          />
+        <div className="mt-5 space-y-3">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[#e8dcc8]">
+            <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
+              {user?.totalLogsCount ?? 0}
+            </span>
+            <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
+              total logs
+            </span>
+            <span
+              className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
+              aria-hidden
+            >
+              ·
+            </span>
+            <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
+              {habits.length}
+            </span>
+            <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
+              active
+            </span>
+            <span
+              className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
+              aria-hidden
+            >
+              ·
+            </span>
+            <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
+              {topStreak}d
+            </span>
+            <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
+              top streak
+            </span>
+            <span
+              className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
+              aria-hidden
+            >
+              ·
+            </span>
+            <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
+              {recentWeekCount}
+            </span>
+            <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
+              this week
+            </span>
+          </div>
+          <p className="max-w-xl text-sm leading-6 text-[#b4a58a]">
+            {momentumCopy} All-time best streak {bestEverStreak}d.
+          </p>
         </div>
       </SectionArtwork>
 
@@ -155,33 +177,6 @@ export default async function StatsPage() {
           <WeeklyBarChart data={weeklyData} />
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-function InsightCard({
-  icon,
-  label,
-  value,
-  note,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-  note: string;
-}) {
-  return (
-    <div className="rounded-[22px] border border-[rgba(216,196,160,0.2)] bg-[rgba(5,9,8,0.45)] p-4 backdrop-blur-sm">
-      <div className="flex items-center gap-2 text-[#d8c4a0]">{icon}</div>
-      <p className="display-title mt-3 text-2xl font-semibold text-[#fff7ea] md:text-3xl">
-        {value}
-      </p>
-      <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[#b4a58a]">
-        {label}
-      </p>
-      <p className="mt-2 text-xs leading-5 text-[#8d826d] md:mt-3 md:text-sm md:leading-6">
-        {note}
-      </p>
     </div>
   );
 }

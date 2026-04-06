@@ -1,6 +1,5 @@
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import type { Session } from "next-auth";
 import { signOut } from "@/auth";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -46,13 +45,6 @@ export function TopNav({ session }: TopNavProps) {
             Lv.{level} • {progress}%
           </span>
         </div>
-        <Link
-          href="/settings"
-          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-2 text-[#b4a58a] hover:bg-[rgba(247,240,225,0.05)] hover:text-[#f7f0e1] active:scale-90 motion-reduce:active:scale-100 md:hidden"
-          title="Settings"
-        >
-          <Settings className="h-5 w-5" />
-        </Link>
         <div className="hidden items-center gap-2 md:flex">
           {user?.image ? (
             <Image

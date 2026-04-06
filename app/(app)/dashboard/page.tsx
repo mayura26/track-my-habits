@@ -1,13 +1,4 @@
-import {
-  ArrowRight,
-  CalendarClock,
-  CheckCircle,
-  Compass,
-  Flame,
-  Plus,
-  Sparkles,
-  Star,
-} from "lucide-react";
+import { ArrowRight, CalendarClock, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { XPBar } from "@/components/gamification/XPBar";
@@ -40,7 +31,6 @@ export default async function DashboardPage() {
       select: {
         xp: true,
         level: true,
-        totalLogsCount: true,
         name: true,
         bucketMorningStart: true,
         bucketDayStart: true,
@@ -115,7 +105,10 @@ export default async function DashboardPage() {
   for (const habit of habits) {
     if (habit.thresholdType !== "DAILY") continue;
     const startBound = new Date(
-      Math.max(new Date(habit.startDate).setHours(0, 0, 0, 0), sevenDaysAgo.getTime()),
+      Math.max(
+        new Date(habit.startDate).setHours(0, 0, 0, 0),
+        sevenDaysAgo.getTime(),
+      ),
     );
     const logsByDate = new Map<string, number>();
     for (const log of habit.logs) {
@@ -186,27 +179,63 @@ export default async function DashboardPage() {
                   </Link>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  <HeroMetric
-                    icon={<Compass className="h-4 w-4" />}
-                    label="Due now"
-                    value={dueTasks.length}
-                  />
-                  <HeroMetric
-                    icon={<CheckCircle className="h-4 w-4" />}
-                    label="Done today"
-                    value={`${completedToday}/${habits.length || 0}`}
-                  />
-                  <HeroMetric
-                    icon={<Flame className="h-4 w-4" />}
-                    label="Top streak"
-                    value={topStreak}
-                  />
-                  <HeroMetric
-                    icon={<Star className="h-4 w-4" />}
-                    label="Level"
-                    value={user?.level ?? 1}
-                  />
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[#e8dcc8]">
+                    <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
+                      {dueTasks.length}
+                    </span>
+                    <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
+                      due now
+                    </span>
+                    <span
+                      className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
+                      aria-hidden
+                    >
+                      ·
+                    </span>
+                    <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
+                      {completedToday}/{habits.length || 0}
+                    </span>
+                    <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
+                      today
+                    </span>
+                    <span
+                      className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
+                      aria-hidden
+                    >
+                      ·
+                    </span>
+                    <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
+                      {topStreak}
+                    </span>
+                    <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
+                      top streak
+                    </span>
+                    <span
+                      className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
+                      aria-hidden
+                    >
+                      ·
+                    </span>
+                    <Link
+                      href="/achievements"
+                      className="inline-flex flex-wrap items-baseline gap-x-2 text-[#f3ddb0] transition-colors hover:text-[#fff2d3]"
+                    >
+                      <span className="display-title text-2xl font-semibold tabular-nums">
+                        {totalBadges}
+                      </span>
+                      <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
+                        badges
+                      </span>
+                    </Link>
+                  </div>
+                  {user && (
+                    <XPBar
+                      xp={user.xp}
+                      level={user.level}
+                      className="max-w-md"
+                    />
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -294,25 +323,6 @@ export default async function DashboardPage() {
         </Card>
 
         <div className="space-y-4">
-          <Card>
-            <CardContent>
-              {user && <XPBar xp={user.xp} level={user.level} />}
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-2 gap-4">
-            <StatCard
-              icon={<CheckCircle className="h-5 w-5 text-[#d9efcd]" />}
-              label="Done Today"
-              value={`${completedToday}/${habits.length}`}
-            />
-            <StatCard
-              icon={<Sparkles className="h-5 w-5 text-[#d8c4a0]" />}
-              label="Badges"
-              value={totalBadges}
-            />
-          </div>
-
           <Card elevated>
             <CardContent className="space-y-3">
               <p className="section-kicker">Focus</p>
@@ -334,56 +344,6 @@ export default async function DashboardPage() {
           </Card>
         </div>
       </section>
-    </div>
-  );
-}
-
-function StatCard({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-}) {
-  return (
-    <Card>
-      <CardContent className="flex flex-col gap-3 py-5">
-        {icon}
-        <div>
-          <p className="display-title text-3xl font-semibold text-[#fff7ea]">
-            {value}
-          </p>
-          <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[#b4a58a]">
-            {label}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function HeroMetric({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-}) {
-  return (
-    <div className="rounded-[22px] border border-[rgba(216,196,160,0.16)] bg-[rgba(6,10,9,0.58)] p-4 backdrop-blur-sm">
-      <div className="flex items-center gap-2 text-[#e6c48b]">
-        {icon}
-        <span className="text-xs uppercase tracking-[0.18em] text-[#b4a58a]">
-          {label}
-        </span>
-      </div>
-      <p className="display-title mt-3 text-4xl font-semibold text-[#fff7ea]">
-        {value}
-      </p>
     </div>
   );
 }

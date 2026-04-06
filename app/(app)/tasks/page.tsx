@@ -1,4 +1,4 @@
-import { Bell, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { SectionArtwork } from "@/components/ui/SectionArtwork";
@@ -42,9 +42,6 @@ export default async function TasksPage() {
     (task) => task.reminderEnabled,
   ).length;
 
-  const statCell =
-    "rounded-[24px] border border-[rgba(216,196,160,0.2)] bg-[rgba(5,9,8,0.45)] p-4 backdrop-blur-sm";
-
   return (
     <div className="space-y-6">
       <SectionArtwork artifactId="tasksFlow" variant="banner">
@@ -68,36 +65,36 @@ export default async function TasksPage() {
           </Link>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <div className={statCell}>
-            <p className="text-xs uppercase tracking-[0.18em] text-[#d8c4a0]">
-              Active tasks
-            </p>
-            <p className="display-title mt-2 text-3xl font-semibold text-[#fff7ea]">
-              {tasksWithLogs.length}
-            </p>
-          </div>
-          <div className={statCell}>
-            <p className="text-xs uppercase tracking-[0.18em] text-[#d8c4a0]">
-              Due now
-            </p>
-            <p className="display-title mt-2 text-3xl font-semibold text-[#fff7ea]">
-              {dueNowCount}
-            </p>
-          </div>
-          <div className={statCell}>
-            <div className="flex items-center gap-2 text-[#d8c4a0]">
-              <Bell className="h-4 w-4" />
-              <p className="text-xs uppercase tracking-[0.18em] text-[#d8c4a0]">
-                Reminders
-              </p>
-            </div>
-            <p className="mt-2 text-sm font-semibold text-[#f7f0e1]">
-              {reminderCount > 0
-                ? `${reminderCount} task${reminderCount === 1 ? "" : "s"} nudging you`
-                : "No reminders configured yet"}
-            </p>
-          </div>
+        <div className="mt-6 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[#e8dcc8]">
+          <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
+            {tasksWithLogs.length}
+          </span>
+          <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
+            active
+          </span>
+          <span
+            className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
+            aria-hidden
+          >
+            ·
+          </span>
+          <span className="display-title text-2xl font-semibold tabular-nums text-[#fff7ea]">
+            {dueNowCount}
+          </span>
+          <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
+            due now
+          </span>
+          <span
+            className="mx-2 text-[rgba(216,196,160,0.35)] sm:mx-3"
+            aria-hidden
+          >
+            ·
+          </span>
+          <span className="text-xs font-medium uppercase tracking-[0.18em] text-[#d8c4a0]">
+            {reminderCount > 0
+              ? `${reminderCount} reminder${reminderCount === 1 ? "" : "s"}`
+              : "no reminders"}
+          </span>
         </div>
       </SectionArtwork>
 
