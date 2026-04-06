@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
+import { HabitImageSection } from "@/components/habits/HabitImageSection";
 import { HabitDetailClient } from "./HabitDetailClient";
 
 interface HabitDetailPageProps {
@@ -92,6 +93,17 @@ export default async function HabitDetailPage({
           </CardContent>
         </Card>
       </div>
+
+      {/* Card artwork */}
+      <HabitImageSection
+        habitId={habit.id}
+        imageUrl={habit.imageUrl}
+        imagePrompt={habit.imagePrompt}
+        name={habit.name}
+        categoryName={habit.category.name}
+        description={habit.description}
+        trackingType={habit.trackingType}
+      />
 
       {habit.trackingType === "COUNT" && (
         <Card>

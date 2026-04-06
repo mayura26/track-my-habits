@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { TaskForm } from "@/components/tasks/TaskForm";
+import { TaskImageSection } from "@/components/tasks/TaskImageSection";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
@@ -52,6 +53,15 @@ export default async function EditTaskPage({
           />
         </CardContent>
       </Card>
+      <TaskImageSection
+        taskId={task.id}
+        imageUrl={task.imageUrl}
+        imagePrompt={task.imagePrompt}
+        name={task.name}
+        description={task.description}
+        frequency={task.frequency}
+        bucket={task.bucket}
+      />
     </div>
   );
 }

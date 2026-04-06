@@ -2,6 +2,7 @@
 
 import type { Task, TaskLog } from "@prisma/client";
 import { CheckCircle, Circle, Loader2, Pencil } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useOptimistic, useState, useTransition } from "react";
@@ -74,7 +75,28 @@ export function TaskCard({ task, periodCount, onComplete }: TaskCardProps) {
   const bucket = (task.bucket as Bucket | null) ?? "DAY";
 
   return (
-    <div className="surface-panel flex items-start gap-4 rounded-[28px] p-4 transition-[border-color,background-color] duration-150 hover:border-[rgba(230,196,139,0.3)] hover:bg-[rgba(247,240,225,0.02)] sm:items-center sm:p-5">
+    <div
+      className={`relative overflow-hidden rounded-[28px] p-4 transition-[border-color,background-color] duration-150 hover:bg-[rgba(247,240,225,0.02)] sm:p-5 ${
+        periodFull
+          ? "border border-[rgba(125,156,115,0.22)] surface-panel hover:border-[rgba(125,156,115,0.36)]"
+          : "surface-panel hover:border-[rgba(230,196,139,0.3)]"
+      }`}
+    >
+      {task.imageUrl && (
+        <>
+          <Image
+            src={task.imageUrl}
+            alt=""
+            fill
+            className="pointer-events-none z-0 object-cover section-artwork-photo-dimmed"
+            sizes="(max-width: 768px) 100vw, 600px"
+            priority={false}
+          />
+          <div className="section-artwork-card-scrim" aria-hidden />
+        </>
+      )}
+
+      <div className="relative z-[2] flex items-start gap-4 sm:items-center">
       <button
         type="button"
         onClick={handleToggle}
@@ -148,6 +170,7 @@ export function TaskCard({ task, periodCount, onComplete }: TaskCardProps) {
             <Pencil className="h-4 w-4" />
           </Link>
         </div>
+      </div>
       </div>
     </div>
   );

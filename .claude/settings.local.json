@@ -28,7 +28,9 @@
       "Read(//d/tmp/**)",
       "Read(//c/Users/kmviv/AppData/Local/Temp/**)",
       "Bash(ls -la \"D:/VSCode Projects/track-my-habits/.env\"*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(npx tsx:*)",
+      "Bash(mkdir:*)"
     ]
   }
 }
