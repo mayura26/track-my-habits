@@ -13,6 +13,7 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "db:seed": "tsx prisma/seed.ts",
+    "cron:reminders": "tsx scripts/run-reminders.ts",
     "db:test:setup": "DATABASE_URL=file:./prisma/test.db npx prisma migrate deploy && DATABASE_URL=file:./prisma/test.db npx prisma db seed"
   },
   "prisma": {
