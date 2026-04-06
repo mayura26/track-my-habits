@@ -40,7 +40,7 @@ export function TaskReminderManager() {
 
         new Notification(`Task reminder: ${task.name}`, {
           body: task.description ?? `Don't forget to complete this task!`,
-          icon: "/icons/icon-192.png",
+          icon: "/web-app-manifest-192x192.png",
         });
         localStorage.setItem(key, "1");
       }
