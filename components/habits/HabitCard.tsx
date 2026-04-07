@@ -104,10 +104,7 @@ export function HabitCard({ habit, onLog }: HabitCardProps) {
           <div className="min-w-0 flex items-start">
             <div className="flex min-w-0 w-full items-end justify-end gap-2">
               <div className="flex shrink-0 flex-col items-end gap-1">
-                <span className="text-right text-xs font-semibold text-[#d6c8af]">
-                  {logged ? "Logged for today" : "Ready to log"}
-                </span>
-                <div className="inline-flex items-center rounded-full border border-[rgba(216,196,160,0.22)] bg-[rgba(247,240,225,0.08)] px-2 py-0.5 shadow-[inset_0_1px_0_rgba(255,248,232,0.08),0_4px_10px_rgba(0,0,0,0.16)]">
+                <div className="inline-flex items-center px-2 py-0.5">
                   <span className="text-[10px] italic font-medium uppercase tracking-[0.12em] text-[#c4b59a]">
                     {habit.thresholdType.toLowerCase()}
                   </span>
@@ -125,7 +122,7 @@ export function HabitCard({ habit, onLog }: HabitCardProps) {
             <div className="-mb-3 -mr-3 ml-auto shrink-0 sm:-mb-3.5 sm:-mr-3.5">
               <Link
                 href={`/habits/${habit.id}`}
-                className="habit-card-details-dock inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#d8c4a0]"
+                className="habit-card-details-dock inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#d8c4a0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(230,196,139,0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111814]"
               >
                 Details
                 <ChevronRight className="h-3.5 w-3.5" />

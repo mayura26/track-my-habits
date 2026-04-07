@@ -4,7 +4,7 @@ import Link from "next/link";
 import { HabitCardList } from "@/components/habits/HabitCardList";
 import { XPBar } from "@/components/gamification/XPBar";
 import { DueTasksSection } from "@/components/tasks/DueTasksSection";
-import { Button } from "@/components/ui/Button";
+import { Button, linkButtonClassName } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { SectionArtwork } from "@/components/ui/SectionArtwork";
 import {
@@ -276,7 +276,7 @@ export default async function DashboardPage() {
               </div>
               <Link
                 href="/habits"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-[#f3ddb0]"
+                className={linkButtonClassName("subtle", "sm", "shrink-0 whitespace-nowrap")}
               >
                 View all
                 <ArrowRight className="h-4 w-4" />
@@ -319,7 +319,7 @@ export default async function DashboardPage() {
               </p>
               <Link
                 href="/stats"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-[#f3ddb0]"
+                className={linkButtonClassName("subtle", "sm", "shrink-0 whitespace-nowrap")}
               >
                 Review progress
                 <ArrowRight className="h-4 w-4" />

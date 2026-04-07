@@ -5,6 +5,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: "sm" | "md" | "lg";
 }
 
+export type ButtonVariant = NonNullable<ButtonProps["variant"]>;
+export type ButtonSize = NonNullable<ButtonProps["size"]>;
+
 const variantClasses = {
   primary:
     "border border-[rgba(230,196,139,0.5)] bg-[linear-gradient(135deg,#c79a52,#8c6737)] text-[#fff9ef] shadow-[0_18px_40px_rgba(130,95,45,0.35)] hover:-translate-y-0.5 hover:brightness-110 active:scale-[0.97] disabled:opacity-50",
@@ -22,6 +25,30 @@ const sizeClasses = {
   lg: "px-6 py-3 text-base",
 };
 
+const baseButtonClasses =
+  "inline-flex items-center justify-center gap-2 rounded-full font-medium focus:outline-none focus:ring-2 focus:ring-[rgba(230,196,139,0.5)] focus:ring-offset-2 focus:ring-offset-[#111814] disabled:cursor-not-allowed motion-reduce:active:scale-100";
+
+export function buttonClassName(
+  variant: ButtonVariant = "primary",
+  size: ButtonSize = "md",
+  className = "",
+) {
+  return `${baseButtonClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
+}
+
+const linkVariantClasses = {
+  subtle:
+    "border border-[rgba(216,196,160,0.22)] bg-[rgba(247,240,225,0.04)] text-[#f3ddb0] hover:border-[rgba(230,196,139,0.4)] hover:bg-[rgba(247,240,225,0.08)] active:scale-[0.98]",
+};
+
+export function linkButtonClassName(
+  variant: keyof typeof linkVariantClasses = "subtle",
+  size: ButtonSize = "sm",
+  className = "",
+) {
+  return `${baseButtonClasses} ${linkVariantClasses[variant]} ${sizeClasses[size]} ${className}`;
+}
+
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     { variant = "primary", size = "md", className = "", children, ...props },
@@ -30,7 +57,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
-        className={`inline-flex items-center justify-center gap-2 rounded-full font-medium focus:outline-none focus:ring-2 focus:ring-[rgba(230,196,139,0.5)] focus:ring-offset-2 focus:ring-offset-[#111814] disabled:cursor-not-allowed motion-reduce:active:scale-100 ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+        className={buttonClassName(variant, size, className)}
         {...props}
       >
         {children}

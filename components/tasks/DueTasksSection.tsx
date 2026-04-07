@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { TaskCard } from "@/components/tasks/TaskCard";
+import { linkButtonClassName } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { BUCKET_LABELS, type Bucket, logsInPeriod } from "@/lib/task-helpers";
 
@@ -45,7 +46,7 @@ export function DueTasksSection({
           </div>
           <Link
             href="/tasks"
-            className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-[#f3ddb0]"
+            className={linkButtonClassName("subtle", "sm", "shrink-0")}
           >
             View all
             <ArrowRight className="h-4 w-4" />

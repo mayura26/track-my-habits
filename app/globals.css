@@ -207,10 +207,14 @@ body::after {
 }
 
 .habit-card-top-shade {
-  border: 1px solid rgba(216, 196, 160, 0.08);
+  border: 1px solid rgba(216, 196, 160, 0.18);
   background:
-    linear-gradient(180deg, rgba(247, 240, 225, 0.06), rgba(247, 240, 225, 0.01)),
-    rgba(8, 13, 11, 0.1);
+    linear-gradient(180deg, rgba(247, 240, 225, 0.2) 0%, rgba(247, 240, 225, 0.08) 38%, rgba(247, 240, 225, 0.02) 100%),
+    rgba(6, 11, 9, 0.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 232, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.26),
+    0 8px 18px rgba(0, 0, 0, 0.28);
 }
 
 .habit-card-details-chip {
