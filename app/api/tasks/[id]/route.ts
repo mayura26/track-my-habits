@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
@@ -70,18 +71,19 @@ export async function PATCH(
     }
   }
 
+  const { scheduledWeekdays, ...restData } = parsed.data;
+  const updateData: Prisma.TaskUncheckedUpdateInput = {
+    ...restData,
+    ...(scheduledWeekdays !== undefined
+      ? {
+          scheduledWeekdays: serializeScheduledWeekdays(scheduledWeekdays),
+        }
+      : {}),
+  };
+
   const task = await db.task.update({
     where: { id },
-    data: {
-      ...parsed.data,
-      ...(parsed.data.scheduledWeekdays !== undefined
-        ? {
-            scheduledWeekdays: serializeScheduledWeekdays(
-              parsed.data.scheduledWeekdays,
-            ),
-          }
-        : {}),
-    },
+    data: updateData,
   });
 
   return NextResponse.json(task);

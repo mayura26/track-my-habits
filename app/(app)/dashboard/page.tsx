@@ -31,21 +31,25 @@ import {
 export default async function DashboardPage() {
   const session = await requireAuth();
   const userId = session.user.id;
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: {
+      xp: true,
+      level: true,
+      name: true,
+      timezone: true,
+      bucketMorningStart: true,
+      bucketDayStart: true,
+      bucketEveningStart: true,
+      bucketBeforeBedStart: true,
+    },
+  });
+  const timezone = user?.timezone ?? "UTC";
+  const now = new Date();
+  const todayStart = startOfDayInTimezone(now, timezone);
+  const sevenDaysAgo = new Date(todayStart.getTime() - 7 * 86_400_000);
 
-  const [user, habits, totalBadges, activeTasks] = await Promise.all([
-    db.user.findUnique({
-      where: { id: userId },
-      select: {
-        xp: true,
-        level: true,
-        name: true,
-        timezone: true,
-        bucketMorningStart: true,
-        bucketDayStart: true,
-        bucketEveningStart: true,
-        bucketBeforeBedStart: true,
-      },
-    }),
+  const [habits, totalBadges, activeTasks] = await Promise.all([
     db.habit.findMany({
       where: { userId, isActive: true },
       include: {
@@ -65,10 +69,6 @@ export default async function DashboardPage() {
       orderBy: { createdAt: "desc" },
     }),
   ]);
-  const timezone = user?.timezone ?? "UTC";
-  const now = new Date();
-  const todayStart = startOfDayInTimezone(now, timezone);
-  const sevenDaysAgo = new Date(todayStart.getTime() - 7 * 86_400_000);
 
   const tasksWithLogs = await Promise.all(
     activeTasks.map(async (task) => {
