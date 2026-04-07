@@ -1,5 +1,6 @@
 import { Compass, Plus, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
+import { CategoryIcon } from "@/components/categories/CategoryIcon";
 import { HabitCard } from "@/components/habits/HabitCard";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -115,7 +116,7 @@ export default async function HabitsPage({ searchParams }: HabitsPageProps) {
               <Link
                 key={cat.id}
                 href={`/habits?category=${cat.id}`}
-                className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:px-3.5 sm:py-2 sm:text-sm ${
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:px-3.5 sm:py-2 sm:text-sm ${
                   params.category === cat.id
                     ? "border-transparent text-white shadow-sm"
                     : "border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] text-[#b4a58a] hover:border-[rgba(230,196,139,0.22)] hover:text-[#f7f0e1]"
@@ -126,6 +127,7 @@ export default async function HabitsPage({ searchParams }: HabitsPageProps) {
                     : undefined
                 }
               >
+                <CategoryIcon icon={cat.icon} className="h-3.5 w-3.5" />
                 {cat.name}
               </Link>
             ))}

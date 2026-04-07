@@ -1,8 +1,9 @@
 "use client";
 
-import { Plus, Tag, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { CategoryIcon } from "@/components/categories/CategoryIcon";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -203,7 +204,7 @@ export function CategoriesClient({
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
                 style={{ backgroundColor: `${cat.color}22`, color: cat.color }}
               >
-                <Tag className="h-5 w-5" />
+                <CategoryIcon icon={cat.icon} className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-[#f7f0e1]">{cat.name}</p>

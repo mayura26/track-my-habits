@@ -4,6 +4,7 @@ import type { Habit, HabitCategory, HabitLog } from "@prisma/client";
 import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { CategoryIcon } from "@/components/categories/CategoryIcon";
 import { Badge } from "@/components/ui/Badge";
 import { HabitCountLogControl } from "./HabitCountLogControl";
 import { HabitLogButton } from "./HabitLogButton";
@@ -57,8 +58,8 @@ export function HabitCard({ habit, onLog }: HabitCardProps) {
         </>
       )}
 
-      <div className="relative z-[2] flex items-stretch gap-3 sm:items-center sm:gap-4">
-        <div className="shrink-0 self-center">
+      <div className="relative z-2 flex items-start gap-3 sm:gap-4">
+        <div className="flex w-17 shrink-0 justify-center pt-1 sm:w-19">
           {isCount ? (
             <HabitCountLogControl
               habitId={habit.id}
@@ -78,43 +79,41 @@ export function HabitCard({ habit, onLog }: HabitCardProps) {
         </div>
 
         <div className="min-w-0 flex-1">
-          {/* Row 1: Category badge */}
-          <div>
+          <div className="habit-card-top-shade rounded-2xl px-2.5 py-2 sm:px-3 sm:py-2.5">
             <span
-              className="rounded-full border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]"
               style={{ color: habit.category.color }}
             >
+              <CategoryIcon icon={habit.category.icon} className="h-3 w-3" />
               {habit.category.name}
             </span>
-          </div>
-
-          {/* Row 2: Habit name */}
-          <Link
-            href={`/habits/${habit.id}`}
-            className="mt-2 block truncate text-base font-bold text-[#f7f0e1] hover:text-[#f3ddb0] sm:text-lg"
-          >
-            {habit.name}
-          </Link>
-
-          {/* Row 3: Status line */}
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-[#b4a58a]">
-              {habit.thresholdType.toLowerCase()}
-            </span>
-            <span className="text-xs text-[#8d826d]">&bull;</span>
-            <span className="text-xs text-[#8d826d]">
-              {logged ? "Logged for today" : "Ready to log"}
-            </span>
-          </div>
-
-          {/* Row 4: Unified bottom bar */}
-          <div className="mt-3 flex items-center gap-2">
-            <StreakBadge streak={habit.currentStreak} size="sm" />
-            {logged && <Badge variant="success">Done</Badge>}
-            {habit.nfcToken && <Badge variant="info">NFC</Badge>}
             <Link
               href={`/habits/${habit.id}`}
-              className="ml-auto inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#d8c4a0]"
+              className="mt-2 block truncate text-base font-bold text-text-primary hover:text-[#f3ddb0] sm:text-lg"
+            >
+              {habit.name}
+            </Link>
+
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <span className="text-xs text-text-muted">
+                {habit.thresholdType.toLowerCase()}
+              </span>
+              <span className="text-xs text-[#8d826d]">&bull;</span>
+              <span className="text-xs text-[#8d826d]">
+                {logged ? "Logged for today" : "Ready to log"}
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <StreakBadge streak={habit.currentStreak} size="sm" />
+              {logged && <Badge variant="success">Done</Badge>}
+              {habit.nfcToken && <Badge variant="info">NFC</Badge>}
+            </div>
+            <Link
+              href={`/habits/${habit.id}`}
+              className="habit-card-details-chip inline-flex shrink-0 items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#d8c4a0]"
             >
               Details
               <ChevronRight className="h-3.5 w-3.5" />

@@ -3,13 +3,13 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CategoryBadge } from "@/components/categories/CategoryBadge";
 import { HabitDetailCountSection } from "@/components/habits/HabitDetailCountSection";
+import { HabitImageSection } from "@/components/habits/HabitImageSection";
 import { StreakBadge } from "@/components/habits/StreakBadge";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
-import { HabitImageSection } from "@/components/habits/HabitImageSection";
 import { HabitDetailClient } from "./HabitDetailClient";
 
 interface HabitDetailPageProps {
@@ -55,6 +55,7 @@ export default async function HabitDetailPage({
             <CategoryBadge
               name={habit.category.name}
               color={habit.category.color}
+              icon={habit.category.icon}
             />
             {habit.nfcToken && <Badge variant="info">NFC</Badge>}
           </div>
