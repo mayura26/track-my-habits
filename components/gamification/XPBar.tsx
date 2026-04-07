@@ -8,10 +8,14 @@ interface XPBarProps {
 }
 
 export function XPBar({ xp, level, className }: XPBarProps) {
-  const currentLevelXP = xpForLevel(level - 1);
-  const nextLevelXP = xpForLevel(level);
-  const progress = Math.round(
-    ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100,
+  const currentLevelXP = xpForLevel(level);
+  const nextLevelXP = xpForLevel(level + 1);
+  const progress = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100),
+    ),
   );
 
   return (

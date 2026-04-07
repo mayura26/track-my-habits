@@ -7,6 +7,7 @@ export function calcLevel(totalXP: number): number {
 }
 
 export function xpForLevel(level: number): number {
+  if (level <= 1) return 0;
   return level * level * 100;
 }
 

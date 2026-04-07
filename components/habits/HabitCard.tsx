@@ -69,9 +69,9 @@ export function HabitCard({ habit, onLog }: HabitCardProps) {
             >
               {habit.name}
             </Link>
-            <div className="flex shrink-0 flex-col items-end gap-1">
+            <div className="-mr-0.5 -mt-0.5 flex shrink-0 flex-col items-end gap-1">
               <span
-                className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]"
+                className="habit-card-category-badge-wrap habit-card-category-badge inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]"
                 style={{ color: habit.category.color }}
               >
                 <CategoryIcon icon={habit.category.icon} className="h-3 w-3" />

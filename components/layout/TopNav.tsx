@@ -13,10 +13,14 @@ export function TopNav({ session }: TopNavProps) {
   const user = session.user;
   const level = (user as { level?: number }).level ?? 1;
   const xp = (user as { xp?: number }).xp ?? 0;
-  const currentLevelXP = xpForLevel(level - 1);
-  const nextLevelXP = xpForLevel(level);
-  const progress = Math.round(
-    ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100,
+  const currentLevelXP = xpForLevel(level);
+  const nextLevelXP = xpForLevel(level + 1);
+  const progress = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100),
+    ),
   );
 
   return (
