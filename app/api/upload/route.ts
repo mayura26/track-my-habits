@@ -4,6 +4,7 @@ import path from "node:path";
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { getUploadsRoot, resolveStoredImagePath } from "@/lib/upload-paths";
 
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -13,23 +14,6 @@ const EXT_MAP: Record<string, string> = {
   "image/png": "png",
   "image/webp": "webp",
 };
-
-const DEFAULT_UPLOADS_ROOT = path.join(process.cwd(), "public", "uploads");
-
-function getUploadsRoot() {
-  const configured = process.env.UPLOADS_ROOT?.trim();
-  if (!configured) return DEFAULT_UPLOADS_ROOT;
-
-  return path.isAbsolute(configured)
-    ? configured
-    : path.join(process.cwd(), configured);
-}
-
-function resolveStoredImagePath(imageUrl: string) {
-  const normalized = imageUrl.startsWith("/") ? imageUrl.slice(1) : imageUrl;
-  const relativeFromUploads = normalized.replace(/^uploads\//, "");
-  return path.join(getUploadsRoot(), relativeFromUploads);
-}
 
 export async function POST(req: NextRequest) {
   const session = await auth();

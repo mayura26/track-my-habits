@@ -14,6 +14,7 @@ import {
   isLogicallyDue,
   nextDueAt,
 } from "@/lib/task-helpers";
+import { toImageDeliveryUrl } from "@/lib/upload-paths";
 
 type TaskWithLogs = Task & { logs: TaskLog[]; category: HabitCategory | null };
 
@@ -50,6 +51,7 @@ export function TaskCard({
   );
   const [isPending, startTransition] = useTransition();
   const [playPop, setPlayPop] = useState(false);
+  const displayImageUrl = toImageDeliveryUrl(task.imageUrl);
 
   const periodFull = optimisticCount >= task.frequencyValue;
 
@@ -88,10 +90,10 @@ export function TaskCard({
           : "surface-panel hover:border-[rgba(230,196,139,0.3)]"
       }`}
     >
-      {task.imageUrl && (
+      {displayImageUrl && (
         <>
           <Image
-            src={task.imageUrl}
+            src={displayImageUrl}
             alt=""
             fill
             className="pointer-events-none z-0 object-cover section-artwork-photo-dimmed"

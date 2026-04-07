@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { generateTaskImagePrompt } from "@/lib/image-prompt";
+import { toImageDeliveryUrl } from "@/lib/upload-paths";
 
 interface TaskImageSectionProps {
   taskId: string;
@@ -46,6 +47,7 @@ export function TaskImageSection({
     imageUrl,
   );
   const [isPending, startTransition] = useTransition();
+  const resolvedImageUrl = toImageDeliveryUrl(displayImageUrl);
 
   useEffect(() => {
     if (!previewUrl) {
@@ -141,13 +143,13 @@ export function TaskImageSection({
         </p>
       </div>
 
-      {displayImageUrl && (
+      {resolvedImageUrl && (
         <div className="relative aspect-video w-full overflow-hidden rounded-[20px] border border-[rgba(216,196,160,0.12)]">
           <Image
-            src={displayImageUrl}
+            src={resolvedImageUrl}
             alt={`Artwork for ${name}`}
             fill
-            unoptimized={displayImageUrl.startsWith("blob:")}
+            unoptimized={resolvedImageUrl.startsWith("blob:")}
             className="object-cover section-artwork-photo-dimmed"
             sizes="(max-width: 768px) 100vw, 600px"
           />

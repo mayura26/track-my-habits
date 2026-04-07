@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { CategoryIcon } from "@/components/categories/CategoryIcon";
 import { Badge } from "@/components/ui/Badge";
+import { toImageDeliveryUrl } from "@/lib/upload-paths";
 import { HabitCountLogControl } from "./HabitCountLogControl";
 import { HabitLogButton } from "./HabitLogButton";
 import { StreakBadge } from "./StreakBadge";
@@ -35,6 +36,7 @@ function isLoggedToday(logs: HabitLog[], thresholdValue: number): boolean {
 export function HabitCard({ habit, onLog }: HabitCardProps) {
   const logged = isLoggedToday(habit.logs, habit.thresholdValue);
   const isCount = habit.trackingType === "COUNT";
+  const displayImageUrl = toImageDeliveryUrl(habit.imageUrl);
 
   return (
     <div
@@ -44,10 +46,10 @@ export function HabitCard({ habit, onLog }: HabitCardProps) {
           : "surface-panel hover:border-[rgba(230,196,139,0.3)]"
       }`}
     >
-      {habit.imageUrl && (
+      {displayImageUrl && (
         <>
           <Image
-            src={habit.imageUrl}
+            src={displayImageUrl}
             alt=""
             fill
             className="pointer-events-none z-0 object-cover section-artwork-photo-dimmed"
