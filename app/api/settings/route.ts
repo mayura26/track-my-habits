@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { updateSettingsSchema } from "@/lib/validations";
 
 const selectBuckets = {
+  timezone: true,
   bucketMorningStart: true,
   bucketDayStart: true,
   bucketEveningStart: true,

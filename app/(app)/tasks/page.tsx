@@ -17,6 +17,12 @@ import { TasksClient } from "./TasksClient";
 export default async function TasksPage() {
   const session = await requireAuth();
   const userId = session.user.id;
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { timezone: true },
+  });
+  const timezone = user?.timezone ?? "UTC";
+  const now = new Date();
 
   const tasks = await db.task.findMany({
     where: { userId, isActive: true },
@@ -26,7 +32,7 @@ export default async function TasksPage() {
 
   const tasksWithLogs = await Promise.all(
     tasks.map(async (task) => {
-      const { start, end } = getPeriodRange(task.frequency);
+      const { start, end } = getPeriodRange(task.frequency, now, timezone);
       const periodLogs = await db.taskLog.findMany({
         where: { taskId: task.id, completedAt: { gte: start, lte: end } },
         orderBy: { completedAt: "desc" },
@@ -44,7 +50,7 @@ export default async function TasksPage() {
   );
 
   const dueNowCount = tasksWithLogs.filter((task) =>
-    isLogicallyDue(task),
+    isLogicallyDue(task, now, timezone),
   ).length;
   const reminderCount = tasksWithLogs.filter(
     (task) => task.reminderEnabled,
@@ -113,7 +119,7 @@ export default async function TasksPage() {
               list honest.
             </p>
           </div>
-          <TasksClient tasks={tasksWithLogs} />
+          <TasksClient tasks={tasksWithLogs} timezone={timezone} />
         </CardContent>
       </Card>
     </div>

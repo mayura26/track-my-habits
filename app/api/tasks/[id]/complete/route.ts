@@ -20,6 +20,13 @@ export async function POST(
   if (!task) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+  const userTimezone =
+    (
+      await db.user.findUnique({
+        where: { id: session.user.id },
+        select: { timezone: true },
+      })
+    )?.timezone ?? "UTC";
 
   const log = await db.taskLog.create({
     data: {
@@ -60,7 +67,11 @@ export async function DELETE(
   }
 
   // Find the most recent log in the current period
-  const { start, end } = getPeriodRange(task.frequency);
+  const { start, end } = getPeriodRange(
+    task.frequency,
+    new Date(),
+    userTimezone,
+  );
   const latestLog = await db.taskLog.findFirst({
     where: {
       taskId: id,

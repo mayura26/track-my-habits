@@ -9,9 +9,10 @@ type TaskWithLogs = Task & { logs: TaskLog[]; category: HabitCategory | null };
 
 interface TasksClientProps {
   tasks: TaskWithLogs[];
+  timezone: string;
 }
 
-export function TasksClient({ tasks }: TasksClientProps) {
+export function TasksClient({ tasks, timezone }: TasksClientProps) {
   const router = useRouter();
 
   function handleComplete() {
@@ -34,7 +35,13 @@ export function TasksClient({ tasks }: TasksClientProps) {
         <TaskCard
           key={task.id}
           task={task}
-          periodCount={logsInPeriod(task.logs, task.frequency)}
+          timezone={timezone}
+          periodCount={logsInPeriod(
+            task.logs,
+            task.frequency,
+            new Date(),
+            timezone,
+          )}
           onComplete={handleComplete}
         />
       ))}

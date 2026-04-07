@@ -4,17 +4,37 @@ import { SectionArtwork } from "@/components/ui/SectionArtwork";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 
+function getTimezoneOptions() {
+  const fallback = [
+    "UTC",
+    "America/Los_Angeles",
+    "America/Denver",
+    "America/Chicago",
+    "America/New_York",
+    "Europe/London",
+    "Europe/Berlin",
+    "Asia/Kolkata",
+    "Asia/Tokyo",
+    "Australia/Sydney",
+  ];
+  if (typeof Intl.supportedValuesOf !== "function") return fallback;
+  const zones = Intl.supportedValuesOf("timeZone");
+  return zones.includes("UTC") ? zones : ["UTC", ...zones];
+}
+
 export default async function SettingsPage() {
   const session = await requireAuth();
   const user = await db.user.findUnique({
     where: { id: session.user.id },
     select: {
+      timezone: true,
       bucketMorningStart: true,
       bucketDayStart: true,
       bucketEveningStart: true,
       bucketBeforeBedStart: true,
     },
   });
+  const timezoneOptions = getTimezoneOptions();
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -45,11 +65,13 @@ export default async function SettingsPage() {
         <CardContent>
           <BucketSettingsForm
             defaultValues={{
+              timezone: user?.timezone ?? "UTC",
               bucketMorningStart: user?.bucketMorningStart ?? 5,
               bucketDayStart: user?.bucketDayStart ?? 11,
               bucketEveningStart: user?.bucketEveningStart ?? 17,
               bucketBeforeBedStart: user?.bucketBeforeBedStart ?? 21,
             }}
+            timezoneOptions={timezoneOptions}
           />
         </CardContent>
       </Card>

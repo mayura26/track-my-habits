@@ -20,6 +20,7 @@ type TaskWithLogs = Task & { logs: TaskLog[]; category: HabitCategory | null };
 interface TaskCardProps {
   task: TaskWithLogs;
   periodCount: number;
+  timezone?: string;
   onComplete?: () => void;
 }
 
@@ -34,10 +35,15 @@ function formatRelative(date: Date, now: Date = new Date()): string {
   return `in ${days}d`;
 }
 
-export function TaskCard({ task, periodCount, onComplete }: TaskCardProps) {
+export function TaskCard({
+  task,
+  periodCount,
+  timezone = "UTC",
+  onComplete,
+}: TaskCardProps) {
   const router = useRouter();
-  const logicallyDue = isLogicallyDue(task);
-  const next = nextDueAt(task);
+  const logicallyDue = isLogicallyDue(task, new Date(), timezone);
+  const next = nextDueAt(task, new Date(), timezone);
   const [optimisticCount, addOptimistic] = useOptimistic(
     periodCount,
     (current: number, delta: number) => current + delta,

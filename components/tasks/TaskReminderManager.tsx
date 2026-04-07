@@ -2,17 +2,18 @@
 
 import type { Task } from "@prisma/client";
 import { useEffect } from "react";
-import { isReminderDue } from "@/lib/task-helpers";
 import {
   registerServiceWorker,
-  subscribeToPush,
   sendSubscriptionToServer,
+  subscribeToPush,
 } from "@/lib/push-client";
+import { isReminderDue } from "@/lib/task-helpers";
+import { getLocalDateKey } from "@/lib/timezone";
 
 type TaskWithDue = Task & { isDue?: boolean };
 
-function getFiredKey(taskId: string): string {
-  const today = new Date().toISOString().slice(0, 10);
+function getFiredKey(taskId: string, timezone: string): string {
+  const today = getLocalDateKey(new Date(), timezone);
   return `reminder_fired:${taskId}:${today}`;
 }
 
@@ -49,11 +50,22 @@ export function TaskReminderManager() {
         return;
       }
 
+      let timezone = "UTC";
+      try {
+        const settingsRes = await fetch("/api/settings");
+        if (settingsRes.ok) {
+          const settings = await settingsRes.json();
+          timezone = settings?.timezone || "UTC";
+        }
+      } catch {
+        timezone = "UTC";
+      }
+
       for (const task of tasks) {
         // Server computes logical due state (respects spacing + period cap).
         if (task.isDue === false) continue;
-        if (!isReminderDue(task)) continue;
-        const key = getFiredKey(task.id);
+        if (!isReminderDue(task, new Date(), timezone)) continue;
+        const key = getFiredKey(task.id, timezone);
         if (localStorage.getItem(key)) continue;
 
         new Notification(`Task reminder: ${task.name}`, {

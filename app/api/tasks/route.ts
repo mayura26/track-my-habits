@@ -15,6 +15,13 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { timezone: true },
+  });
+  const timezone = user?.timezone ?? "UTC";
+  const now = new Date();
+
   const tasks = await db.task.findMany({
     where: { userId: session.user.id, isActive: true },
     include: { category: true },
@@ -24,7 +31,7 @@ export async function GET() {
   // Attach period logs + computed due state for each task
   const tasksWithMeta = await Promise.all(
     tasks.map(async (task) => {
-      const { start, end } = getPeriodRange(task.frequency);
+      const { start, end } = getPeriodRange(task.frequency, now, timezone);
       const logs = await db.taskLog.findMany({
         where: { taskId: task.id, completedAt: { gte: start, lte: end } },
         orderBy: { completedAt: "desc" },
@@ -38,8 +45,8 @@ export async function GET() {
       return {
         ...withLogs,
         lastCompletedAt: latest?.completedAt ?? null,
-        isDue: isLogicallyDue(withLogs),
-        nextDueAt: nextDueAt(withLogs),
+        isDue: isLogicallyDue(withLogs, now, timezone),
+        nextDueAt: nextDueAt(withLogs, now, timezone),
       };
     }),
   );

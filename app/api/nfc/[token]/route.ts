@@ -29,7 +29,12 @@ export async function GET(
     },
   });
 
-  const result = await processHabitLog(habit.id, habit.userId, "NFC");
+  const result = await processHabitLog(
+    habit.id,
+    habit.userId,
+    "NFC",
+    habit.user.timezone ?? "UTC",
+  );
 
   return NextResponse.json({
     ok: true,

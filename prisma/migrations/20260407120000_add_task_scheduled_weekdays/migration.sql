@@ -1,3 +1,3 @@
--- Add optional weekday selection for tasks.
--- Null keeps backward-compatible behavior (task is eligible on all days).
-ALTER TABLE "Task" ADD COLUMN "scheduledWeekdays" TEXT;
+-- No-op migration.
+-- `scheduledWeekdays` is already introduced in
+-- `20260407103203_add_task_cat/migration.sql`.

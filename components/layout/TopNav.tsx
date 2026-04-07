@@ -19,7 +19,9 @@ export function TopNav({ session }: TopNavProps) {
     0,
     Math.min(
       100,
-      Math.round(((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100),
+      Math.round(
+        ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100,
+      ),
     ),
   );
 

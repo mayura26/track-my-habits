@@ -1,7 +1,7 @@
 "use client";
 
-import type { Habit, HabitCategory, HabitLog } from "@prisma/client";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import type { Habit, HabitCategory, HabitLog } from "@prisma/client";
 import { HabitCard } from "./HabitCard";
 
 type HabitWithRelations = Habit & {

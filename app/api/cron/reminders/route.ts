@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendPushToUser } from "@/lib/push";
-import { isScheduledForToday } from "@/lib/task-helpers";
+import { isReminderDue, isSameLocalDay } from "@/lib/task-helpers";
+import { getTimePartsInTimezone } from "@/lib/timezone";
 
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
@@ -11,8 +12,6 @@ export async function GET(req: Request) {
   }
 
   const now = new Date();
-  const todayStr = now.toISOString().slice(0, 10);
-  const currentHHMM = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
   // Find tasks with reminders due
   const tasks = await db.task.findMany({
@@ -21,6 +20,7 @@ export async function GET(req: Request) {
       reminderEnabled: true,
       reminderTime: { not: null },
     },
+    include: { user: { select: { timezone: true } } },
   });
 
   // Find habits with reminders due
@@ -30,18 +30,19 @@ export async function GET(req: Request) {
       reminderEnabled: true,
       reminderTime: { not: null },
     },
+    include: { user: { select: { timezone: true } } },
   });
 
   let sent = 0;
 
   for (const task of tasks) {
-    if (!task.reminderTime || task.reminderTime > currentHHMM) continue;
-    if (!isScheduledForToday(task, now)) continue;
+    const timezone = task.user.timezone ?? "UTC";
+    if (!isReminderDue(task, now, timezone)) continue;
 
     // Skip if already sent today
     if (
       task.lastReminderSentAt &&
-      task.lastReminderSentAt.toISOString().slice(0, 10) === todayStr
+      isSameLocalDay(task.lastReminderSentAt, now, timezone)
     )
       continue;
 
@@ -61,12 +62,17 @@ export async function GET(req: Request) {
   }
 
   for (const habit of habits) {
-    if (!habit.reminderTime || habit.reminderTime > currentHHMM) continue;
+    const timezone = habit.user.timezone ?? "UTC";
+    if (!habit.reminderTime) continue;
+    const [h, m] = habit.reminderTime.split(":").map(Number);
+    const local = getTimePartsInTimezone(now, timezone);
+    const currentMinutes = local.hour * 60 + local.minute;
+    if (currentMinutes < h * 60 + m) continue;
 
     // Skip if already sent today
     if (
       habit.lastReminderSentAt &&
-      habit.lastReminderSentAt.toISOString().slice(0, 10) === todayStr
+      isSameLocalDay(habit.lastReminderSentAt, now, timezone)
     )
       continue;
 

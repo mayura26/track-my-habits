@@ -4,8 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 
 interface Prefs {
+  timezone: string;
   bucketMorningStart: number;
   bucketDayStart: number;
   bucketEveningStart: number;
@@ -14,6 +16,7 @@ interface Prefs {
 
 interface BucketSettingsFormProps {
   defaultValues: Prefs;
+  timezoneOptions: string[];
 }
 
 function fmt(h: number): string {
@@ -21,15 +24,18 @@ function fmt(h: number): string {
   return `${hh.toString().padStart(2, "0")}:00`;
 }
 
-export function BucketSettingsForm({ defaultValues }: BucketSettingsFormProps) {
+export function BucketSettingsForm({
+  defaultValues,
+  timezoneOptions,
+}: BucketSettingsFormProps) {
   const router = useRouter();
   const [values, setValues] = useState<Prefs>(defaultValues);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
 
-  const setField = (key: keyof Prefs, n: number) => {
-    setValues((v) => ({ ...v, [key]: n }));
+  const setField = <K extends keyof Prefs>(key: K, value: Prefs[K]) => {
+    setValues((v) => ({ ...v, [key]: value }));
     setSaved(false);
   };
 
@@ -56,6 +62,21 @@ export function BucketSettingsForm({ defaultValues }: BucketSettingsFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <Select
+            label="Timezone"
+            name="timezone"
+            id="timezone"
+            value={values.timezone}
+            onChange={(e) => setField("timezone", e.target.value)}
+          >
+            {timezoneOptions.map((zone) => (
+              <option key={zone} value={zone}>
+                {zone}
+              </option>
+            ))}
+          </Select>
+        </div>
         <Input
           label="Morning start (hour)"
           name="bucketMorningStart"

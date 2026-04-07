@@ -236,8 +236,41 @@ test.describe("Tasks", () => {
   test("task set for another weekday is hidden from today's due list", async ({
     page,
   }) => {
+    const tzRes = await page.request.patch("/api/settings", {
+      data: {
+        timezone: "Pacific/Kiritimati",
+        bucketMorningStart: 5,
+        bucketDayStart: 11,
+        bucketEveningStart: 17,
+        bucketBeforeBedStart: 21,
+      },
+    });
+    expect(tzRes.ok()).toBeTruthy();
+
     const dayLabels = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-    const today = new Date().getDay();
+    const today = Number(
+      await page
+        .evaluate(() =>
+          new Intl.DateTimeFormat("en-US", {
+            timeZone: "Pacific/Kiritimati",
+            weekday: "short",
+          }).format(new Date()),
+        )
+        .then(
+          (weekday) =>
+            ({
+              Sun: 0,
+              Mon: 1,
+              Tue: 2,
+              Wed: 3,
+              Thu: 4,
+              Fri: 5,
+              Sat: 6,
+            })[
+              weekday as "Sun" | "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat"
+            ],
+        ),
+    );
     const nextDay = dayLabels[(today + 1) % 7];
     const createRes = await page.request.post("/api/tasks", {
       data: {
@@ -252,5 +285,35 @@ test.describe("Tasks", () => {
 
     await page.goto("/dashboard");
     await expect(page.getByText("Weekday Filter E2E")).not.toBeVisible();
+  });
+
+  test("dashboard greeting follows selected timezone", async ({ page }) => {
+    await page.request.patch("/api/settings", {
+      data: {
+        timezone: "Pacific/Kiritimati",
+        bucketMorningStart: 5,
+        bucketDayStart: 11,
+        bucketEveningStart: 17,
+        bucketBeforeBedStart: 21,
+      },
+    });
+
+    const expected = await page.evaluate(() => {
+      const hour = Number(
+        new Intl.DateTimeFormat("en-US", {
+          timeZone: "Pacific/Kiritimati",
+          hour12: false,
+          hour: "2-digit",
+        }).format(new Date()),
+      );
+      if (hour < 12) return "morning";
+      if (hour < 17) return "afternoon";
+      return "evening";
+    });
+
+    await page.goto("/dashboard");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      `Good ${expected}`,
+    );
   });
 });

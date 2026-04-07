@@ -4,17 +4,19 @@ import { BackfillClient } from "@/components/habits/BackfillClient";
 import { Card, CardContent } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
+import { getLocalDateKey, startOfDayInTimezone } from "@/lib/timezone";
 
 export default async function BackfillPage() {
   const session = await requireAuth();
   const userId = session.user.id;
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { timezone: true },
+  });
+  const timezone = user?.timezone ?? "UTC";
 
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  sevenDaysAgo.setHours(0, 0, 0, 0);
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = startOfDayInTimezone(new Date(), timezone);
+  const sevenDaysAgo = new Date(today.getTime() - 7 * 86_400_000);
 
   const habits = await db.habit.findMany({
     where: { userId, isActive: true, thresholdType: "DAILY" },
@@ -37,18 +39,13 @@ export default async function BackfillPage() {
   const habitsData = habits
     .map((habit) => {
       const startBound = new Date(
-        Math.max(
-          new Date(habit.startDate).setHours(0, 0, 0, 0),
-          sevenDaysAgo.getTime(),
-        ),
+        Math.max(new Date(habit.startDate).getTime(), sevenDaysAgo.getTime()),
       );
 
       const habitLogs = logs.filter((l) => l.habitId === habit.id);
       const logsByDate = new Map<string, number>();
       for (const log of habitLogs) {
-        const d = new Date(log.loggedAt);
-        d.setHours(0, 0, 0, 0);
-        const key = d.toISOString();
+        const key = getLocalDateKey(new Date(log.loggedAt), timezone);
         logsByDate.set(key, (logsByDate.get(key) ?? 0) + log.value);
       }
 
@@ -59,16 +56,16 @@ export default async function BackfillPage() {
       }[] = [];
 
       const cursor = new Date(today);
-      cursor.setDate(cursor.getDate() - 1); // start from yesterday
+      cursor.setUTCDate(cursor.getUTCDate() - 1); // start from yesterday
       while (cursor >= startBound) {
-        const key = new Date(cursor).toISOString();
+        const key = getLocalDateKey(new Date(cursor), timezone);
         const sum = logsByDate.get(key) ?? 0;
         days.push({
           date: cursor.toISOString(),
           label: `${dayLabels[cursor.getDay()]} ${cursor.getDate()}`,
           isLogged: sum >= habit.thresholdValue,
         });
-        cursor.setDate(cursor.getDate() - 1);
+        cursor.setUTCDate(cursor.getUTCDate() - 1);
       }
 
       days.reverse(); // chronological order

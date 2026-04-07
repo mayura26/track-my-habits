@@ -14,7 +14,7 @@ export default async function NfcLandingPage({ params }: NfcPageProps) {
 
   const habit = await db.habit.findUnique({
     where: { nfcToken: token },
-    include: { category: true },
+    include: { category: true, user: true },
   });
 
   if (!habit || !habit.isActive) {
@@ -53,7 +53,12 @@ export default async function NfcLandingPage({ params }: NfcPageProps) {
     },
   });
 
-  const result = await processHabitLog(habit.id, habit.userId, "NFC");
+  const result = await processHabitLog(
+    habit.id,
+    habit.userId,
+    "NFC",
+    habit.user.timezone ?? "UTC",
+  );
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#0c1110] p-6 text-center">

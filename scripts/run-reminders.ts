@@ -17,7 +17,10 @@ async function tick() {
       `[${new Date().toLocaleTimeString()}] Checked ${data.checked ?? 0} reminders, sent ${data.sent ?? 0} push notifications`,
     );
   } catch (err) {
-    console.error(`[${new Date().toLocaleTimeString()}] Reminder check failed:`, err);
+    console.error(
+      `[${new Date().toLocaleTimeString()}] Reminder check failed:`,
+      err,
+    );
   }
 }
 

@@ -1,4 +1,11 @@
 import type { Task, TaskLog } from "@prisma/client";
+import {
+  endOfDayInTimezone,
+  getLocalDateKey,
+  getTimePartsInTimezone,
+  normalizeTimezone,
+  startOfDayInTimezone,
+} from "@/lib/timezone";
 
 export const BUCKETS = ["MORNING", "DAY", "EVENING", "BEFORE_BED"] as const;
 export type Bucket = (typeof BUCKETS)[number];
@@ -34,31 +41,31 @@ export interface BucketPrefs {
 export function getPeriodRange(
   frequency: string,
   now: Date = new Date(),
+  timezone = "UTC",
 ): { start: Date; end: Date } {
+  const zone = normalizeTimezone(timezone);
   if (frequency === "DAILY") {
-    const start = new Date(now);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(now);
-    end.setHours(23, 59, 59, 999);
+    const start = startOfDayInTimezone(now, zone);
+    const end = endOfDayInTimezone(now, zone);
     return { start, end };
   }
 
   if (frequency === "WEEKLY") {
     // Monday-based week
-    const start = new Date(now);
-    const day = start.getDay(); // 0=Sun, 1=Mon...
+    const day = getTimePartsInTimezone(now, zone).weekdayIndex; // 0=Sun, 1=Mon...
     const diff = day === 0 ? -6 : 1 - day;
-    start.setDate(start.getDate() + diff);
-    start.setHours(0, 0, 0, 0);
+    const start = startOfDayInTimezone(
+      new Date(now.getTime() + diff * MS_PER_DAY),
+      zone,
+    );
     const end = new Date(start);
-    end.setDate(end.getDate() + 6);
-    end.setHours(23, 59, 59, 999);
+    end.setUTCDate(end.getUTCDate() + 7);
+    end.setUTCMilliseconds(end.getUTCMilliseconds() - 1);
     return { start, end };
   }
 
   if (frequency === "FORTNIGHTLY") {
-    const startOfToday = new Date(now);
-    startOfToday.setHours(0, 0, 0, 0);
+    const startOfToday = startOfDayInTimezone(now, zone);
     const daysSinceEpoch = Math.floor(
       (startOfToday.getTime() - FORTNIGHT_EPOCH.getTime()) / MS_PER_DAY,
     );
@@ -84,8 +91,13 @@ export function getPeriodRange(
   return { start, end };
 }
 
-export function logsInPeriod(logs: TaskLog[], frequency: string): number {
-  const { start, end } = getPeriodRange(frequency);
+export function logsInPeriod(
+  logs: TaskLog[],
+  frequency: string,
+  now: Date = new Date(),
+  timezone = "UTC",
+): number {
+  const { start, end } = getPeriodRange(frequency, now, timezone);
   return logs.filter((l) => {
     const d = new Date(l.completedAt);
     return d >= start && d <= end;
@@ -140,10 +152,12 @@ export function serializeScheduledWeekdays(
 export function isScheduledForToday(
   task: Pick<Task, "scheduledWeekdays">,
   now: Date = new Date(),
+  timezone = "UTC",
 ): boolean {
   const scheduled = parseScheduledWeekdays(task.scheduledWeekdays);
   if (!scheduled) return true;
-  const today = WEEKDAY_ORDER[now.getDay()];
+  const weekdayIndex = getTimePartsInTimezone(now, timezone).weekdayIndex;
+  const today = WEEKDAY_ORDER[weekdayIndex];
   return scheduled.includes(today);
 }
 
@@ -160,9 +174,14 @@ function latestLogDate(logs: TaskLog[]): Date | null {
 export function isLogicallyDue(
   task: TaskWithLogs,
   now: Date = new Date(),
+  timezone = "UTC",
 ): boolean {
-  if (!isScheduledForToday(task, now)) return false;
-  const count = logsInPeriod(task.logs, task.frequency);
+  if (!isScheduledForToday(task, now, timezone)) return false;
+  const { start, end } = getPeriodRange(task.frequency, now, timezone);
+  const count = task.logs.filter((l) => {
+    const d = new Date(l.completedAt);
+    return d >= start && d <= end;
+  }).length;
   if (count >= task.frequencyValue) return false;
   const gap = effectiveGapDays(task);
   if (gap <= 0) return true;
@@ -180,12 +199,16 @@ export function isDue(task: TaskWithLogs): boolean {
 export function nextDueAt(
   task: TaskWithLogs,
   now: Date = new Date(),
+  timezone = "UTC",
 ): Date | null {
-  if (isLogicallyDue(task, now)) return null;
-  const count = logsInPeriod(task.logs, task.frequency);
+  if (isLogicallyDue(task, now, timezone)) return null;
+  const { start, end } = getPeriodRange(task.frequency, now, timezone);
+  const count = task.logs.filter((l) => {
+    const d = new Date(l.completedAt);
+    return d >= start && d <= end;
+  }).length;
   // Gated by period cap → next period start
   if (count >= task.frequencyValue) {
-    const { end } = getPeriodRange(task.frequency);
     return new Date(end.getTime() + 1);
   }
   // Gated by spacing
@@ -198,8 +221,10 @@ export function nextDueAt(
 export function getCurrentBucket(
   prefs: BucketPrefs,
   now: Date = new Date(),
+  timezone = "UTC",
 ): Bucket {
-  const hour = now.getHours() + now.getMinutes() / 60;
+  const local = getTimePartsInTimezone(now, timezone);
+  const hour = local.hour + local.minute / 60;
   const rawEntries: { b: Bucket; s: number }[] = [
     { b: "MORNING", s: prefs.bucketMorningStart },
     { b: "DAY", s: prefs.bucketDayStart },
@@ -220,8 +245,9 @@ export function getCurrentBucket(
 export function bucketOrderFromNow(
   prefs: BucketPrefs,
   now: Date = new Date(),
+  timezone = "UTC",
 ): Bucket[] {
-  const current = getCurrentBucket(prefs, now);
+  const current = getCurrentBucket(prefs, now, timezone);
   const idx = BUCKETS.indexOf(current);
   return [...BUCKETS.slice(idx), ...BUCKETS.slice(0, idx)];
 }
@@ -229,23 +255,28 @@ export function bucketOrderFromNow(
 export function isReminderDue(
   task: Task & { logs?: TaskLog[] },
   now: Date = new Date(),
+  timezone = "UTC",
 ): boolean {
   if (!task.reminderEnabled || !task.reminderTime) return false;
-  if (!isScheduledForToday(task, now)) return false;
+  if (!isScheduledForToday(task, now, timezone)) return false;
 
   // If caller passed logs, gate on logical due state so we don't nag for done tasks.
   if (task.logs) {
-    if (!isLogicallyDue(task as TaskWithLogs, now)) return false;
+    if (!isLogicallyDue(task as TaskWithLogs, now, timezone)) return false;
   }
 
   const [hStr, mStr] = task.reminderTime.split(":");
   const reminderHour = Number(hStr);
   const reminderMin = Number(mStr);
 
-  const reminderDate = new Date(now);
-  reminderDate.setHours(reminderHour, reminderMin, 0, 0);
+  const local = getTimePartsInTimezone(now, timezone);
+  const currentMinutes = local.hour * 60 + local.minute;
+  const reminderMinutes = reminderHour * 60 + reminderMin;
+  return currentMinutes >= reminderMinutes;
+}
 
-  return now >= reminderDate;
+export function isSameLocalDay(a: Date, b: Date, timezone = "UTC"): boolean {
+  return getLocalDateKey(a, timezone) === getLocalDateKey(b, timezone);
 }
 
 export function frequencyLabel(

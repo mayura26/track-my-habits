@@ -16,6 +16,7 @@ model User {
   xp             Int       @default(0)
   level          Int       @default(1)
   totalLogsCount Int       @default(0)
+  timezone       String    @default("UTC")
   bucketMorningStart   Int @default(5)
   bucketDayStart       Int @default(11)
   bucketEveningStart   Int @default(17)

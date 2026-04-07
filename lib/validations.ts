@@ -1,5 +1,19 @@
 import { z } from "zod";
 
+const supportedTimeZones =
+  typeof Intl.supportedValuesOf === "function"
+    ? new Set(Intl.supportedValuesOf("timeZone"))
+    : null;
+
+const timezoneSchema = z
+  .string()
+  .min(1)
+  .refine(
+    (value) =>
+      supportedTimeZones ? supportedTimeZones.has(value) : value.includes("/"),
+    "Invalid timezone",
+  );
+
 export const createHabitSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
@@ -84,6 +98,7 @@ export const updateTaskSchema = createTaskSchema.partial().extend({
 });
 
 export const updateSettingsSchema = z.object({
+  timezone: timezoneSchema,
   bucketMorningStart: z.number().int().min(0).max(23),
   bucketDayStart: z.number().int().min(0).max(23),
   bucketEveningStart: z.number().int().min(0).max(23),

@@ -1,4 +1,12 @@
 import { db } from "@/lib/db";
+import {
+  getLocalDateKey,
+  getTimePartsInTimezone,
+  normalizeTimezone,
+  startOfDayInTimezone,
+} from "@/lib/timezone";
+
+const MS_PER_DAY = 86_400_000;
 
 // ─── XP & Level ───────────────────────────────────────────────────────────────
 
@@ -27,7 +35,11 @@ interface HabitForStreak {
   thresholdWindow: number | null;
 }
 
-export async function calculateStreak(habit: HabitForStreak): Promise<number> {
+export async function calculateStreak(
+  habit: HabitForStreak,
+  timezone = "UTC",
+): Promise<number> {
+  const zone = normalizeTimezone(timezone);
   const logs = await db.habitLog.findMany({
     where: { habitId: habit.id },
     orderBy: { loggedAt: "desc" },
@@ -35,13 +47,13 @@ export async function calculateStreak(habit: HabitForStreak): Promise<number> {
 
   if (logs.length === 0) return 0;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = startOfDayInTimezone(new Date(), zone);
 
   if (habit.thresholdType === "ROLLING_WINDOW") {
     const windowDays = habit.thresholdWindow ?? 7;
-    const windowStart = new Date(today);
-    windowStart.setDate(windowStart.getDate() - windowDays + 1);
+    const windowStart = new Date(
+      today.getTime() - (windowDays - 1) * MS_PER_DAY,
+    );
     const windowLogs = logs.filter((l) => new Date(l.loggedAt) >= windowStart);
     const windowSum = windowLogs.reduce((s, l) => s + l.value, 0);
     return windowSum >= habit.thresholdValue ? 1 : 0;
@@ -50,9 +62,7 @@ export async function calculateStreak(habit: HabitForStreak): Promise<number> {
   // Group logs by calendar date
   const byDate = new Map<string, number>();
   for (const log of logs) {
-    const d = new Date(log.loggedAt);
-    d.setHours(0, 0, 0, 0);
-    const key = d.toISOString();
+    const key = getLocalDateKey(new Date(log.loggedAt), zone);
     byDate.set(key, (byDate.get(key) ?? 0) + log.value);
   }
 
@@ -61,7 +71,7 @@ export async function calculateStreak(habit: HabitForStreak): Promise<number> {
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    const key = new Date(cursor).toISOString();
+    const key = getLocalDateKey(new Date(cursor), zone);
     const daySum = byDate.get(key) ?? 0;
 
     if (habit.thresholdType === "DAILY") {
@@ -69,41 +79,44 @@ export async function calculateStreak(habit: HabitForStreak): Promise<number> {
         streak++;
       } else if (cursor.getTime() === today.getTime()) {
         // today hasn't been completed yet — don't break streak
-        cursor.setDate(cursor.getDate() - 1);
+        cursor.setTime(cursor.getTime() - MS_PER_DAY);
         continue;
       } else {
         break;
       }
     } else if (habit.thresholdType === "WEEKLY_TOTAL") {
       // Get start of week (Monday)
-      const weekStart = new Date(cursor);
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
-      weekStart.setHours(0, 0, 0, 0);
+      const weekday = getTimePartsInTimezone(cursor, zone).weekdayIndex;
+      const diffToMonday = weekday === 0 ? -6 : 1 - weekday;
+      const weekStart = startOfDayInTimezone(
+        new Date(cursor.getTime() + diffToMonday * MS_PER_DAY),
+        zone,
+      );
       const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
+      weekEnd.setTime(weekEnd.getTime() + 6 * MS_PER_DAY);
 
       let weekSum = 0;
       const wCursor = new Date(weekStart);
       while (wCursor <= weekEnd) {
-        const wKey = new Date(wCursor).toISOString();
+        const wKey = getLocalDateKey(new Date(wCursor), zone);
         weekSum += byDate.get(wKey) ?? 0;
-        wCursor.setDate(wCursor.getDate() + 1);
+        wCursor.setTime(wCursor.getTime() + MS_PER_DAY);
       }
 
       const isCurrentWeek = cursor >= weekStart && cursor <= weekEnd;
       if (weekSum >= habit.thresholdValue) {
         streak++;
-        cursor.setDate(weekStart.getDate() - 1);
+        cursor.setTime(weekStart.getTime() - MS_PER_DAY);
         continue;
       } else if (isCurrentWeek) {
-        cursor.setDate(weekStart.getDate() - 1);
+        cursor.setTime(weekStart.getTime() - MS_PER_DAY);
         continue;
       } else {
         break;
       }
     }
 
-    cursor.setDate(cursor.getDate() - 1);
+    cursor.setTime(cursor.getTime() - MS_PER_DAY);
   }
 
   return streak;
@@ -225,11 +238,12 @@ export async function processHabitLog(
   habitId: string,
   userId: string,
   source: string,
+  timezone = "UTC",
 ): Promise<ProcessResult> {
   const habit = await db.habit.findUniqueOrThrow({ where: { id: habitId } });
 
   // Recalculate streak
-  const newStreak = await calculateStreak(habit);
+  const newStreak = await calculateStreak(habit, timezone);
   const bestStreak = Math.max(habit.bestStreak, newStreak);
 
   await db.habit.update({

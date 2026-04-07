@@ -6,6 +6,7 @@ import {
   calculateStreak,
   processHabitLog,
 } from "@/lib/gamification";
+import { endOfDayInTimezone, startOfDayInTimezone } from "@/lib/timezone";
 import { logHabitSchema } from "@/lib/validations";
 
 export async function POST(
@@ -24,6 +25,12 @@ export async function POST(
   if (!habit) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { timezone: true },
+  });
+  const timezone = user?.timezone ?? "UTC";
 
   const body = await req.json().catch(() => ({}));
   const parsed = logHabitSchema.safeParse(body);
@@ -48,7 +55,12 @@ export async function POST(
     },
   });
 
-  const result = await processHabitLog(id, session.user.id, parsed.data.source);
+  const result = await processHabitLog(
+    id,
+    session.user.id,
+    parsed.data.source,
+    timezone,
+  );
 
   // Store actual XP awarded so undo can reverse the correct amount
   if (result.xpGained > 0) {
@@ -74,6 +86,12 @@ export async function DELETE(
   const habit = await db.habit.findFirst({
     where: { id, userId: session.user.id, isActive: true },
   });
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { timezone: true },
+  });
+  const timezone = user?.timezone ?? "UTC";
+
   if (!habit) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
@@ -83,10 +101,10 @@ export async function DELETE(
   const loggedAtParam = url.searchParams.get("loggedAt");
 
   const targetDate = loggedAtParam ? new Date(loggedAtParam) : new Date();
-  const dayStart = new Date(targetDate);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(dayStart);
-  dayEnd.setDate(dayEnd.getDate() + 1);
+  const dayStart = startOfDayInTimezone(targetDate, timezone);
+  const dayEnd = new Date(
+    endOfDayInTimezone(targetDate, timezone).getTime() + 1,
+  );
 
   const latestLog = await db.habitLog.findFirst({
     where: {
@@ -122,7 +140,7 @@ export async function DELETE(
   }
 
   // Recalculate streak after removing the log
-  const newStreak = await calculateStreak(habit);
+  const newStreak = await calculateStreak(habit, timezone);
   await db.habit.update({
     where: { id: habit.id },
     data: { currentStreak: newStreak },

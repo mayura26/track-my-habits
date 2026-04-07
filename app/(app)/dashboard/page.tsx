@@ -1,8 +1,8 @@
 import { ArrowRight, CalendarClock, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { HabitCardList } from "@/components/habits/HabitCardList";
 import { XPBar } from "@/components/gamification/XPBar";
+import { HabitCardList } from "@/components/habits/HabitCardList";
 import { DueTasksSection } from "@/components/tasks/DueTasksSection";
 import { Button, linkButtonClassName } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -22,14 +22,15 @@ import {
   getPeriodRange,
   isLogicallyDue,
 } from "@/lib/task-helpers";
+import {
+  getLocalDateKey,
+  getTimePartsInTimezone,
+  startOfDayInTimezone,
+} from "@/lib/timezone";
 
 export default async function DashboardPage() {
   const session = await requireAuth();
   const userId = session.user.id;
-
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  sevenDaysAgo.setHours(0, 0, 0, 0);
 
   const [user, habits, totalBadges, activeTasks] = await Promise.all([
     db.user.findUnique({
@@ -38,6 +39,7 @@ export default async function DashboardPage() {
         xp: true,
         level: true,
         name: true,
+        timezone: true,
         bucketMorningStart: true,
         bucketDayStart: true,
         bucketEveningStart: true,
@@ -63,10 +65,14 @@ export default async function DashboardPage() {
       orderBy: { createdAt: "desc" },
     }),
   ]);
+  const timezone = user?.timezone ?? "UTC";
+  const now = new Date();
+  const todayStart = startOfDayInTimezone(now, timezone);
+  const sevenDaysAgo = new Date(todayStart.getTime() - 7 * 86_400_000);
 
   const tasksWithLogs = await Promise.all(
     activeTasks.map(async (task) => {
-      const { start, end } = getPeriodRange(task.frequency);
+      const { start, end } = getPeriodRange(task.frequency, now, timezone);
       const periodLogs = await db.taskLog.findMany({
         where: { taskId: task.id, completedAt: { gte: start, lte: end } },
         orderBy: { completedAt: "desc" },
@@ -83,7 +89,9 @@ export default async function DashboardPage() {
     }),
   );
 
-  const dueTasks = tasksWithLogs.filter((t) => isLogicallyDue(t));
+  const dueTasks = tasksWithLogs.filter((t) =>
+    isLogicallyDue(t, now, timezone),
+  );
 
   const bucketPrefs = {
     bucketMorningStart: user?.bucketMorningStart ?? 5,
@@ -91,18 +99,18 @@ export default async function DashboardPage() {
     bucketEveningStart: user?.bucketEveningStart ?? 17,
     bucketBeforeBedStart: user?.bucketBeforeBedStart ?? 21,
   };
-  const orderedBuckets = bucketOrderFromNow(bucketPrefs);
+  const orderedBuckets = bucketOrderFromNow(bucketPrefs, now, timezone);
   const currentBucket = orderedBuckets[0];
   const grouped = Object.fromEntries(
     BUCKETS.map((b) => [b, dueTasks.filter((t) => (t.bucket ?? "DAY") === b)]),
   ) as Record<Bucket, typeof dueTasks>;
 
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-
   function todaySum(logs: { loggedAt: Date; value: number }[]) {
+    const todayKey = getLocalDateKey(now, timezone);
     return logs
-      .filter((l) => new Date(l.loggedAt) >= todayStart)
+      .filter(
+        (l) => getLocalDateKey(new Date(l.loggedAt), timezone) === todayKey,
+      )
       .reduce((s, l) => s + l.value, 0);
   }
 
@@ -119,18 +127,16 @@ export default async function DashboardPage() {
     );
     const logsByDate = new Map<string, number>();
     for (const log of habit.logs) {
-      const d = new Date(log.loggedAt);
-      d.setHours(0, 0, 0, 0);
-      const key = d.toISOString();
+      const key = getLocalDateKey(new Date(log.loggedAt), timezone);
       logsByDate.set(key, (logsByDate.get(key) ?? 0) + log.value);
     }
     let missing = 0;
     const cursor = new Date(todayStart);
     cursor.setDate(cursor.getDate() - 1);
     while (cursor >= startBound) {
-      const key = new Date(cursor).toISOString();
+      const key = getLocalDateKey(new Date(cursor), timezone);
       if ((logsByDate.get(key) ?? 0) < habit.thresholdValue) missing++;
-      cursor.setDate(cursor.getDate() - 1);
+      cursor.setUTCDate(cursor.getUTCDate() - 1);
     }
     if (missing > 0) {
       totalMissingDays += missing;
@@ -170,7 +176,7 @@ export default async function DashboardPage() {
                   <div className="max-w-2xl">
                     <p className="section-kicker">Today</p>
                     <h1 className="display-title mt-3 text-4xl font-semibold leading-none text-[#fff7ea] md:text-6xl">
-                      Good {getTimeOfDay()},{" "}
+                      Good {getTimeOfDay(timezone)},{" "}
                       {user?.name?.split(" ")[0] ?? "there"}.
                     </h1>
                     <p className="mt-4 max-w-xl text-base leading-7 text-[#e8dcc8] text-balance drop-shadow-[0_1px_12px_rgba(0,0,0,0.45)]">
@@ -276,7 +282,11 @@ export default async function DashboardPage() {
               </div>
               <Link
                 href="/habits"
-                className={linkButtonClassName("subtle", "sm", "shrink-0 whitespace-nowrap")}
+                className={linkButtonClassName(
+                  "subtle",
+                  "sm",
+                  "shrink-0 whitespace-nowrap",
+                )}
               >
                 View all
                 <ArrowRight className="h-4 w-4" />
@@ -300,7 +310,9 @@ export default async function DashboardPage() {
             ) : (
               <HabitCardList
                 className="space-y-2"
-                habits={sortedHabits as Parameters<typeof HabitCardList>[0]["habits"]}
+                habits={
+                  sortedHabits as Parameters<typeof HabitCardList>[0]["habits"]
+                }
               />
             )}
           </CardContent>
@@ -319,7 +331,11 @@ export default async function DashboardPage() {
               </p>
               <Link
                 href="/stats"
-                className={linkButtonClassName("subtle", "sm", "shrink-0 whitespace-nowrap")}
+                className={linkButtonClassName(
+                  "subtle",
+                  "sm",
+                  "shrink-0 whitespace-nowrap",
+                )}
               >
                 Review progress
                 <ArrowRight className="h-4 w-4" />
@@ -332,8 +348,8 @@ export default async function DashboardPage() {
   );
 }
 
-function getTimeOfDay() {
-  const h = new Date().getHours();
+function getTimeOfDay(timezone: string) {
+  const h = getTimePartsInTimezone(new Date(), timezone).hour;
   if (h < 12) return "morning";
   if (h < 17) return "afternoon";
   return "evening";
