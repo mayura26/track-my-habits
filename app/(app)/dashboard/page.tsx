@@ -1,8 +1,8 @@
 import { ArrowRight, CalendarClock, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { HabitCardList } from "@/components/habits/HabitCardList";
 import { XPBar } from "@/components/gamification/XPBar";
-import { HabitCard } from "@/components/habits/HabitCard";
 import { DueTasksSection } from "@/components/tasks/DueTasksSection";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -298,14 +298,10 @@ export default async function DashboardPage() {
                 </div>
               </SectionArtwork>
             ) : (
-              <div className="space-y-2">
-                {sortedHabits.map((habit) => (
-                  <HabitCard
-                    key={habit.id}
-                    habit={habit as Parameters<typeof HabitCard>[0]["habit"]}
-                  />
-                ))}
-              </div>
+              <HabitCardList
+                className="space-y-2"
+                habits={sortedHabits as Parameters<typeof HabitCardList>[0]["habits"]}
+              />
             )}
           </CardContent>
         </Card>

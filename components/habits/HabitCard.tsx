@@ -38,7 +38,7 @@ export function HabitCard({ habit, onLog }: HabitCardProps) {
 
   return (
     <div
-      className={`relative overflow-hidden rounded-[28px] p-4 transition-[border-color,background-color] duration-150 hover:bg-[rgba(247,240,225,0.02)] sm:p-5 ${
+      className={`relative h-39 overflow-hidden rounded-[26px] px-3 pb-3 pt-0 transition-[border-color,background-color] duration-150 hover:bg-[rgba(247,240,225,0.02)] sm:h-39 sm:px-3.5 sm:pb-3.5 sm:pt-0 ${
         logged
           ? "border border-[rgba(125,156,115,0.22)] surface-panel hover:border-[rgba(125,156,115,0.36)]"
           : "surface-panel hover:border-[rgba(230,196,139,0.3)]"
@@ -58,66 +58,79 @@ export function HabitCard({ habit, onLog }: HabitCardProps) {
         </>
       )}
 
-      <div className="relative z-2 flex items-start gap-3 sm:gap-4">
-        <div className="flex w-17 shrink-0 justify-center pt-1 sm:w-19">
-          {isCount ? (
-            <HabitCountLogControl
-              habitId={habit.id}
-              logs={habit.logs}
-              thresholdValue={habit.thresholdValue}
-              countIncrement={habit.countIncrement ?? null}
-              compact
-              onLog={onLog}
-            />
-          ) : (
-            <HabitLogButton
-              habitId={habit.id}
-              isLoggedToday={logged}
-              onLog={onLog}
-            />
-          )}
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="habit-card-top-shade rounded-2xl px-2.5 py-2 sm:px-3 sm:py-2.5">
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]"
-              style={{ color: habit.category.color }}
-            >
-              <CategoryIcon icon={habit.category.icon} className="h-3 w-3" />
-              {habit.category.name}
-            </span>
+      <div className="relative z-2 flex h-full flex-col">
+        <div
+          className="-mx-3 habit-card-top-shade rounded-none px-3 py-2 sm:-mx-3.5 sm:px-3.5"
+        >
+          <div className="flex items-center justify-between gap-2">
             <Link
               href={`/habits/${habit.id}`}
-              className="mt-2 block truncate text-base font-bold text-text-primary hover:text-[#f3ddb0] sm:text-lg"
+              className="block min-w-0 flex-1 truncate text-base leading-tight font-bold text-text-primary hover:text-[#f3ddb0] sm:text-lg"
             >
               {habit.name}
             </Link>
-
-            <div className="mt-1 flex flex-wrap items-center gap-2">
-              <span className="text-xs text-text-muted">
-                {habit.thresholdType.toLowerCase()}
-              </span>
-              <span className="text-xs text-[#8d826d]">&bull;</span>
-              <span className="text-xs text-[#8d826d]">
-                {logged ? "Logged for today" : "Ready to log"}
+            <div className="flex shrink-0 flex-col items-end gap-1">
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]"
+                style={{ color: habit.category.color }}
+              >
+                <CategoryIcon icon={habit.category.icon} className="h-3 w-3" />
+                {habit.category.name}
               </span>
             </div>
           </div>
+        </div>
 
-          <div className="mt-3 flex items-center justify-between gap-2">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <div className="mt-1.5 grid min-h-0 flex-1 grid-cols-[4rem_minmax(0,1fr)] grid-rows-[auto_1fr] gap-x-2.5 sm:gap-x-3">
+          <div className="row-span-2 flex translate-x-[10px] items-center justify-center pr-1 sm:pr-1.5">
+            {isCount ? (
+              <HabitCountLogControl
+                habitId={habit.id}
+                logs={habit.logs}
+                thresholdValue={habit.thresholdValue}
+                countIncrement={habit.countIncrement ?? null}
+                compact
+                onLog={onLog}
+              />
+            ) : (
+              <HabitLogButton
+                habitId={habit.id}
+                isLoggedToday={logged}
+                onLog={onLog}
+              />
+            )}
+          </div>
+
+          <div className="min-w-0 flex items-start">
+            <div className="flex min-w-0 w-full items-end justify-end gap-2">
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <span className="text-right text-xs font-semibold text-[#d6c8af]">
+                  {logged ? "Logged for today" : "Ready to log"}
+                </span>
+                <div className="inline-flex items-center rounded-full border border-[rgba(216,196,160,0.22)] bg-[rgba(247,240,225,0.08)] px-2 py-0.5 shadow-[inset_0_1px_0_rgba(255,248,232,0.08),0_4px_10px_rgba(0,0,0,0.16)]">
+                  <span className="text-[10px] italic font-medium uppercase tracking-[0.12em] text-[#c4b59a]">
+                    {habit.thresholdType.toLowerCase()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="min-w-0 flex items-end justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2 overflow-hidden">
               <StreakBadge streak={habit.currentStreak} size="sm" />
               {logged && <Badge variant="success">Done</Badge>}
               {habit.nfcToken && <Badge variant="info">NFC</Badge>}
             </div>
-            <Link
-              href={`/habits/${habit.id}`}
-              className="habit-card-details-chip inline-flex shrink-0 items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#d8c4a0]"
-            >
-              Details
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Link>
+            <div className="-mb-3 -mr-3 ml-auto shrink-0 sm:-mb-3.5 sm:-mr-3.5">
+              <Link
+                href={`/habits/${habit.id}`}
+                className="habit-card-details-dock inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#d8c4a0]"
+              >
+                Details
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </div>
         </div>
       </div>

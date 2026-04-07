@@ -1,7 +1,7 @@
 import { Compass, Plus, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { CategoryIcon } from "@/components/categories/CategoryIcon";
-import { HabitCard } from "@/components/habits/HabitCard";
+import { HabitCardList } from "@/components/habits/HabitCardList";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { SectionArtwork } from "@/components/ui/SectionArtwork";
@@ -168,14 +168,10 @@ export default async function HabitsPage({ searchParams }: HabitsPageProps) {
                 Log from here or open a habit for history and step size.
               </p>
             </div>
-            <div className="space-y-2">
-              {habits.map((habit) => (
-                <HabitCard
-                  key={habit.id}
-                  habit={habit as Parameters<typeof HabitCard>[0]["habit"]}
-                />
-              ))}
-            </div>
+            <HabitCardList
+              className="space-y-2"
+              habits={habits as Parameters<typeof HabitCardList>[0]["habits"]}
+            />
           </CardContent>
         </Card>
       )}

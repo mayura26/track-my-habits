@@ -75,12 +75,12 @@ export function HabitLogButton({
     >
       {showDone ? (
         <CheckCircle
-          className={`h-6 w-6 text-[#7d9c73] ${playPop ? "habit-log-check-pop" : ""}`}
+          className={`h-8 w-8 text-[#7d9c73] ${playPop ? "habit-log-check-pop" : ""}`}
           strokeWidth={2}
         />
       ) : (
         <Circle
-          className="h-6 w-6 text-[#5c5348] transition-colors hover:text-[#b4a58a]"
+          className="h-8 w-8 text-[#5c5348] transition-colors hover:text-text-muted"
           strokeWidth={2}
         />
       )}
