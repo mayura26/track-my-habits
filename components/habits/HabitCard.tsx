@@ -115,11 +115,10 @@ export function HabitCard({ habit, onLog }: HabitCardProps) {
 
           <div className="min-w-0 flex items-end justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2 overflow-hidden">
-              <StreakBadge streak={habit.currentStreak} size="sm" />
-              {logged && <Badge variant="success">Done</Badge>}
               {habit.nfcToken && <Badge variant="info">NFC</Badge>}
             </div>
-            <div className="-mb-3 -mr-3 ml-auto shrink-0 sm:-mb-3.5 sm:-mr-3.5">
+            <div className="-mb-3 -mr-3 ml-auto flex shrink-0 items-center gap-2 sm:-mb-3.5 sm:-mr-3.5">
+              <StreakBadge streak={habit.currentStreak} size="sm" />
               <Link
                 href={`/habits/${habit.id}`}
                 className="habit-card-details-dock inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#d8c4a0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(230,196,139,0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111814]"
