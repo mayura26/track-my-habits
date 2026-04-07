@@ -1,11 +1,11 @@
 "use client";
 
-import type { Task, TaskLog } from "@prisma/client";
+import type { HabitCategory, Task, TaskLog } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { logsInPeriod } from "@/lib/task-helpers";
 
-type TaskWithLogs = Task & { logs: TaskLog[] };
+type TaskWithLogs = Task & { logs: TaskLog[]; category: HabitCategory | null };
 
 interface TasksClientProps {
   tasks: TaskWithLogs[];

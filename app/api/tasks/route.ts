@@ -17,6 +17,7 @@ export async function GET() {
 
   const tasks = await db.task.findMany({
     where: { userId: session.user.id, isActive: true },
+    include: { category: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -59,6 +60,22 @@ export async function POST(req: NextRequest) {
       { error: parsed.error.flatten() },
       { status: 400 },
     );
+  }
+
+  if (parsed.data.categoryId) {
+    const category = await db.habitCategory.findFirst({
+      where: {
+        id: parsed.data.categoryId,
+        OR: [{ isDefault: true }, { userId: session.user.id }],
+      },
+      select: { id: true },
+    });
+    if (!category) {
+      return NextResponse.json(
+        { error: { formErrors: ["Invalid category"] } },
+        { status: 400 },
+      );
+    }
   }
 
   const task = await db.task.create({

@@ -34,3 +34,39 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Persistent Upload Storage (Production)
+
+Habit/task images are uploaded by the app and should not be stored on ephemeral container layers.
+
+- Configure `UPLOADS_ROOT` so the upload API writes to a persistent mounted directory.
+- Keep this path mounted across container restarts/rebuilds.
+- The app still stores public URLs in the database as `/uploads/...`.
+
+Recommended production setting:
+
+```bash
+UPLOADS_ROOT=/app/public/uploads
+```
+
+Example Docker run:
+
+```bash
+docker run \
+  -e UPLOADS_ROOT=/app/public/uploads \
+  -v /host/track-my-habits/uploads:/app/public/uploads \
+  your-image:latest
+```
+
+Example docker-compose snippet:
+
+```yaml
+services:
+  web:
+    environment:
+      - UPLOADS_ROOT=/app/public/uploads
+    volumes:
+      - /host/track-my-habits/uploads:/app/public/uploads
+```
+
+After restart/rebuild, previously uploaded images remain available as long as the same host volume is mounted.

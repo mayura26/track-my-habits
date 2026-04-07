@@ -20,6 +20,7 @@ export default async function TasksPage() {
 
   const tasks = await db.task.findMany({
     where: { userId, isActive: true },
+    include: { category: true },
     orderBy: { createdAt: "desc" },
   });
 

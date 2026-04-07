@@ -1,10 +1,12 @@
 "use client";
 
+import type { HabitCategory } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ChoiceCard } from "@/components/ui/ChoiceCard";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { autoGapDays, WEEKDAY_ORDER, type Weekday } from "@/lib/task-helpers";
 
 const WEEKDAY_BUTTONS: { value: Weekday; label: string }[] = [
@@ -18,9 +20,11 @@ const WEEKDAY_BUTTONS: { value: Weekday; label: string }[] = [
 ];
 
 interface TaskFormProps {
+  categories: HabitCategory[];
   defaultValues?: {
     name?: string;
     description?: string;
+    categoryId?: string;
     frequency?: string;
     frequencyValue?: number;
     bucket?: string;
@@ -32,7 +36,7 @@ interface TaskFormProps {
   taskId?: string;
 }
 
-export function TaskForm({ defaultValues, taskId }: TaskFormProps) {
+export function TaskForm({ categories, defaultValues, taskId }: TaskFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -73,6 +77,7 @@ export function TaskForm({ defaultValues, taskId }: TaskFormProps) {
     const body = {
       name: formData.get("name"),
       description: (formData.get("description") as string) || undefined,
+      categoryId: (formData.get("categoryId") as string) || undefined,
       frequency,
       frequencyValue: parseTimesPerPeriod(
         String(formData.get("frequencyValue")),
@@ -135,6 +140,20 @@ export function TaskForm({ defaultValues, taskId }: TaskFormProps) {
           placeholder="Optional note"
           defaultValue={defaultValues?.description ?? ""}
         />
+
+        <Select
+          label="Category"
+          name="categoryId"
+          id="categoryId"
+          defaultValue={defaultValues?.categoryId ?? ""}
+        >
+          <option value="">No category</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </Select>
       </section>
 
       <section className="space-y-4 rounded-[26px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.03)] p-4">

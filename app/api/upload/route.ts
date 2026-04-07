@@ -5,11 +5,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 
-const ALLOWED_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-]);
+const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
 const EXT_MAP: Record<string, string> = {
@@ -17,6 +13,23 @@ const EXT_MAP: Record<string, string> = {
   "image/png": "png",
   "image/webp": "webp",
 };
+
+const DEFAULT_UPLOADS_ROOT = path.join(process.cwd(), "public", "uploads");
+
+function getUploadsRoot() {
+  const configured = process.env.UPLOADS_ROOT?.trim();
+  if (!configured) return DEFAULT_UPLOADS_ROOT;
+
+  return path.isAbsolute(configured)
+    ? configured
+    : path.join(process.cwd(), configured);
+}
+
+function resolveStoredImagePath(imageUrl: string) {
+  const normalized = imageUrl.startsWith("/") ? imageUrl.slice(1) : imageUrl;
+  const relativeFromUploads = normalized.replace(/^uploads\//, "");
+  return path.join(getUploadsRoot(), relativeFromUploads);
+}
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -64,7 +77,7 @@ export async function POST(req: NextRequest) {
     }
     // Delete old image if exists
     if (habit.imageUrl) {
-      const oldPath = path.join(process.cwd(), "public", habit.imageUrl);
+      const oldPath = resolveStoredImagePath(habit.imageUrl);
       if (existsSync(oldPath)) await unlink(oldPath);
     }
   } else {
@@ -75,14 +88,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     if (task.imageUrl) {
-      const oldPath = path.join(process.cwd(), "public", task.imageUrl);
+      const oldPath = resolveStoredImagePath(task.imageUrl);
       if (existsSync(oldPath)) await unlink(oldPath);
     }
   }
 
   const ext = EXT_MAP[file.type] ?? "jpg";
   const filename = `${id}-${Date.now()}.${ext}`;
-  const dir = path.join(process.cwd(), "public", "uploads", `${type}s`);
+  const dir = path.join(getUploadsRoot(), `${type}s`);
   if (!existsSync(dir)) await mkdir(dir, { recursive: true });
   const filePath = path.join(dir, filename);
 
@@ -120,7 +133,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     if (habit.imageUrl) {
-      const filePath = path.join(process.cwd(), "public", habit.imageUrl);
+      const filePath = resolveStoredImagePath(habit.imageUrl);
       if (existsSync(filePath)) await unlink(filePath);
     }
     await db.habit.update({ where: { id }, data: { imageUrl: null } });
@@ -132,7 +145,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     if (task.imageUrl) {
-      const filePath = path.join(process.cwd(), "public", task.imageUrl);
+      const filePath = resolveStoredImagePath(task.imageUrl);
       if (existsSync(filePath)) await unlink(filePath);
     }
     await db.task.update({ where: { id }, data: { imageUrl: null } });

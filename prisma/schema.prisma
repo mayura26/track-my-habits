@@ -81,6 +81,7 @@ model HabitCategory {
 
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   habits Habit[]
+  tasks  Task[]
 }
 
 model Habit {
@@ -157,6 +158,7 @@ model UserBadge {
 model Task {
   id              String   @id @default(cuid())
   userId          String
+  categoryId      String?
   name            String
   description     String?
   frequency       String   @default("WEEKLY")
@@ -174,8 +176,11 @@ model Task {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  logs TaskLog[]
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category HabitCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  logs     TaskLog[]
+
+  @@index([categoryId])
 }
 
 model TaskLog {

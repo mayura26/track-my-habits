@@ -59,6 +59,7 @@ export default async function DashboardPage() {
     db.userBadge.count({ where: { userId } }),
     db.task.findMany({
       where: { userId, isActive: true },
+      include: { category: true },
       orderBy: { createdAt: "desc" },
     }),
   ]);

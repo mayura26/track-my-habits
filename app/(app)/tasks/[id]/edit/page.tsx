@@ -16,6 +16,12 @@ export default async function EditTaskPage({
 
   const task = await db.task.findFirst({
     where: { id, userId: session.user.id, isActive: true },
+    include: { category: true },
+  });
+
+  const categories = await db.habitCategory.findMany({
+    where: { OR: [{ isDefault: true }, { userId: session.user.id }] },
+    orderBy: [{ isDefault: "desc" }, { name: "asc" }],
   });
 
   if (!task) notFound();
@@ -40,10 +46,12 @@ export default async function EditTaskPage({
         </CardHeader>
         <CardContent>
           <TaskForm
+            categories={categories}
             taskId={task.id}
             defaultValues={{
               name: task.name,
               description: task.description ?? undefined,
+              categoryId: task.categoryId ?? undefined,
               frequency: task.frequency,
               frequencyValue: task.frequencyValue,
               bucket: task.bucket ?? "DAY",
@@ -64,6 +72,7 @@ export default async function EditTaskPage({
         description={task.description}
         frequency={task.frequency}
         bucket={task.bucket}
+        categoryName={task.category?.name ?? null}
       />
     </div>
   );

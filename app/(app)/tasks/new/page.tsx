@@ -1,9 +1,14 @@
 import { TaskForm } from "@/components/tasks/TaskForm";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
+import { db } from "@/lib/db";
 
 export default async function NewTaskPage() {
-  await requireAuth();
+  const session = await requireAuth();
+  const categories = await db.habitCategory.findMany({
+    where: { OR: [{ isDefault: true }, { userId: session.user.id }] },
+    orderBy: [{ isDefault: "desc" }, { name: "asc" }],
+  });
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -25,7 +30,7 @@ export default async function NewTaskPage() {
           </p>
         </CardHeader>
         <CardContent>
-          <TaskForm />
+          <TaskForm categories={categories} />
         </CardContent>
       </Card>
     </div>

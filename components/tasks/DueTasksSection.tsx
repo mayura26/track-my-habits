@@ -1,6 +1,6 @@
 "use client";
 
-import type { Task, TaskLog } from "@prisma/client";
+import type { HabitCategory, Task, TaskLog } from "@prisma/client";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,7 +8,7 @@ import { TaskCard } from "@/components/tasks/TaskCard";
 import { Card, CardContent } from "@/components/ui/Card";
 import { BUCKET_LABELS, type Bucket, logsInPeriod } from "@/lib/task-helpers";
 
-type TaskWithLogs = Task & { logs: TaskLog[] };
+type TaskWithLogs = Task & { logs: TaskLog[]; category: HabitCategory | null };
 
 interface DueTasksSectionProps {
   grouped: Record<Bucket, TaskWithLogs[]>;

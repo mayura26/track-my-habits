@@ -1,9 +1,16 @@
 "use client";
 
-import { Check, ClipboardCopy, ImagePlus, RefreshCw, Trash2, Upload } from "lucide-react";
+import {
+  Check,
+  ClipboardCopy,
+  ImagePlus,
+  RefreshCw,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { generateHabitImagePrompt } from "@/lib/image-prompt";
 
@@ -32,6 +39,25 @@ export function HabitImageSection({
   const [uploading, setUploading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [displayImageUrl, setDisplayImageUrl] = useState<string | null>(
+    imageUrl,
+  );
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!previewUrl) {
+      setDisplayImageUrl(imageUrl);
+    }
+  }, [imageUrl, previewUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   async function handleGenerate() {
     setSaving(true);
@@ -58,6 +84,12 @@ export function HabitImageSection({
   }
 
   async function handleUpload(file: File) {
+    const localPreview = URL.createObjectURL(file);
+    if (previewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(localPreview);
+    setDisplayImageUrl(localPreview);
     setUploading(true);
     const form = new FormData();
     form.append("file", file);
@@ -66,7 +98,17 @@ export function HabitImageSection({
     const res = await fetch("/api/upload", { method: "POST", body: form });
     setUploading(false);
     if (res.ok) {
-      router.refresh();
+      const payload = (await res.json()) as { url?: string };
+      if (payload.url) {
+        setDisplayImageUrl(payload.url);
+      }
+      if (localPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(localPreview);
+      }
+      setPreviewUrl(null);
+      startTransition(() => {
+        router.refresh();
+      });
     }
   }
 
@@ -76,7 +118,14 @@ export function HabitImageSection({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type: "habit", id: habitId }),
     });
-    router.refresh();
+    if (previewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+    setDisplayImageUrl(null);
+    startTransition(() => {
+      router.refresh();
+    });
   }
 
   return (
@@ -90,12 +139,13 @@ export function HabitImageSection({
       </div>
 
       {/* Image preview */}
-      {imageUrl && (
+      {displayImageUrl && (
         <div className="relative aspect-video w-full overflow-hidden rounded-[20px] border border-[rgba(216,196,160,0.12)]">
           <Image
-            src={imageUrl}
+            src={displayImageUrl}
             alt={`Artwork for ${name}`}
             fill
+            unoptimized={displayImageUrl.startsWith("blob:")}
             className="object-cover section-artwork-photo-dimmed"
             sizes="(max-width: 768px) 100vw, 600px"
           />
@@ -168,7 +218,7 @@ export function HabitImageSection({
       )}
 
       {/* Upload zone */}
-      {prompt && !imageUrl && (
+      {prompt && !displayImageUrl && (
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
@@ -179,9 +229,13 @@ export function HabitImageSection({
           <p className="text-sm text-[#b4a58a]">
             {uploading
               ? "Uploading..."
-              : "Click to upload your generated image"}
+              : isPending
+                ? "Saving..."
+                : "Click to upload your generated image"}
           </p>
-          <p className="text-xs text-[#8d826d]">JPEG, PNG, or WebP up to 5 MB</p>
+          <p className="text-xs text-[#8d826d]">
+            JPEG, PNG, or WebP up to 5 MB
+          </p>
         </button>
       )}
 
