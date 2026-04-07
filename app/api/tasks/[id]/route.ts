@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { serializeScheduledWeekdays } from "@/lib/task-helpers";
 import { updateTaskSchema } from "@/lib/validations";
 
 export async function GET(
@@ -53,7 +54,16 @@ export async function PATCH(
 
   const task = await db.task.update({
     where: { id },
-    data: parsed.data,
+    data: {
+      ...parsed.data,
+      ...(parsed.data.scheduledWeekdays !== undefined
+        ? {
+            scheduledWeekdays: serializeScheduledWeekdays(
+              parsed.data.scheduledWeekdays,
+            ),
+          }
+        : {}),
+    },
   });
 
   return NextResponse.json(task);

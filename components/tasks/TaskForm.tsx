@@ -5,7 +5,17 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ChoiceCard } from "@/components/ui/ChoiceCard";
 import { Input } from "@/components/ui/Input";
-import { autoGapDays } from "@/lib/task-helpers";
+import { autoGapDays, WEEKDAY_ORDER, type Weekday } from "@/lib/task-helpers";
+
+const WEEKDAY_BUTTONS: { value: Weekday; label: string }[] = [
+  { value: "MON", label: "Mon" },
+  { value: "TUE", label: "Tue" },
+  { value: "WED", label: "Wed" },
+  { value: "THU", label: "Thu" },
+  { value: "FRI", label: "Fri" },
+  { value: "SAT", label: "Sat" },
+  { value: "SUN", label: "Sun" },
+];
 
 interface TaskFormProps {
   defaultValues?: {
@@ -14,6 +24,7 @@ interface TaskFormProps {
     frequency?: string;
     frequencyValue?: number;
     bucket?: string;
+    scheduledWeekdays?: Weekday[];
     minGapDays?: number | null;
     reminderEnabled?: boolean;
     reminderTime?: string;
@@ -35,6 +46,9 @@ export function TaskForm({ defaultValues, taskId }: TaskFormProps) {
     String(defaultValues?.frequencyValue ?? 1),
   );
   const [bucket, setBucket] = useState(defaultValues?.bucket ?? "DAY");
+  const [scheduledWeekdays, setScheduledWeekdays] = useState<Weekday[]>(
+    defaultValues?.scheduledWeekdays ?? [...WEEKDAY_ORDER],
+  );
   const [customGap, setCustomGap] = useState(defaultValues?.minGapDays != null);
   const [minGapDaysInput, setMinGapDaysInput] = useState(() =>
     String(defaultValues?.minGapDays ?? 1),
@@ -64,6 +78,7 @@ export function TaskForm({ defaultValues, taskId }: TaskFormProps) {
         String(formData.get("frequencyValue")),
       ),
       bucket,
+      scheduledWeekdays,
       minGapDays:
         customGap && timesPerPeriod > 1
           ? parseMinGapDays(String(formData.get("minGapDays")))
@@ -206,6 +221,44 @@ export function TaskForm({ defaultValues, taskId }: TaskFormProps) {
               onClick={() => setBucket(value)}
             />
           ))}
+        </div>
+      </section>
+
+      <section className="space-y-4 rounded-[26px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.03)] p-4">
+        <div>
+          <p className="section-kicker">Active weekdays</p>
+          <p className="mt-2 text-sm text-[#b4a58a]">
+            Only show this task as due on the selected days.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+          {WEEKDAY_BUTTONS.map(({ value, label }) => {
+            const active = scheduledWeekdays.includes(value);
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  setScheduledWeekdays((current) => {
+                    if (current.includes(value)) {
+                      if (current.length === 1) return current;
+                      return current.filter((day) => day !== value);
+                    }
+                    return [...current, value];
+                  });
+                }}
+                className={`rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
+                  active
+                    ? "border-[rgba(230,196,139,0.42)] bg-[rgba(199,154,82,0.18)] text-[#f7f0e1]"
+                    : "border-[rgba(216,196,160,0.16)] bg-[rgba(247,240,225,0.04)] text-[#b4a58a]"
+                }`}
+                aria-pressed={active}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </section>
 

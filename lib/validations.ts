@@ -46,12 +46,27 @@ export const BUCKET_VALUES = [
   "EVENING",
   "BEFORE_BED",
 ] as const;
+export const WEEKDAY_VALUES = [
+  "SUN",
+  "MON",
+  "TUE",
+  "WED",
+  "THU",
+  "FRI",
+  "SAT",
+] as const;
 
 export const createTaskSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
   frequency: z.enum(["DAILY", "WEEKLY", "FORTNIGHTLY", "MONTHLY"]),
   frequencyValue: z.number().int().min(1).max(30),
+  scheduledWeekdays: z
+    .array(z.enum(WEEKDAY_VALUES))
+    .min(1)
+    .max(7)
+    .optional()
+    .transform((value) => (value ? [...new Set(value)] : value)),
   bucket: z.enum(BUCKET_VALUES).optional().default("DAY"),
   minGapDays: z.number().int().min(0).max(365).nullable().optional(),
   imageUrl: z.string().nullable().optional(),

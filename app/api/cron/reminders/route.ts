@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendPushToUser } from "@/lib/push";
+import { isScheduledForToday } from "@/lib/task-helpers";
 
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
@@ -35,6 +36,7 @@ export async function GET(req: Request) {
 
   for (const task of tasks) {
     if (!task.reminderTime || task.reminderTime > currentHHMM) continue;
+    if (!isScheduledForToday(task, now)) continue;
 
     // Skip if already sent today
     if (

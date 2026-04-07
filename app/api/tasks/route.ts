@@ -1,7 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { getPeriodRange, isLogicallyDue, nextDueAt } from "@/lib/task-helpers";
+import {
+  getPeriodRange,
+  isLogicallyDue,
+  nextDueAt,
+  serializeScheduledWeekdays,
+} from "@/lib/task-helpers";
 import { createTaskSchema } from "@/lib/validations";
 
 export async function GET() {
@@ -60,6 +65,9 @@ export async function POST(req: NextRequest) {
     data: {
       userId: session.user.id,
       ...parsed.data,
+      scheduledWeekdays: serializeScheduledWeekdays(
+        parsed.data.scheduledWeekdays,
+      ),
     },
   });
 

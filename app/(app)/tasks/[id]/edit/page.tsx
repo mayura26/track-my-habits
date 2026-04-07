@@ -4,6 +4,7 @@ import { TaskImageSection } from "@/components/tasks/TaskImageSection";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
+import { parseScheduledWeekdays } from "@/lib/task-helpers";
 
 export default async function EditTaskPage({
   params,
@@ -46,6 +47,8 @@ export default async function EditTaskPage({
               frequency: task.frequency,
               frequencyValue: task.frequencyValue,
               bucket: task.bucket ?? "DAY",
+              scheduledWeekdays:
+                parseScheduledWeekdays(task.scheduledWeekdays) ?? undefined,
               minGapDays: task.minGapDays,
               reminderEnabled: task.reminderEnabled,
               reminderTime: task.reminderTime ?? undefined,

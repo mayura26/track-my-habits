@@ -13,6 +13,16 @@ export const BUCKET_LABELS: Record<Bucket, string> = {
 // Monday, 2024-01-01, midnight UTC — used as a deterministic fortnight anchor.
 export const FORTNIGHT_EPOCH = new Date("2024-01-01T00:00:00.000Z");
 const MS_PER_DAY = 86_400_000;
+export const WEEKDAY_ORDER = [
+  "SUN",
+  "MON",
+  "TUE",
+  "WED",
+  "THU",
+  "FRI",
+  "SAT",
+] as const;
+export type Weekday = (typeof WEEKDAY_ORDER)[number];
 
 export interface BucketPrefs {
   bucketMorningStart: number;
@@ -109,6 +119,34 @@ export function effectiveGapDays(
 
 type TaskWithLogs = Task & { logs: TaskLog[] };
 
+export function parseScheduledWeekdays(value: string | null): Weekday[] | null {
+  if (!value) return null;
+  const parsed = value
+    .split(",")
+    .map((part) => part.trim().toUpperCase())
+    .filter((part): part is Weekday => WEEKDAY_ORDER.includes(part as Weekday));
+  if (parsed.length === 0) return null;
+  return [...new Set(parsed)];
+}
+
+export function serializeScheduledWeekdays(
+  weekdays?: Weekday[],
+): string | null {
+  if (!weekdays || weekdays.length === 0 || weekdays.length === 7) return null;
+  const selected = new Set<Weekday>(weekdays);
+  return WEEKDAY_ORDER.filter((day) => selected.has(day)).join(",");
+}
+
+export function isScheduledForToday(
+  task: Pick<Task, "scheduledWeekdays">,
+  now: Date = new Date(),
+): boolean {
+  const scheduled = parseScheduledWeekdays(task.scheduledWeekdays);
+  if (!scheduled) return true;
+  const today = WEEKDAY_ORDER[now.getDay()];
+  return scheduled.includes(today);
+}
+
 function latestLogDate(logs: TaskLog[]): Date | null {
   if (logs.length === 0) return null;
   let latest = new Date(logs[0].completedAt);
@@ -123,6 +161,7 @@ export function isLogicallyDue(
   task: TaskWithLogs,
   now: Date = new Date(),
 ): boolean {
+  if (!isScheduledForToday(task, now)) return false;
   const count = logsInPeriod(task.logs, task.frequency);
   if (count >= task.frequencyValue) return false;
   const gap = effectiveGapDays(task);
@@ -192,6 +231,7 @@ export function isReminderDue(
   now: Date = new Date(),
 ): boolean {
   if (!task.reminderEnabled || !task.reminderTime) return false;
+  if (!isScheduledForToday(task, now)) return false;
 
   // If caller passed logs, gate on logical due state so we don't nag for done tasks.
   if (task.logs) {

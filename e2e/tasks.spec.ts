@@ -232,4 +232,25 @@ test.describe("Tasks", () => {
     await expect(page).toHaveURL("/tasks");
     await expect(page.getByText("Edited Task Name E2E").first()).toBeVisible();
   });
+
+  test("task set for another weekday is hidden from today's due list", async ({
+    page,
+  }) => {
+    const dayLabels = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+    const today = new Date().getDay();
+    const nextDay = dayLabels[(today + 1) % 7];
+    const createRes = await page.request.post("/api/tasks", {
+      data: {
+        name: "Weekday Filter E2E",
+        frequency: "DAILY",
+        frequencyValue: 1,
+        bucket: "DAY",
+        scheduledWeekdays: [nextDay],
+      },
+    });
+    expect(createRes.ok()).toBeTruthy();
+
+    await page.goto("/dashboard");
+    await expect(page.getByText("Weekday Filter E2E")).not.toBeVisible();
+  });
 });

@@ -161,6 +161,8 @@ model Task {
   description     String?
   frequency       String   @default("WEEKLY")
   frequencyValue  Int      @default(1)
+  /// Optional CSV weekdays (SUN,MON,TUE,WED,THU,FRI,SAT). Null means all days.
+  scheduledWeekdays String?
   bucket          String?  @default("DAY")
   minGapDays      Int?
   reminderEnabled     Boolean   @default(false)
