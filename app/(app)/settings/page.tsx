@@ -1,4 +1,5 @@
 import { BucketSettingsForm } from "@/components/settings/BucketSettingsForm";
+import { TestPushButton } from "@/components/settings/TestPushButton";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { SectionArtwork } from "@/components/ui/SectionArtwork";
 import { requireAuth } from "@/lib/auth-helpers";
@@ -73,6 +74,18 @@ export default async function SettingsPage() {
             }}
             timezoneOptions={timezoneOptions}
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <h2 className="font-medium text-[#f7f0e1]">Push Notifications</h2>
+          <p className="text-sm text-[#b4a58a]">
+            Send a test notification to verify push is working on this device.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <TestPushButton />
         </CardContent>
       </Card>
     </div>

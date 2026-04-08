@@ -13,9 +13,11 @@ export default auth((req) => {
     pathname.startsWith("/nfc/") ||
     pathname.startsWith("/api/auth/") ||
     pathname.startsWith("/api/test/") ||
+    pathname.startsWith("/api/cron/") ||
     pathname.startsWith("/artifacts/") ||
     pathname === "/signin" ||
     pathname === "/manifest.webmanifest" ||
+    pathname === "/sw.js" ||
     isStaticPublicAsset;
 
   if (!isPublic && !req.auth) {
