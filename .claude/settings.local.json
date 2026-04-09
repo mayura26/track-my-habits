@@ -30,7 +30,10 @@
       "Bash(ls -la \"D:/VSCode Projects/track-my-habits/.env\"*)",
       "Bash(python3:*)",
       "Bash(npx tsx:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(grep:*)",
+      "Bash(npx biome:*)",
+      "Bash(sqlite3 prisma/dev.db \".tables\")"
     ]
   }
 }

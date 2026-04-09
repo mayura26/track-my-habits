@@ -14,7 +14,7 @@ self.addEventListener("push", (event) => {
   const options = {
     body: payload.body || "",
     icon: "/web-app-manifest-192x192.png",
-    badge: "/web-app-manifest-192x192.png",
+    badge: "/icons/notification-badge.png",
     data: { url: payload.url || "/dashboard" },
   };
 
