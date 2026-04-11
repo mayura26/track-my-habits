@@ -1,8 +1,9 @@
-import { Calendar, Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CategoryBadge } from "@/components/categories/CategoryBadge";
 import { HabitDetailCountSection } from "@/components/habits/HabitDetailCountSection";
+import { HabitHistorySection } from "@/components/habits/HabitHistorySection";
 import { HabitImageSection } from "@/components/habits/HabitImageSection";
 import { StreakBadge } from "@/components/habits/StreakBadge";
 import { Badge } from "@/components/ui/Badge";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
+import { normalizeTimezone, startOfDayInTimezone } from "@/lib/timezone";
 import { HabitDetailClient } from "./HabitDetailClient";
 
 interface HabitDetailPageProps {
@@ -22,11 +24,24 @@ export default async function HabitDetailPage({
   const session = await requireAuth();
   const { id } = await params;
 
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { timezone: true },
+  });
+  const timezone = normalizeTimezone(user?.timezone);
+  const todayStart = startOfDayInTimezone(new Date(), timezone);
+
   const habit = await db.habit.findFirst({
     where: { id, userId: session.user.id },
     include: {
       category: true,
-      logs: { orderBy: { loggedAt: "desc" }, take: 50 },
+      // HabitDetailCountSection only needs today's logs for its running
+      // total + undo-last-log. The new HabitHistorySection fetches its own
+      // 91-day window independently.
+      logs: {
+        where: { loggedAt: { gte: todayStart } },
+        orderBy: { loggedAt: "desc" },
+      },
     },
   });
 
@@ -162,45 +177,8 @@ export default async function HabitDetailPage({
         nfcValue={habit.nfcValue}
       />
 
-      {/* Recent logs */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-[#b4a58a]" />
-            <h2 className="font-medium text-[#f7f0e1]">Recent Logs</h2>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {habit.logs.length === 0 ? (
-            <p className="text-center text-sm text-[#b4a58a]">No logs yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {habit.logs.slice(0, 20).map((log) => (
-                <div
-                  key={log.id}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <span className="text-[#b4a58a]">
-                    {new Date(log.loggedAt).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#f7f0e1]">{log.value}</span>
-                    {log.source === "NFC" && (
-                      <Badge variant="info" className="text-xs">
-                        NFC
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* History */}
+      <HabitHistorySection habit={habit} timezone={timezone} />
     </div>
   );
 }

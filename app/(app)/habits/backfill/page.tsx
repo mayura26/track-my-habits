@@ -3,41 +3,9 @@ import Link from "next/link";
 import { BackfillClient } from "@/components/habits/BackfillClient";
 import { Card, CardContent } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
+import { addDays, labelFor } from "@/lib/date-keys";
 import { db } from "@/lib/db";
 import { getLocalDateKey } from "@/lib/timezone";
-
-// Habits are date-based, not moment-based. Timezone is only used to decide
-// *which* calendar date is "today" for the user. After that, all arithmetic
-// is plain YYYY-MM-DD string math — no more Date cursors, no more mixing
-// UTC midnights with localized formatters.
-const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-function parseDateKey(key: string): { year: number; month: number; day: number } {
-  const [y, m, d] = key.split("-").map(Number);
-  return { year: y, month: m, day: d };
-}
-
-function formatDateKey(year: number, month: number, day: number): string {
-  return `${year.toString().padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-}
-
-// Subtract N days from a YYYY-MM-DD key. Uses UTC Date math internally purely
-// as a calendar calculator — no timezone semantics escape this function.
-function addDays(key: string, delta: number): string {
-  const { year, month, day } = parseDateKey(key);
-  const d = new Date(Date.UTC(year, month - 1, day + delta));
-  return formatDateKey(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate());
-}
-
-function weekdayIndexOf(key: string): number {
-  const { year, month, day } = parseDateKey(key);
-  return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
-}
-
-function labelFor(key: string): string {
-  const { day } = parseDateKey(key);
-  return `${WEEKDAY_SHORT[weekdayIndexOf(key)]} ${day}`;
-}
 
 export default async function BackfillPage() {
   const session = await requireAuth();
@@ -95,10 +63,7 @@ export default async function BackfillPage() {
         if (log.status === "FAILED") {
           failedDates.add(key);
         } else {
-          completedByDate.set(
-            key,
-            (completedByDate.get(key) ?? 0) + log.value,
-          );
+          completedByDate.set(key, (completedByDate.get(key) ?? 0) + log.value);
         }
       }
 
@@ -144,8 +109,8 @@ export default async function BackfillPage() {
             Fill Missing Days
           </h1>
           <p className="mt-1 text-sm text-[#b4a58a]">
-            Tap ✓ to log a day, or ✗ to mark it as failed. Tap a filled chip
-            to undo. Last 7 days shown.
+            Tap ✓ to log a day, or ✗ to mark it as failed. Tap a filled chip to
+            undo. Last 7 days shown.
           </p>
         </div>
       </div>

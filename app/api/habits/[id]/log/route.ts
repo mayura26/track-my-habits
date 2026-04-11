@@ -59,6 +59,53 @@ export async function POST(
       ? new Date(parsed.data.loggedAt)
       : new Date();
 
+  // COUNT history editor: replace the day's logs in one atomic step. Delete
+  // everything on the day, create the requested log, recalc streak. Only
+  // meaningful for BACKFILL — no XP pipeline, no totalLogsCount changes.
+  if (parsed.data.replace === true && parsed.data.source === "BACKFILL") {
+    const dayStart = startOfDayInTimezone(loggedAt, timezone);
+    const dayEnd = new Date(
+      endOfDayInTimezone(loggedAt, timezone).getTime() + 1,
+    );
+    const [, log] = await db.$transaction([
+      db.habitLog.deleteMany({
+        where: {
+          habitId: id,
+          userId: session.user.id,
+          loggedAt: { gte: dayStart, lt: dayEnd },
+        },
+      }),
+      db.habitLog.create({
+        data: {
+          habitId: id,
+          userId: session.user.id,
+          value: parsed.data.value,
+          source: parsed.data.source,
+          status: parsed.data.status,
+          loggedAt,
+        },
+      }),
+    ]);
+
+    const newStreak = await calculateStreak(habit, timezone);
+    const bestStreak = Math.max(habit.bestStreak, newStreak);
+    await db.habit.update({
+      where: { id: habit.id },
+      data: { currentStreak: newStreak, bestStreak },
+    });
+    return NextResponse.json(
+      {
+        log,
+        streak: newStreak,
+        xpGained: 0,
+        leveledUp: false,
+        newLevel: 0,
+        newBadges: [],
+      },
+      { status: 201 },
+    );
+  }
+
   // Backfill is idempotent: if a log with the same status already exists on
   // this day, return it without creating a duplicate. This protects against
   // double-clicks and retries (a real user just had 5 duplicate FAILED rows
@@ -172,11 +219,13 @@ export async function DELETE(
   // Support date-specific deletion via ?dateKey= (preferred, timezone-safe)
   // or legacy ?loggedAt= query param, with an optional ?status= filter so the
   // backfill UI can target a failed log specifically even if both a completed
-  // and a failed log exist on the date.
+  // and a failed log exist on the date. ?all=true wipes every log for the day
+  // (used by the COUNT history editor's Clear button).
   const url = new URL(req.url);
   const dateKeyParam = url.searchParams.get("dateKey");
   const loggedAtParam = url.searchParams.get("loggedAt");
   const statusParam = url.searchParams.get("status");
+  const allParam = url.searchParams.get("all") === "true";
 
   const targetDate = dateKeyParam
     ? dateKeyToUtcNoon(dateKeyParam, timezone)
@@ -187,6 +236,35 @@ export async function DELETE(
   const dayEnd = new Date(
     endOfDayInTimezone(targetDate, timezone).getTime() + 1,
   );
+
+  if (allParam) {
+    // Wipe every log on the day. Intended for BACKFILL-style editing of COUNT
+    // habits, so we deliberately skip XP reversal — COUNT history editing
+    // goes through the BACKFILL source which never awards XP in the first
+    // place. Any non-BACKFILL logs caught by this sweep were MANUAL/NFC and
+    // their XP stays on the user's account; this is an acceptable trade since
+    // reverse-accounting multi-log XP is fragile and users editing history
+    // are already opting into overwriting the record.
+    const result = await db.habitLog.deleteMany({
+      where: {
+        habitId: id,
+        userId: session.user.id,
+        loggedAt: { gte: dayStart, lt: dayEnd },
+      },
+    });
+
+    const newStreak = await calculateStreak(habit, timezone);
+    await db.habit.update({
+      where: { id: habit.id },
+      data: { currentStreak: newStreak },
+    });
+
+    return NextResponse.json({
+      undone: true,
+      deletedCount: result.count,
+      streak: newStreak,
+    });
+  }
 
   const latestLog = await db.habitLog.findFirst({
     where: {

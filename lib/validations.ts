@@ -46,6 +46,10 @@ export const logHabitSchema = z.object({
     .optional(),
   source: z.enum(["MANUAL", "NFC", "BACKFILL"]).optional().default("MANUAL"),
   status: z.enum(["COMPLETED", "FAILED"]).optional().default("COMPLETED"),
+  // When true (BACKFILL only), delete all existing logs for the day first,
+  // then create the new log. Used by the COUNT history editor to "set the
+  // day's total to exactly N" in one atomic step.
+  replace: z.boolean().optional(),
 });
 
 export const createCategorySchema = z.object({
