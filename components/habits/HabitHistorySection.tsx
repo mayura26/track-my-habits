@@ -2,6 +2,7 @@ import type { Habit } from "@prisma/client";
 import { Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { addDays, weekdayIndexOf } from "@/lib/date-keys";
+import { dailyThresholdDayState } from "@/lib/habit-day-state";
 import { db } from "@/lib/db";
 import { getLocalDateKey } from "@/lib/timezone";
 import {
@@ -59,6 +60,7 @@ export async function HabitHistorySection({
 
   // Bucket logs by user-local date key.
   const completedByDate = new Map<string, number>();
+  const completedLogCountByDate = new Map<string, number>();
   const failedDates = new Set<string>();
   for (const log of logs) {
     const key = getLocalDateKey(new Date(log.loggedAt), timezone);
@@ -66,6 +68,12 @@ export async function HabitHistorySection({
       failedDates.add(key);
     } else {
       completedByDate.set(key, (completedByDate.get(key) ?? 0) + log.value);
+      if (log.status === "COMPLETED") {
+        completedLogCountByDate.set(
+          key,
+          (completedLogCountByDate.get(key) ?? 0) + 1,
+        );
+      }
     }
   }
 
@@ -79,6 +87,7 @@ export async function HabitHistorySection({
 
   const days: DayCell[] = windowKeys.map((key) => {
     const sum = completedByDate.get(key) ?? 0;
+    const completedLogCount = completedLogCountByDate.get(key) ?? 0;
     const isToday = key === todayKey;
 
     let state: DayCell["state"];
@@ -87,10 +96,13 @@ export async function HabitHistorySection({
     } else if (key < habitStartKey) {
       state = "out-of-range";
     } else if (dailyThreshold) {
-      if (sum >= threshold) state = "completed";
-      else if (isCount && sum > 0) state = "partial";
-      else if (failedDates.has(key)) state = "failed";
-      else state = "missing";
+      state = dailyThresholdDayState(
+        sum,
+        threshold,
+        isCount,
+        failedDates.has(key),
+        completedLogCount,
+      );
     } else {
       if (sum > 0) state = "completed";
       else if (failedDates.has(key)) state = "failed";

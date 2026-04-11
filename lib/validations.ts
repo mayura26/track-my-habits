@@ -38,7 +38,8 @@ export const updateHabitSchema = createHabitSchema.partial().extend({
 });
 
 export const logHabitSchema = z.object({
-  value: z.number().positive().optional().default(1),
+  // Omitted value is treated as 1 in the log route (explicit 0 is allowed).
+  value: z.number().min(0).optional(),
   loggedAt: z.string().datetime().optional(),
   dateKey: z
     .string()

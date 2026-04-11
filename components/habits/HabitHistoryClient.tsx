@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import {
-  type KeyboardEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -16,7 +15,9 @@ import {
   StatPanel,
   statCellClass,
 } from "@/components/ui/StatPanel";
+import { CountDayEditor } from "@/components/habits/CountDayEditor";
 import { parseDateKey } from "@/lib/date-keys";
+import { COUNT_SCALE, countScaleColor } from "@/lib/habit-analog-colors";
 
 export type DayCellState =
   | "completed"
@@ -50,27 +51,6 @@ interface HabitHistoryClientProps {
   thresholdValue: number;
   days: DayCell[];
   stats: HistoryStats;
-}
-
-// Analog scale for DAILY COUNT habits. Colors progress from red (no logs)
-// through orange/yellow/lime to green (target met). Chosen to read cleanly
-// on the dark surface and stay consistent with the BOOLEAN completed/failed
-// palette at the two ends.
-const COUNT_SCALE = {
-  green: "#7d9c73", // >= 100%
-  lime: "#a8b05a", // 66-99%
-  yellow: "#d4a843", // 33-66%
-  orange: "#c8864a", // >0-33%
-  red: "#b66b5a", // 0%
-} as const;
-
-function countScaleColor(value: number, threshold: number): string {
-  const ratio = threshold > 0 ? value / threshold : 0;
-  if (ratio >= 1) return COUNT_SCALE.green;
-  if (ratio >= 2 / 3) return COUNT_SCALE.lime;
-  if (ratio >= 1 / 3) return COUNT_SCALE.yellow;
-  if (ratio > 0) return COUNT_SCALE.orange;
-  return COUNT_SCALE.red;
 }
 
 // Keep the weekday labels aligned with the Mon-top cell order. Labels shown
@@ -324,41 +304,55 @@ export function HabitHistoryClient({
   const setCountValue = useCallback(
     (day: DayCell, value: number) => {
       if (isPending) return;
+      if (value < 0 || !Number.isFinite(value)) return;
       let nextState: DayCellState;
-      if (value <= 0) nextState = "missing";
+      if (value === 0) nextState = "partial";
       else if (value >= thresholdValue) nextState = "completed";
       else nextState = "partial";
 
       updateDayState(day.dateKey, (d) => ({
         ...d,
         state: nextState,
-        value: Math.max(0, value),
+        value,
       }));
       setSelectedDayKey(null);
 
       startTransition(async () => {
-        if (value <= 0) {
-          await fetch(
-            `/api/habits/${habitId}/log?dateKey=${encodeURIComponent(day.dateKey)}&all=true`,
-            { method: "DELETE" },
-          );
-        } else {
-          await fetch(`/api/habits/${habitId}/log`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              dateKey: day.dateKey,
-              source: "BACKFILL",
-              status: "COMPLETED",
-              value,
-              replace: true,
-            }),
-          });
-        }
+        await fetch(`/api/habits/${habitId}/log`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            dateKey: day.dateKey,
+            source: "BACKFILL",
+            status: "COMPLETED",
+            value,
+            replace: true,
+          }),
+        });
         router.refresh();
       });
     },
     [habitId, isPending, router, thresholdValue, updateDayState],
+  );
+
+  const clearCountDay = useCallback(
+    (day: DayCell) => {
+      if (isPending) return;
+      updateDayState(day.dateKey, (d) => ({
+        ...d,
+        state: "missing",
+        value: 0,
+      }));
+      setSelectedDayKey(null);
+      startTransition(async () => {
+        await fetch(
+          `/api/habits/${habitId}/log?dateKey=${encodeURIComponent(day.dateKey)}&all=true`,
+          { method: "DELETE" },
+        );
+        router.refresh();
+      });
+    },
+    [habitId, isPending, router, updateDayState],
   );
 
   const handleCellClick = useCallback((day: DayCell) => {
@@ -529,6 +523,7 @@ export function HabitHistoryClient({
           onMarkFailed={() => markFailed(selectedDay)}
           onUndo={() => undoDay(selectedDay)}
           onSetValue={(v) => setCountValue(selectedDay, v)}
+          onClearCountDay={() => clearCountDay(selectedDay)}
         />
       )}
     </div>
@@ -607,6 +602,7 @@ interface DayEditorDialogProps {
   onMarkFailed: () => void;
   onUndo: () => void;
   onSetValue: (value: number) => void;
+  onClearCountDay: () => void;
 }
 
 function DayEditorDialog({
@@ -619,6 +615,7 @@ function DayEditorDialog({
   onMarkFailed,
   onUndo,
   onSetValue,
+  onClearCountDay,
 }: DayEditorDialogProps) {
   const firstButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -676,13 +673,16 @@ function DayEditorDialog({
 
         <div className="mt-5">
           {isCount ? (
-            <CountEditor
-              day={day}
+            <CountDayEditor
+              value={day.value}
               thresholdValue={thresholdValue}
               isPending={isPending}
               firstButtonRef={firstButtonRef}
-              onSetValue={onSetValue}
+              onSave={onSetValue}
+              onClearDay={onClearCountDay}
               onCancel={onClose}
+              disableClear={day.state === "missing"}
+              inputId={`count-day-value-${day.dateKey}`}
             />
           ) : (
             <BooleanEditor
@@ -766,96 +766,3 @@ function BooleanEditor({
   );
 }
 
-interface CountEditorProps {
-  day: DayCell;
-  thresholdValue: number;
-  isPending: boolean;
-  firstButtonRef: React.RefObject<HTMLButtonElement | null>;
-  onSetValue: (value: number) => void;
-  onCancel: () => void;
-}
-
-function CountEditor({
-  day,
-  thresholdValue,
-  isPending,
-  firstButtonRef,
-  onSetValue,
-  onCancel,
-}: CountEditorProps) {
-  const [draft, setDraft] = useState<string>(String(day.value));
-
-  useEffect(() => {
-    setDraft(String(day.value));
-  }, [day.value]);
-
-  const parsed = Number(draft);
-  const isValid = Number.isFinite(parsed) && parsed >= 0;
-
-  const handleSave = () => {
-    if (!isValid) return;
-    onSetValue(parsed);
-  };
-
-  const handleKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSave();
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <label
-          htmlFor="count-day-value"
-          className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8d826d]"
-        >
-          Value (target: {thresholdValue})
-        </label>
-        <input
-          id="count-day-value"
-          type="number"
-          inputMode="decimal"
-          min={0}
-          step="any"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={handleKey}
-          disabled={isPending}
-          className="mt-2 w-full rounded-2xl border border-[rgba(216,196,160,0.22)] bg-[rgba(6,5,4,0.42)] px-4 py-3 text-lg font-semibold text-[#fff7ea] tabular-nums outline-none focus:border-[rgba(230,196,139,0.5)] disabled:opacity-60"
-        />
-        <p className="mt-1 text-xs text-[#8d826d]">
-          Enter 0 (or tap Clear) to remove all logs for this day.
-        </p>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          ref={firstButtonRef}
-          type="button"
-          onClick={handleSave}
-          disabled={isPending || !isValid}
-          className="rounded-full border border-[rgba(230,196,139,0.5)] bg-[linear-gradient(135deg,#c79a52,#8c6737)] px-4 py-2.5 text-sm font-semibold text-[#fff9ef] transition-[filter] hover:brightness-110 active:scale-[0.97] disabled:cursor-wait disabled:opacity-60"
-        >
-          Save
-        </button>
-        <button
-          type="button"
-          onClick={() => onSetValue(0)}
-          disabled={isPending || day.value === 0}
-          className="rounded-full border border-[rgba(216,196,160,0.22)] bg-[rgba(247,240,225,0.04)] px-4 py-2.5 text-sm font-semibold text-[#f7f0e1] transition-colors hover:bg-[rgba(247,240,225,0.08)] active:scale-[0.97] disabled:cursor-wait disabled:opacity-60"
-        >
-          Clear day
-        </button>
-      </div>
-      <button
-        type="button"
-        onClick={onCancel}
-        disabled={isPending}
-        className="w-full text-xs text-[#8d826d] hover:text-[#f7f0e1]"
-      >
-        Cancel
-      </button>
-    </div>
-  );
-}

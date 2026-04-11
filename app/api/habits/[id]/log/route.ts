@@ -59,6 +59,10 @@ export async function POST(
       ? new Date(parsed.data.loggedAt)
       : new Date();
 
+  // When the client omits `value`, behave like a single full increment (1).
+  // Explicit 0 is stored as-is (COUNT replace / zero-day logs).
+  const value = parsed.data.value ?? 1;
+
   // COUNT history editor: replace the day's logs in one atomic step. Delete
   // everything on the day, create the requested log, recalc streak. Only
   // meaningful for BACKFILL — no XP pipeline, no totalLogsCount changes.
@@ -79,7 +83,7 @@ export async function POST(
         data: {
           habitId: id,
           userId: session.user.id,
-          value: parsed.data.value,
+          value,
           source: parsed.data.source,
           status: parsed.data.status,
           loggedAt,
@@ -145,7 +149,7 @@ export async function POST(
     data: {
       habitId: id,
       userId: session.user.id,
-      value: parsed.data.value,
+      value,
       source: parsed.data.source,
       status: parsed.data.status,
       loggedAt,

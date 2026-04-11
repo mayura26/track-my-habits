@@ -4,6 +4,7 @@ import { BackfillClient } from "@/components/habits/BackfillClient";
 import { Card, CardContent } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
 import { addDays, labelFor } from "@/lib/date-keys";
+import { dailyThresholdDayState } from "@/lib/habit-day-state";
 import { db } from "@/lib/db";
 import { getLocalDateKey } from "@/lib/timezone";
 
@@ -56,7 +57,9 @@ export default async function BackfillPage() {
       const effectiveKeys = windowKeys.filter((k) => k >= habitStartKey);
 
       const completedByDate = new Map<string, number>();
+      const completedLogCountByDate = new Map<string, number>();
       const failedDates = new Set<string>();
+      const isCount = habit.trackingType === "COUNT";
       for (const log of logs) {
         if (log.habitId !== habit.id) continue;
         const key = getLocalDateKey(new Date(log.loggedAt), timezone);
@@ -64,21 +67,30 @@ export default async function BackfillPage() {
           failedDates.add(key);
         } else {
           completedByDate.set(key, (completedByDate.get(key) ?? 0) + log.value);
+          if (log.status === "COMPLETED") {
+            completedLogCountByDate.set(
+              key,
+              (completedLogCountByDate.get(key) ?? 0) + 1,
+            );
+          }
         }
       }
 
       const days = effectiveKeys.map((key) => {
         const sum = completedByDate.get(key) ?? 0;
-        const state: "completed" | "failed" | "missing" =
-          sum >= habit.thresholdValue
-            ? "completed"
-            : failedDates.has(key)
-              ? "failed"
-              : "missing";
+        const completedLogCount = completedLogCountByDate.get(key) ?? 0;
+        const state = dailyThresholdDayState(
+          sum,
+          habit.thresholdValue,
+          isCount,
+          failedDates.has(key),
+          completedLogCount,
+        );
         return {
           dateKey: key,
           label: labelFor(key),
           state,
+          value: sum,
         };
       });
 
@@ -109,8 +121,9 @@ export default async function BackfillPage() {
             Fill Missing Days
           </h1>
           <p className="mt-1 text-sm text-[#b4a58a]">
-            Tap ✓ to log a day, or ✗ to mark it as failed. Tap a filled chip to
-            undo. Last 7 days shown.
+            For yes/no habits: tap ✓ to log or ✗ to mark failed. For numeric
+            habits: tap a day to enter a value. Tap a filled chip to undo. Last 7
+            days shown.
           </p>
         </div>
       </div>
