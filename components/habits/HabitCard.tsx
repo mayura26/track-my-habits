@@ -6,7 +6,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { CategoryIcon } from "@/components/categories/CategoryIcon";
 import { Badge } from "@/components/ui/Badge";
-import { toImageDeliveryUrl } from "@/lib/upload-paths";
+import {
+  isDeliveryImageUnoptimized,
+  toImageDeliveryUrl,
+} from "@/lib/upload-paths";
 import { HabitCountLogControl } from "./HabitCountLogControl";
 import { HabitLogButton } from "./HabitLogButton";
 import { StreakBadge } from "./StreakBadge";
@@ -52,6 +55,7 @@ export function HabitCard({ habit, onLog }: HabitCardProps) {
             src={displayImageUrl}
             alt=""
             fill
+            unoptimized={isDeliveryImageUnoptimized(displayImageUrl)}
             className="pointer-events-none z-0 object-cover section-artwork-photo-dimmed"
             sizes="(max-width: 768px) 100vw, 600px"
             priority={false}

@@ -14,7 +14,10 @@ import {
   isLogicallyDue,
   nextDueAt,
 } from "@/lib/task-helpers";
-import { toImageDeliveryUrl } from "@/lib/upload-paths";
+import {
+  isDeliveryImageUnoptimized,
+  toImageDeliveryUrl,
+} from "@/lib/upload-paths";
 
 type TaskWithLogs = Task & { logs: TaskLog[]; category: HabitCategory | null };
 
@@ -96,6 +99,7 @@ export function TaskCard({
             src={displayImageUrl}
             alt=""
             fill
+            unoptimized={isDeliveryImageUnoptimized(displayImageUrl)}
             className="pointer-events-none z-0 object-cover section-artwork-photo-dimmed"
             sizes="(max-width: 768px) 100vw, 600px"
             priority={false}

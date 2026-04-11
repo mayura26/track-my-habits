@@ -13,7 +13,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { generateTaskImagePrompt } from "@/lib/image-prompt";
-import { toImageDeliveryUrl } from "@/lib/upload-paths";
+import {
+  isDeliveryImageUnoptimized,
+  toImageDeliveryUrl,
+} from "@/lib/upload-paths";
 
 interface TaskImageSectionProps {
   taskId: string;
@@ -149,7 +152,7 @@ export function TaskImageSection({
             src={resolvedImageUrl}
             alt={`Artwork for ${name}`}
             fill
-            unoptimized={resolvedImageUrl.startsWith("blob:")}
+            unoptimized={isDeliveryImageUnoptimized(resolvedImageUrl)}
             className="object-cover section-artwork-photo-dimmed"
             sizes="(max-width: 768px) 100vw, 600px"
           />

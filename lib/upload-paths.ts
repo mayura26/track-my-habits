@@ -22,3 +22,8 @@ export function toImageDeliveryUrl(imageUrl: string | null | undefined) {
   if (!imageUrl.startsWith("/uploads/")) return imageUrl;
   return `/api/uploads${imageUrl.replace(/^\/uploads/, "")}`;
 }
+
+/** Bypass next/image optimizer for blob previews and /api/uploads (avoids server-side fetch + sharp on large user PNGs). */
+export function isDeliveryImageUnoptimized(src: string): boolean {
+  return src.startsWith("blob:") || src.startsWith("/api/uploads/");
+}

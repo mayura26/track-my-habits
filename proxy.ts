@@ -12,6 +12,7 @@ export default auth((req) => {
   const isPublic =
     pathname.startsWith("/nfc/") ||
     pathname.startsWith("/api/auth/") ||
+    pathname.startsWith("/api/uploads/") ||
     pathname.startsWith("/api/test/") ||
     pathname.startsWith("/api/cron/") ||
     pathname.startsWith("/artifacts/") ||
