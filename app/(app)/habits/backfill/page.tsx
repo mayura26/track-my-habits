@@ -4,7 +4,40 @@ import { BackfillClient } from "@/components/habits/BackfillClient";
 import { Card, CardContent } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
-import { getLocalDateKey, startOfDayInTimezone } from "@/lib/timezone";
+import { getLocalDateKey } from "@/lib/timezone";
+
+// Habits are date-based, not moment-based. Timezone is only used to decide
+// *which* calendar date is "today" for the user. After that, all arithmetic
+// is plain YYYY-MM-DD string math — no more Date cursors, no more mixing
+// UTC midnights with localized formatters.
+const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function parseDateKey(key: string): { year: number; month: number; day: number } {
+  const [y, m, d] = key.split("-").map(Number);
+  return { year: y, month: m, day: d };
+}
+
+function formatDateKey(year: number, month: number, day: number): string {
+  return `${year.toString().padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+// Subtract N days from a YYYY-MM-DD key. Uses UTC Date math internally purely
+// as a calendar calculator — no timezone semantics escape this function.
+function addDays(key: string, delta: number): string {
+  const { year, month, day } = parseDateKey(key);
+  const d = new Date(Date.UTC(year, month - 1, day + delta));
+  return formatDateKey(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate());
+}
+
+function weekdayIndexOf(key: string): number {
+  const { year, month, day } = parseDateKey(key);
+  return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+}
+
+function labelFor(key: string): string {
+  const { day } = parseDateKey(key);
+  return `${WEEKDAY_SHORT[weekdayIndexOf(key)]} ${day}`;
+}
 
 export default async function BackfillPage() {
   const session = await requireAuth();
@@ -15,8 +48,16 @@ export default async function BackfillPage() {
   });
   const timezone = user?.timezone ?? "UTC";
 
-  const today = startOfDayInTimezone(new Date(), timezone);
-  const sevenDaysAgo = new Date(today.getTime() - 7 * 86_400_000);
+  // The only timezone-aware operation in this file: decide which calendar
+  // date is "today" from the user's perspective.
+  const todayKey = getLocalDateKey(new Date(), timezone);
+
+  // Build the window: yesterday back through 7 days ago, chronological.
+  const windowKeys: string[] = [];
+  for (let i = 7; i >= 1; i--) {
+    windowKeys.push(addDays(todayKey, -i));
+  }
+  const earliestKey = windowKeys[0];
 
   const habits = await db.habit.findMany({
     where: { userId, isActive: true, thresholdType: "DAILY" },
@@ -24,60 +65,67 @@ export default async function BackfillPage() {
     orderBy: { name: "asc" },
   });
 
+  // Fetch logs with a generous coarse filter on loggedAt (±2 days around the
+  // window) so we don't miss any that could still belong to a window day after
+  // bucketing. Then do the precise bucketing in memory with getLocalDateKey.
+  const earliestMoment = new Date(`${earliestKey}T00:00:00.000Z`);
+  earliestMoment.setUTCDate(earliestMoment.getUTCDate() - 2);
+
   const logs = await db.habitLog.findMany({
     where: {
       userId,
       habitId: { in: habits.map((h) => h.id) },
-      loggedAt: { gte: sevenDaysAgo },
+      loggedAt: { gte: earliestMoment },
     },
-    select: { habitId: true, loggedAt: true, value: true },
+    select: { habitId: true, loggedAt: true, value: true, status: true },
   });
-
-  // Build per-habit missing-days data
-  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const habitsData = habits
     .map((habit) => {
-      const startBound = new Date(
-        Math.max(new Date(habit.startDate).getTime(), sevenDaysAgo.getTime()),
-      );
+      // Clip the window to the habit's own start date (also as a date key).
+      const startParts = new Date(habit.startDate);
+      const habitStartKey = getLocalDateKey(startParts, timezone);
+      const effectiveKeys = windowKeys.filter((k) => k >= habitStartKey);
 
-      const habitLogs = logs.filter((l) => l.habitId === habit.id);
-      const logsByDate = new Map<string, number>();
-      for (const log of habitLogs) {
+      const completedByDate = new Map<string, number>();
+      const failedDates = new Set<string>();
+      for (const log of logs) {
+        if (log.habitId !== habit.id) continue;
         const key = getLocalDateKey(new Date(log.loggedAt), timezone);
-        logsByDate.set(key, (logsByDate.get(key) ?? 0) + log.value);
+        if (log.status === "FAILED") {
+          failedDates.add(key);
+        } else {
+          completedByDate.set(
+            key,
+            (completedByDate.get(key) ?? 0) + log.value,
+          );
+        }
       }
 
-      const days: {
-        date: string;
-        label: string;
-        isLogged: boolean;
-      }[] = [];
-
-      const cursor = new Date(today);
-      cursor.setUTCDate(cursor.getUTCDate() - 1); // start from yesterday
-      while (cursor >= startBound) {
-        const key = getLocalDateKey(new Date(cursor), timezone);
-        const sum = logsByDate.get(key) ?? 0;
-        days.push({
-          date: cursor.toISOString(),
-          label: `${dayLabels[cursor.getDay()]} ${cursor.getDate()}`,
-          isLogged: sum >= habit.thresholdValue,
-        });
-        cursor.setUTCDate(cursor.getUTCDate() - 1);
-      }
-
-      days.reverse(); // chronological order
+      const days = effectiveKeys.map((key) => {
+        const sum = completedByDate.get(key) ?? 0;
+        const state: "completed" | "failed" | "missing" =
+          sum >= habit.thresholdValue
+            ? "completed"
+            : failedDates.has(key)
+              ? "failed"
+              : "missing";
+        return {
+          dateKey: key,
+          label: labelFor(key),
+          state,
+        };
+      });
 
       return {
         id: habit.id,
         name: habit.name,
+        trackingType: habit.trackingType,
         categoryName: habit.category.name,
         categoryColor: habit.category.color,
         thresholdValue: habit.thresholdValue,
         days,
-        missingCount: days.filter((d) => !d.isLogged).length,
+        missingCount: days.filter((d) => d.state === "missing").length,
       };
     })
     .filter((h) => h.missingCount > 0);
@@ -96,7 +144,8 @@ export default async function BackfillPage() {
             Fill Missing Days
           </h1>
           <p className="mt-1 text-sm text-[#b4a58a]">
-            Tap a day to log it. Tap again to remove. Last 7 days shown.
+            Tap ✓ to log a day, or ✗ to mark it as failed. Tap a filled chip
+            to undo. Last 7 days shown.
           </p>
         </div>
       </div>

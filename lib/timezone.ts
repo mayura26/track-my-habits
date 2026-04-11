@@ -35,11 +35,16 @@ function parseParts(date: Date, timezone: string) {
   const parts = getPartsFormatter(timezone).formatToParts(date);
   const read = (type: Intl.DateTimeFormatPartTypes): number =>
     Number(parts.find((p) => p.type === type)?.value ?? "0");
+  // Node's Intl.DateTimeFormat("en-CA", { hour12: false }) formats midnight
+  // as "24" instead of "00". Date.UTC(..., 24) normalises to hour 0 of the
+  // *next* day, which made startOfDayInTimezone overshoot by one day and
+  // corrupted every day-range query that relied on it.
+  const hourRaw = read("hour");
   return {
     year: read("year"),
     month: read("month"),
     day: read("day"),
-    hour: read("hour"),
+    hour: hourRaw === 24 ? 0 : hourRaw,
     minute: read("minute"),
     second: read("second"),
   };

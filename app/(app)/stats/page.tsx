@@ -30,7 +30,7 @@ export default async function StatsPage() {
       select: { id: true, name: true, currentStreak: true, bestStreak: true },
     }),
     db.habitLog.findMany({
-      where: { userId, loggedAt: { gte: oneYearAgo } },
+      where: { userId, status: "COMPLETED", loggedAt: { gte: oneYearAgo } },
       select: { loggedAt: true, value: true },
       orderBy: { loggedAt: "asc" },
     }),

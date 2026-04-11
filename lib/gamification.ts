@@ -41,7 +41,7 @@ export async function calculateStreak(
 ): Promise<number> {
   const zone = normalizeTimezone(timezone);
   const logs = await db.habitLog.findMany({
-    where: { habitId: habit.id },
+    where: { habitId: habit.id, status: "COMPLETED" },
     orderBy: { loggedAt: "desc" },
   });
 

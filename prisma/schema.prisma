@@ -121,6 +121,7 @@ model HabitLog {
   habitId    String
   userId     String
   value      Float    @default(1)
+  status     String   @default("COMPLETED")
   source     String   @default("MANUAL")
   xpAwarded  Int      @default(0)
   loggedAt   DateTime @default(now())

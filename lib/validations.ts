@@ -40,7 +40,12 @@ export const updateHabitSchema = createHabitSchema.partial().extend({
 export const logHabitSchema = z.object({
   value: z.number().positive().optional().default(1),
   loggedAt: z.string().datetime().optional(),
+  dateKey: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
   source: z.enum(["MANUAL", "NFC", "BACKFILL"]).optional().default("MANUAL"),
+  status: z.enum(["COMPLETED", "FAILED"]).optional().default("COMPLETED"),
 });
 
 export const createCategorySchema = z.object({

@@ -1,17 +1,20 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useOptimistic, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+
+type DayState = "completed" | "failed" | "missing";
 
 interface BackfillDay {
-  date: string;
+  dateKey: string;
   label: string;
-  isLogged: boolean;
+  state: DayState;
 }
 
 interface BackfillHabit {
   id: string;
   name: string;
+  trackingType: string;
   categoryName: string;
   categoryColor: string;
   thresholdValue: number;
@@ -35,44 +38,69 @@ export function BackfillClient({ habits }: BackfillClientProps) {
 
 function BackfillHabitRow({ habit }: { habit: BackfillHabit }) {
   const router = useRouter();
-  const [optimisticDays, addOptimistic] = useOptimistic(
-    habit.days,
-    (current: BackfillDay[], toggleDate: string) =>
-      current.map((d) =>
-        d.date === toggleDate ? { ...d, isLogged: !d.isLogged } : d,
-      ),
-  );
+  // Local copy of days so clicks reflect instantly and persist past the
+  // router.refresh round-trip. useOptimistic clears its staged state when the
+  // transition settles, which can race the RSC re-render and snap the UI back
+  // to stale props — using useState + a sync effect avoids that race entirely.
+  const [days, setDays] = useState<BackfillDay[]>(habit.days);
+  useEffect(() => {
+    setDays(habit.days);
+  }, [habit.days]);
   const [isPending, startTransition] = useTransition();
 
-  const handleToggle = (day: BackfillDay) => {
+  // Backfill operates on plain YYYY-MM-DD keys. The server derives the stored
+  // loggedAt moment from the key using the user's timezone, so the client
+  // never needs to think about timezones or Date objects.
+  const updateLocal = (dateKey: string, next: DayState) => {
+    setDays((prev) =>
+      prev.map((d) => (d.dateKey === dateKey ? { ...d, state: next } : d)),
+    );
+  };
+
+  const markCompleted = (day: BackfillDay) => {
     if (isPending) return;
-
-    const dateForApi = new Date(day.date);
-    dateForApi.setHours(12, 0, 0, 0);
-    const isoDate = dateForApi.toISOString();
-
+    updateLocal(day.dateKey, "completed");
     startTransition(async () => {
-      addOptimistic(day.date);
-
-      if (day.isLogged) {
-        await fetch(
-          `/api/habits/${habit.id}/log?loggedAt=${encodeURIComponent(isoDate)}`,
-          { method: "DELETE" },
-        );
-      } else {
-        await fetch(`/api/habits/${habit.id}/log`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            loggedAt: isoDate,
-            source: "BACKFILL",
-          }),
-        });
-      }
-
-      await router.refresh();
+      await fetch(`/api/habits/${habit.id}/log`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dateKey: day.dateKey, source: "BACKFILL" }),
+      });
+      router.refresh();
     });
   };
+
+  const markFailed = (day: BackfillDay) => {
+    if (isPending) return;
+    updateLocal(day.dateKey, "failed");
+    startTransition(async () => {
+      await fetch(`/api/habits/${habit.id}/log`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dateKey: day.dateKey,
+          source: "BACKFILL",
+          status: "FAILED",
+        }),
+      });
+      router.refresh();
+    });
+  };
+
+  const undo = (day: BackfillDay) => {
+    if (isPending) return;
+    const statusQuery = day.state === "failed" ? "&status=FAILED" : "";
+    updateLocal(day.dateKey, "missing");
+    startTransition(async () => {
+      await fetch(
+        `/api/habits/${habit.id}/log?dateKey=${encodeURIComponent(day.dateKey)}${statusQuery}`,
+        { method: "DELETE" },
+      );
+      router.refresh();
+    });
+  };
+
+  const allowFail = habit.trackingType === "BOOLEAN";
 
   return (
     <div className="surface-panel rounded-[28px] p-4 sm:p-5">
@@ -89,23 +117,67 @@ function BackfillHabitRow({ habit }: { habit: BackfillHabit }) {
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {optimisticDays.map((day) => (
-          <button
-            key={day.date}
-            type="button"
-            onClick={() =>
-              handleToggle(habit.days.find((d) => d.date === day.date) ?? day)
-            }
-            disabled={isPending}
-            className={`rounded-full border px-3.5 py-2 text-xs font-semibold transition-[background-color,border-color,color] duration-150 active:scale-95 motion-reduce:active:scale-100 disabled:opacity-60 disabled:cursor-wait ${
-              day.isLogged
-                ? "border-[#7d9c73] bg-[rgba(125,156,115,0.2)] text-[#d9efcd]"
-                : "border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] text-[#5c5348] hover:border-[rgba(230,196,139,0.3)] hover:text-[#b4a58a]"
-            }`}
-          >
-            {day.label}
-          </button>
-        ))}
+        {days.map((day) => {
+          if (day.state === "completed") {
+            return (
+              <button
+                key={day.dateKey}
+                type="button"
+                onClick={() => undo(day)}
+                disabled={isPending}
+                className="rounded-full border border-[#7d9c73] bg-[rgba(125,156,115,0.2)] px-3.5 py-2 text-xs font-semibold text-[#d9efcd] transition-[background-color,border-color,color] duration-150 active:scale-95 motion-reduce:active:scale-100 disabled:cursor-wait disabled:opacity-60"
+                title="Tap to undo"
+              >
+                {day.label}
+              </button>
+            );
+          }
+
+          if (day.state === "failed") {
+            return (
+              <button
+                key={day.dateKey}
+                type="button"
+                onClick={() => undo(day)}
+                disabled={isPending}
+                className="rounded-full border border-[#b66b5a] bg-[rgba(182,107,90,0.2)] px-3.5 py-2 text-xs font-semibold text-[#f1c4b8] line-through transition-[background-color,border-color,color] duration-150 active:scale-95 motion-reduce:active:scale-100 disabled:cursor-wait disabled:opacity-60"
+                title="Marked failed — tap to undo"
+              >
+                {day.label}
+              </button>
+            );
+          }
+
+          // missing
+          return (
+            <div
+              key={day.dateKey}
+              className="inline-flex items-stretch overflow-hidden rounded-full border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)]"
+            >
+              <button
+                type="button"
+                onClick={() => markCompleted(day)}
+                disabled={isPending}
+                className="px-3.5 py-2 text-xs font-semibold text-[#5c5348] transition-colors duration-150 hover:text-[#b4a58a] active:scale-95 motion-reduce:active:scale-100 disabled:cursor-wait disabled:opacity-60"
+                title="Mark completed"
+              >
+                ✓ {day.label}
+              </button>
+              {allowFail && (
+                <button
+                  type="button"
+                  onClick={() => markFailed(day)}
+                  disabled={isPending}
+                  aria-label={`Mark ${day.label} as failed`}
+                  className="border-l border-[rgba(216,196,160,0.14)] px-2.5 py-2 text-xs font-semibold text-[#8a6257] transition-colors duration-150 hover:bg-[rgba(182,107,90,0.15)] hover:text-[#e29e8f] active:scale-95 motion-reduce:active:scale-100 disabled:cursor-wait disabled:opacity-60"
+                  title="Mark failed"
+                >
+                  ✗
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

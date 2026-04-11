@@ -29,7 +29,7 @@ export async function GET() {
       },
     }),
     db.habitLog.findMany({
-      where: { userId, loggedAt: { gte: oneYearAgo } },
+      where: { userId, status: "COMPLETED", loggedAt: { gte: oneYearAgo } },
       select: { loggedAt: true, value: true, habitId: true },
       orderBy: { loggedAt: "asc" },
     }),

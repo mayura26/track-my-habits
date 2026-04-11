@@ -6,8 +6,20 @@ import {
   calculateStreak,
   processHabitLog,
 } from "@/lib/gamification";
-import { endOfDayInTimezone, startOfDayInTimezone } from "@/lib/timezone";
+import {
+  endOfDayInTimezone,
+  startOfDayInTimezone,
+  zonedDateTimeToUtc,
+} from "@/lib/timezone";
 import { logHabitSchema } from "@/lib/validations";
+
+// Build a canonical noon-in-user-timezone timestamp from a YYYY-MM-DD key.
+// The client sends dateKey so the resulting UTC moment always buckets back to
+// the intended day regardless of the browser's local timezone.
+function dateKeyToUtcNoon(dateKey: string, timezone: string): Date {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  return zonedDateTimeToUtc(timezone, y, m, d, 12, 0, 0, 0);
+}
 
 export async function POST(
   req: NextRequest,
@@ -41,9 +53,46 @@ export async function POST(
     );
   }
 
-  const loggedAt = parsed.data.loggedAt
-    ? new Date(parsed.data.loggedAt)
-    : new Date();
+  const loggedAt = parsed.data.dateKey
+    ? dateKeyToUtcNoon(parsed.data.dateKey, timezone)
+    : parsed.data.loggedAt
+      ? new Date(parsed.data.loggedAt)
+      : new Date();
+
+  // Backfill is idempotent: if a log with the same status already exists on
+  // this day, return it without creating a duplicate. This protects against
+  // double-clicks and retries (a real user just had 5 duplicate FAILED rows
+  // pile up from frantic clicking when an earlier bug made buttons look
+  // unresponsive).
+  if (parsed.data.source === "BACKFILL") {
+    const dayStart = startOfDayInTimezone(loggedAt, timezone);
+    const dayEnd = new Date(
+      endOfDayInTimezone(loggedAt, timezone).getTime() + 1,
+    );
+    const existing = await db.habitLog.findFirst({
+      where: {
+        habitId: id,
+        userId: session.user.id,
+        loggedAt: { gte: dayStart, lt: dayEnd },
+        status: parsed.data.status,
+      },
+    });
+    if (existing) {
+      const newStreak = await calculateStreak(habit, timezone);
+      return NextResponse.json(
+        {
+          log: existing,
+          streak: newStreak,
+          xpGained: 0,
+          leveledUp: false,
+          newLevel: 0,
+          newBadges: [],
+          deduped: true,
+        },
+        { status: 200 },
+      );
+    }
+  }
 
   const log = await db.habitLog.create({
     data: {
@@ -51,9 +100,33 @@ export async function POST(
       userId: session.user.id,
       value: parsed.data.value,
       source: parsed.data.source,
+      status: parsed.data.status,
       loggedAt,
     },
   });
+
+  // FAILED logs bypass the XP pipeline entirely — we only recompute the streak
+  // (which already excludes FAILED rows) so the habit's currentStreak reflects
+  // the broken chain. No XP, no totalLogsCount bump, no badge check.
+  if (parsed.data.status === "FAILED") {
+    const newStreak = await calculateStreak(habit, timezone);
+    const bestStreak = Math.max(habit.bestStreak, newStreak);
+    await db.habit.update({
+      where: { id: habit.id },
+      data: { currentStreak: newStreak, bestStreak },
+    });
+    return NextResponse.json(
+      {
+        log,
+        streak: newStreak,
+        xpGained: 0,
+        leveledUp: false,
+        newLevel: 0,
+        newBadges: [],
+      },
+      { status: 201 },
+    );
+  }
 
   const result = await processHabitLog(
     id,
@@ -96,11 +169,20 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // Support date-specific deletion via ?loggedAt= query param
+  // Support date-specific deletion via ?dateKey= (preferred, timezone-safe)
+  // or legacy ?loggedAt= query param, with an optional ?status= filter so the
+  // backfill UI can target a failed log specifically even if both a completed
+  // and a failed log exist on the date.
   const url = new URL(req.url);
+  const dateKeyParam = url.searchParams.get("dateKey");
   const loggedAtParam = url.searchParams.get("loggedAt");
+  const statusParam = url.searchParams.get("status");
 
-  const targetDate = loggedAtParam ? new Date(loggedAtParam) : new Date();
+  const targetDate = dateKeyParam
+    ? dateKeyToUtcNoon(dateKeyParam, timezone)
+    : loggedAtParam
+      ? new Date(loggedAtParam)
+      : new Date();
   const dayStart = startOfDayInTimezone(targetDate, timezone);
   const dayEnd = new Date(
     endOfDayInTimezone(targetDate, timezone).getTime() + 1,
@@ -111,6 +193,7 @@ export async function DELETE(
       habitId: id,
       userId: session.user.id,
       loggedAt: { gte: dayStart, lt: dayEnd },
+      ...(statusParam ? { status: statusParam } : {}),
     },
     orderBy: { loggedAt: "desc" },
   });
@@ -121,8 +204,8 @@ export async function DELETE(
 
   await db.habitLog.delete({ where: { id: latestLog.id } });
 
-  // Skip XP reversal for backfill logs (no XP was awarded)
-  if (latestLog.source !== "BACKFILL") {
+  // Skip XP reversal for backfill and failed logs (no XP was ever awarded)
+  if (latestLog.source !== "BACKFILL" && latestLog.status !== "FAILED") {
     const user = await db.user.findUniqueOrThrow({
       where: { id: session.user.id },
     });

@@ -33,7 +33,14 @@
       "Bash(mkdir:*)",
       "Bash(grep:*)",
       "Bash(npx biome:*)",
-      "Bash(sqlite3 prisma/dev.db \".tables\")"
+      "Bash(sqlite3 prisma/dev.db \".tables\")",
+      "Bash(git push:*)",
+      "Bash(tasklist //FI \"IMAGENAME eq node.exe\")",
+      "Bash(powershell -Command \"Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,StartTime,Path | Format-Table\")",
+      "Bash(wmic process:*)",
+      "Bash(taskkill //PID 21428 //F)",
+      "Bash(taskkill //PID 18856 //F)",
+      "Bash(taskkill //PID 19220 //F)"
     ]
   }
 }
