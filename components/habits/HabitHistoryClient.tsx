@@ -9,13 +9,13 @@ import {
   useState,
   useTransition,
 } from "react";
+import { CountDayEditor } from "@/components/habits/CountDayEditor";
 import {
   StatGrid,
   StatItem,
   StatPanel,
   statCellClass,
 } from "@/components/ui/StatPanel";
-import { CountDayEditor } from "@/components/habits/CountDayEditor";
 import { parseDateKey } from "@/lib/date-keys";
 import { COUNT_SCALE, countScaleColor } from "@/lib/habit-analog-colors";
 
@@ -765,4 +765,3 @@ function BooleanEditor({
     </div>
   );
 }
-

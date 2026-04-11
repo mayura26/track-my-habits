@@ -4,8 +4,8 @@ import { BackfillClient } from "@/components/habits/BackfillClient";
 import { Card, CardContent } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
 import { addDays, labelFor } from "@/lib/date-keys";
-import { dailyThresholdDayState } from "@/lib/habit-day-state";
 import { db } from "@/lib/db";
+import { dailyThresholdDayState } from "@/lib/habit-day-state";
 import { getLocalDateKey } from "@/lib/timezone";
 
 export default async function BackfillPage() {
@@ -122,8 +122,8 @@ export default async function BackfillPage() {
           </h1>
           <p className="mt-1 text-sm text-[#b4a58a]">
             For yes/no habits: tap ✓ to log or ✗ to mark failed. For numeric
-            habits: tap a day to enter a value. Tap a filled chip to undo. Last 7
-            days shown.
+            habits: tap a day to enter a value. Tap a filled chip to undo. Last
+            7 days shown.
           </p>
         </div>
       </div>

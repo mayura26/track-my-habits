@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  type KeyboardEvent,
-  useEffect,
-  useState,
-  type RefObject,
-} from "react";
+import { type KeyboardEvent, type RefObject, useEffect, useState } from "react";
 
 export interface CountDayEditorProps {
   /** Current total for the day (sum of completed logs). */

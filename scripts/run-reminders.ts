@@ -48,7 +48,10 @@ async function main() {
     await tick();
     process.exitCode = 0;
   } catch (err) {
-    console.error(`[${new Date().toLocaleTimeString()}] Reminder check failed:`, err);
+    console.error(
+      `[${new Date().toLocaleTimeString()}] Reminder check failed:`,
+      err,
+    );
     process.exitCode = 1;
   }
 }

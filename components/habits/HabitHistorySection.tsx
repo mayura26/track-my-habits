@@ -2,8 +2,8 @@ import type { Habit } from "@prisma/client";
 import { Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { addDays, weekdayIndexOf } from "@/lib/date-keys";
-import { dailyThresholdDayState } from "@/lib/habit-day-state";
 import { db } from "@/lib/db";
+import { dailyThresholdDayState } from "@/lib/habit-day-state";
 import { getLocalDateKey } from "@/lib/timezone";
 import {
   type DayCell,

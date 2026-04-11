@@ -162,7 +162,10 @@ function BackfillHabitRow({ habit }: { habit: BackfillHabit }) {
 
       <div className="mt-4 flex flex-wrap gap-2">
         {days.map((day) => {
-          if (isCount && (day.state === "completed" || day.state === "partial")) {
+          if (
+            isCount &&
+            (day.state === "completed" || day.state === "partial")
+          ) {
             const c = countScaleColor(day.value, habit.thresholdValue);
             return (
               <button
