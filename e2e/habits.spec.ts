@@ -85,4 +85,43 @@ test.describe("Habits CRUD", () => {
     // The first habit(s) should not have Done badge if any exist
     await expect(page.getByText("Today's Habits")).toBeVisible();
   });
+
+  test("reset habit clears streak and history", async ({ page }) => {
+    await page.goto("/habits/new");
+    await page.fill('[name="name"]', "Reset Test Habit");
+    await page.selectOption('[name="categoryId"]', { label: "Fitness" });
+    await page.getByRole("button", { name: "Create Habit" }).click();
+    await expect(page).toHaveURL("/habits");
+
+    const habitCard = page
+      .locator("div")
+      .filter({
+        has: page.getByRole("link", { name: "Reset Test Habit" }),
+      })
+      .first();
+    await habitCard.getByTitle("Log habit").click();
+    await expect(habitCard.getByTitle("Undo log").first()).toBeVisible({
+      timeout: 5000,
+    });
+
+    await page.getByRole("link", { name: "Reset Test Habit" }).click();
+
+    const streakCell = page
+      .getByRole("tabpanel", { name: "Overview" })
+      .locator("div")
+      .filter({ has: page.getByText("current streak", { exact: true }) })
+      .first();
+    await expect(streakCell).toContainText("1");
+
+    await page.getByRole("tab", { name: "Settings" }).click();
+    await page.getByRole("button", { name: "Reset habit" }).first().click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Reset habit" })
+      .click();
+
+    await page.getByRole("tab", { name: "Overview" }).click();
+    await expect(streakCell).toContainText("0");
+    await expect(page.getByText("0%").first()).toBeVisible();
+  });
 });

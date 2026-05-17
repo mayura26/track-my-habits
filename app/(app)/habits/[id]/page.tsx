@@ -6,6 +6,7 @@ import { HabitDetailHero } from "@/components/habits/HabitDetailHero";
 import { HabitDetailTabs } from "@/components/habits/HabitDetailTabs";
 import { HabitHistorySection } from "@/components/habits/HabitHistorySection";
 import { HabitImageSection } from "@/components/habits/HabitImageSection";
+import { HabitResetButton } from "@/components/habits/HabitResetButton";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import {
@@ -195,6 +196,19 @@ export default async function HabitDetailPage({
               Edit habit
             </Button>
           </Link>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <h2 className="font-medium text-[#f7f0e1]">Start fresh</h2>
+          <p className="mt-1 text-sm text-[#b4a58a]">
+            Stopped for a while? Reset logs and streaks and begin again from
+            today.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <HabitResetButton habitId={id} />
         </CardContent>
       </Card>
 
