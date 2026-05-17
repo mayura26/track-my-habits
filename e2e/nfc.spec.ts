@@ -21,6 +21,9 @@ authTest.describe("NFC (authenticated)", () => {
     // Navigate to habit detail
     await page.getByText("NFC Test Habit").first().click();
 
+    // NFC token management lives under the Settings tab
+    await page.getByRole("tab", { name: "Settings" }).click();
+
     // Generate NFC token
     await page.getByRole("button", { name: /Generate Token/i }).click();
     await expect(page.locator("text=/NFC URL/")).toBeVisible({ timeout: 5000 });

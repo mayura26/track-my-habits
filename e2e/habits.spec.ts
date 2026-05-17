@@ -71,7 +71,7 @@ test.describe("Habits CRUD", () => {
 
     await expect(page).toHaveURL("/habits");
     await page.getByText("Edit Me Habit").first().click();
-    await page.locator('a[href*="/edit"]').click();
+    await page.locator('a[href*="/edit"]').first().click();
 
     await page.fill('[name="name"]', "Edited Habit Name");
     await page.getByRole("button", { name: "Update Habit" }).click();

@@ -2,6 +2,7 @@
 
 import {
   Check,
+  ChevronDown,
   ClipboardCopy,
   ImagePlus,
   RefreshCw,
@@ -12,6 +13,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { generateHabitImagePrompt } from "@/lib/image-prompt";
 import {
   isDeliveryImageUnoptimized,
@@ -43,6 +45,7 @@ export function HabitImageSection({
   const [uploading, setUploading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [displayImageUrl, setDisplayImageUrl] = useState<string | null>(
     imageUrl,
@@ -134,127 +137,144 @@ export function HabitImageSection({
   }
 
   return (
-    <section className="space-y-4 rounded-[26px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.03)] p-4">
-      <div>
-        <p className="section-kicker">Card artwork</p>
-        <p className="mt-2 text-sm text-[#b4a58a]">
-          Generate a prompt for AI image tools, then upload the result as a card
-          background.
+    <Card>
+      <CardHeader>
+        <h2 className="font-medium text-[#f7f0e1]">Card artwork</h2>
+        <p className="mt-1 text-sm text-[#b4a58a]">
+          Generate a prompt for AI image tools, then upload the result as your
+          habit's card background.
         </p>
-      </div>
-
-      {/* Image preview */}
-      {resolvedImageUrl && (
-        <div className="relative aspect-video w-full overflow-hidden rounded-[20px] border border-[rgba(216,196,160,0.12)]">
-          <Image
-            src={resolvedImageUrl}
-            alt={`Artwork for ${name}`}
-            fill
-            unoptimized={isDeliveryImageUnoptimized(resolvedImageUrl)}
-            className="object-cover section-artwork-photo-dimmed"
-            sizes="(max-width: 768px) 100vw, 600px"
-          />
-          <div className="section-artwork-card-scrim" aria-hidden />
-          <div className="relative z-[2] flex h-full items-end justify-end gap-2 p-4">
-            <Button
-              variant="secondary"
-              size="sm"
-              type="button"
-              onClick={() => fileRef.current?.click()}
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Replace
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              type="button"
-              onClick={handleRemove}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Remove
-            </Button>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Image preview */}
+        {resolvedImageUrl && (
+          <div className="relative aspect-video w-full overflow-hidden rounded-[20px] border border-[rgba(216,196,160,0.12)]">
+            <Image
+              src={resolvedImageUrl}
+              alt={`Artwork for ${name}`}
+              fill
+              unoptimized={isDeliveryImageUnoptimized(resolvedImageUrl)}
+              className="object-cover section-artwork-photo-dimmed"
+              sizes="(max-width: 768px) 100vw, 600px"
+            />
+            <div className="section-artwork-card-scrim" aria-hidden />
+            <div className="relative z-[2] flex h-full items-end justify-end gap-2 p-4">
+              <Button
+                variant="secondary"
+                size="sm"
+                type="button"
+                onClick={() => fileRef.current?.click()}
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Replace
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                type="button"
+                onClick={handleRemove}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Remove
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Prompt area */}
-      {prompt ? (
-        <div className="space-y-3">
-          <div className="max-h-48 overflow-y-auto rounded-[16px] border border-[rgba(216,196,160,0.1)] bg-[rgba(12,17,16,0.45)] p-4 font-mono text-xs leading-relaxed text-[#b4a58a]">
-            {prompt}
+        {/* Prompt area */}
+        {prompt ? (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                type="button"
+                onClick={handleCopy}
+              >
+                {copied ? (
+                  <Check className="h-3.5 w-3.5" />
+                ) : (
+                  <ClipboardCopy className="h-3.5 w-3.5" />
+                )}
+                {copied ? "Copied" : "Copy prompt"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
+                onClick={handleGenerate}
+                disabled={saving}
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Regenerate
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
+                onClick={() => setShowPrompt((v) => !v)}
+                aria-expanded={showPrompt}
+              >
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform ${
+                    showPrompt ? "rotate-180" : ""
+                  }`}
+                />
+                {showPrompt ? "Hide prompt" : "Show prompt"}
+              </Button>
+            </div>
+            {showPrompt && (
+              <div className="max-h-48 overflow-y-auto rounded-[16px] border border-[rgba(216,196,160,0.1)] bg-[rgba(12,17,16,0.45)] p-4 font-mono text-xs leading-relaxed text-[#b4a58a]">
+                {prompt}
+              </div>
+            )}
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              type="button"
-              onClick={handleCopy}
-            >
-              {copied ? (
-                <Check className="h-3.5 w-3.5" />
-              ) : (
-                <ClipboardCopy className="h-3.5 w-3.5" />
-              )}
-              {copied ? "Copied" : "Copy prompt"}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              type="button"
-              onClick={handleGenerate}
-              disabled={saving}
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Regenerate
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <Button
-          variant="secondary"
-          type="button"
-          onClick={handleGenerate}
-          disabled={saving}
-        >
-          <ImagePlus className="h-4 w-4" />
-          {saving ? "Generating..." : "Generate image prompt"}
-        </Button>
-      )}
+        ) : (
+          <Button
+            variant="secondary"
+            type="button"
+            onClick={handleGenerate}
+            disabled={saving}
+          >
+            <ImagePlus className="h-4 w-4" />
+            {saving ? "Generating..." : "Generate image prompt"}
+          </Button>
+        )}
 
-      {/* Upload zone */}
-      {prompt && !displayImageUrl && (
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={uploading}
-          className="flex w-full cursor-pointer flex-col items-center gap-3 rounded-[20px] border-2 border-dashed border-[rgba(216,196,160,0.18)] bg-[rgba(247,240,225,0.02)] p-8 text-center transition-colors hover:border-[rgba(230,196,139,0.36)] hover:bg-[rgba(247,240,225,0.04)]"
-        >
-          <Upload className="h-8 w-8 text-[#8d826d]" />
-          <p className="text-sm text-[#b4a58a]">
-            {uploading
-              ? "Uploading..."
-              : isPending
-                ? "Saving..."
-                : "Click to upload your generated image"}
-          </p>
-          <p className="text-xs text-[#8d826d]">
-            JPEG, PNG, or WebP up to 5 MB
-          </p>
-        </button>
-      )}
+        {/* Upload zone */}
+        {prompt && !displayImageUrl && (
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="flex w-full cursor-pointer flex-col items-center gap-3 rounded-[20px] border-2 border-dashed border-[rgba(216,196,160,0.18)] bg-[rgba(247,240,225,0.02)] p-8 text-center transition-colors hover:border-[rgba(230,196,139,0.36)] hover:bg-[rgba(247,240,225,0.04)]"
+          >
+            <Upload className="h-8 w-8 text-[#8d826d]" />
+            <p className="text-sm text-[#b4a58a]">
+              {uploading
+                ? "Uploading..."
+                : isPending
+                  ? "Saving..."
+                  : "Click to upload your generated image"}
+            </p>
+            <p className="text-xs text-[#8d826d]">
+              JPEG, PNG, or WebP up to 5 MB
+            </p>
+          </button>
+        )}
 
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) handleUpload(file);
-          e.target.value = "";
-        }}
-      />
-    </section>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleUpload(file);
+            e.target.value = "";
+          }}
+        />
+      </CardContent>
+    </Card>
   );
 }

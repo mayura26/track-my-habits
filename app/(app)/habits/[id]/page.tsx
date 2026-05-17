@@ -1,22 +1,39 @@
-import { Edit, Trash2 } from "lucide-react";
+import { Flame, Trophy } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { CategoryBadge } from "@/components/categories/CategoryBadge";
 import { HabitDetailCountSection } from "@/components/habits/HabitDetailCountSection";
+import { HabitDetailHero } from "@/components/habits/HabitDetailHero";
+import { HabitDetailTabs } from "@/components/habits/HabitDetailTabs";
 import { HabitHistorySection } from "@/components/habits/HabitHistorySection";
 import { HabitImageSection } from "@/components/habits/HabitImageSection";
-import { StreakBadge } from "@/components/habits/StreakBadge";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import {
+  StatGrid,
+  StatItem,
+  StatPanel,
+  statCellClass,
+} from "@/components/ui/StatPanel";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
+import { loadHabitHistory } from "@/lib/habit-history";
 import { normalizeTimezone, startOfDayInTimezone } from "@/lib/timezone";
 import { HabitDetailClient } from "./HabitDetailClient";
 
 interface HabitDetailPageProps {
   params: Promise<{ id: string }>;
 }
+
+const TRACKING_LABELS: Record<string, string> = {
+  BOOLEAN: "Yes / No",
+  COUNT: "Count toward goal",
+};
+
+const THRESHOLD_LABELS: Record<string, string> = {
+  DAILY: "Daily",
+  WEEKLY_TOTAL: "Weekly total",
+  ROLLING_WINDOW: "Rolling window",
+};
 
 export default async function HabitDetailPage({
   params,
@@ -36,8 +53,8 @@ export default async function HabitDetailPage({
     include: {
       category: true,
       // HabitDetailCountSection only needs today's logs for its running
-      // total + undo-last-log. The new HabitHistorySection fetches its own
-      // 91-day window independently.
+      // total + undo-last-log. The history grid fetches its own 91-day
+      // window independently via loadHabitHistory.
       logs: {
         where: { loggedAt: { gte: todayStart } },
         orderBy: { loggedAt: "desc" },
@@ -57,68 +74,57 @@ export default async function HabitDetailPage({
     redirect("/habits");
   }
 
-  return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="section-kicker">Habit</p>
-          <h1 className="display-title mt-2 text-3xl font-semibold text-[#fff7ea] md:text-4xl">
-            {habit.name}
-          </h1>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <CategoryBadge
-              name={habit.category.name}
-              color={habit.category.color}
-              icon={habit.category.icon}
-            />
-            {habit.nfcToken && <Badge variant="info">NFC</Badge>}
-          </div>
-          {habit.description && (
-            <p className="mt-2 text-sm leading-relaxed text-[#b4a58a]">
-              {habit.description}
-            </p>
-          )}
-        </div>
-        <div className="flex shrink-0 gap-2">
-          <Link href={`/habits/${id}/edit`}>
-            <Button variant="secondary" size="sm">
-              <Edit className="h-3.5 w-3.5" />
-            </Button>
-          </Link>
-          <form action={deleteHabit}>
-            <Button type="submit" variant="danger" size="sm">
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-          </form>
-        </div>
-      </div>
+  const { days, stats, dailyThreshold } = await loadHabitHistory(
+    habit,
+    timezone,
+  );
 
-      {/* Streak stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="py-4 text-center">
-            <StreakBadge streak={habit.currentStreak} />
-            <p className="mt-2 text-xs text-[#b4a58a]">Current Streak</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-4 text-center">
-            <StreakBadge streak={habit.bestStreak} />
-            <p className="mt-2 text-xs text-[#b4a58a]">Best Streak</p>
-          </CardContent>
-        </Card>
-      </div>
+  const overview = (
+    <>
+      <StatPanel>
+        <StatGrid columns={4}>
+          <StatItem
+            value={
+              <span className="inline-flex items-center gap-1.5">
+                <Flame className="h-5 w-5 text-[#e0a04a]" />
+                {habit.currentStreak}
+              </span>
+            }
+            label="current streak"
+            className={statCellClass(4, 0)}
+          />
+          <StatItem
+            value={
+              <span className="inline-flex items-center gap-1.5">
+                <Trophy className="h-5 w-5 text-[#e6c48b]" />
+                {habit.bestStreak}
+              </span>
+            }
+            label="best streak"
+            className={statCellClass(4, 1)}
+          />
+          <StatItem
+            value={`${stats.completionRate}%`}
+            label="completion"
+            accent
+            className={statCellClass(4, 2)}
+          />
+          <StatItem
+            value={stats.completed}
+            label="completed"
+            className={statCellClass(4, 3)}
+          />
+        </StatGrid>
+      </StatPanel>
 
-      {/* Card artwork */}
-      <HabitImageSection
+      <HabitHistorySection
         habitId={habit.id}
-        imageUrl={habit.imageUrl}
-        imagePrompt={habit.imagePrompt}
-        name={habit.name}
-        categoryName={habit.category.name}
-        description={habit.description}
         trackingType={habit.trackingType}
+        thresholdType={habit.thresholdType}
+        thresholdValue={habit.thresholdValue}
+        days={days}
+        stats={stats}
+        dailyThreshold={dailyThreshold}
       />
 
       {habit.trackingType === "COUNT" && (
@@ -140,21 +146,38 @@ export default async function HabitDetailPage({
           </CardContent>
         </Card>
       )}
+    </>
+  );
 
-      {/* Config */}
+  const settings = (
+    <>
+      <HabitImageSection
+        habitId={habit.id}
+        imageUrl={habit.imageUrl}
+        imagePrompt={habit.imagePrompt}
+        name={habit.name}
+        categoryName={habit.category.name}
+        description={habit.description}
+        trackingType={habit.trackingType}
+      />
+
       <Card>
         <CardHeader>
           <h2 className="font-medium text-[#f7f0e1]">Configuration</h2>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <dl className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <dt className="text-[#b4a58a]">Tracking</dt>
-              <dd className="text-[#f7f0e1]">{habit.trackingType}</dd>
+              <dd className="text-[#f7f0e1]">
+                {TRACKING_LABELS[habit.trackingType] ?? habit.trackingType}
+              </dd>
             </div>
             <div>
-              <dt className="text-[#b4a58a]">Goal Type</dt>
-              <dd className="text-[#f7f0e1]">{habit.thresholdType}</dd>
+              <dt className="text-[#b4a58a]">Goal type</dt>
+              <dd className="text-[#f7f0e1]">
+                {THRESHOLD_LABELS[habit.thresholdType] ?? habit.thresholdType}
+              </dd>
             </div>
             <div>
               <dt className="text-[#b4a58a]">Target</dt>
@@ -167,18 +190,39 @@ export default async function HabitDetailPage({
               </div>
             )}
           </dl>
+          <Link href={`/habits/${id}/edit`} className="inline-block">
+            <Button variant="secondary" size="sm">
+              Edit habit
+            </Button>
+          </Link>
         </CardContent>
       </Card>
 
-      {/* NFC */}
       <HabitDetailClient
         habitId={id}
         nfcToken={habit.nfcToken}
         nfcValue={habit.nfcValue}
       />
+    </>
+  );
 
-      {/* History */}
-      <HabitHistorySection habit={habit} timezone={timezone} />
+  return (
+    <div className="mx-auto max-w-2xl space-y-6">
+      <HabitDetailHero
+        name={habit.name}
+        description={habit.description}
+        imageUrl={habit.imageUrl}
+        category={{
+          name: habit.category.name,
+          color: habit.category.color,
+          icon: habit.category.icon,
+        }}
+        hasNfc={Boolean(habit.nfcToken)}
+        editHref={`/habits/${id}/edit`}
+        deleteAction={deleteHabit}
+      />
+
+      <HabitDetailTabs overview={overview} settings={settings} />
     </div>
   );
 }
