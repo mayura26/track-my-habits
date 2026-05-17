@@ -40,7 +40,24 @@
       "Bash(wmic process:*)",
       "Bash(taskkill //PID 21428 //F)",
       "Bash(taskkill //PID 18856 //F)",
-      "Bash(taskkill //PID 19220 //F)"
+      "Bash(taskkill //PID 19220 //F)",
+      "Skill(frontend-design:frontend-design)",
+      "Bash(Get-ChildItem -Path \"D:\\\\VSCode Projects\\\\track-my-habits\\\\app\\\\\\(app\\)\\\\habits\\\\[id]\" -Recurse)",
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"D:\\\\VSCode Projects\\\\track-my-habits\" -Force)",
+      "Bash(Select-Object Name, FullName)",
+      "PowerShell(npm run *)",
+      "PowerShell(Test-Path *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(cmd /c dir /b \"%LOCALAPPDATA%\\\\nvm\" 2>nul; Write-Output \"---\"; cmd /c dir /b \"%ProgramFiles%\\\\nodejs\" 2>nul)",
+      "PowerShell($env:Path = \"C:\\\\Users\\\\kmviv\\\\AppData\\\\Local\\\\nvm\\\\v20.10.0;\" + $env:Path; & \"C:\\\\Users\\\\kmviv\\\\AppData\\\\Local\\\\nvm\\\\v20.10.0\\\\npm.cmd\" run build)",
+      "PowerShell($env:Path = \"C:\\\\Users\\\\kmviv\\\\AppData\\\\Local\\\\nvm\\\\v24.15.0;\" + $env:Path; node -v; & \"C:\\\\Users\\\\kmviv\\\\AppData\\\\Local\\\\nvm\\\\v24.15.0\\\\npm.cmd\" run build)",
+      "PowerShell($env:Path = \"C:\\\\Users\\\\kmviv\\\\AppData\\\\Local\\\\nvm\\\\v24.15.0;\" + $env:Path; & \"C:\\\\Users\\\\kmviv\\\\AppData\\\\Local\\\\nvm\\\\v24.15.0\\\\npm.cmd\" run lint)",
+      "PowerShell($env:Path = \"C:\\\\Users\\\\kmviv\\\\AppData\\\\Local\\\\nvm\\\\v24.15.0;\" + $env:Path; & \"C:\\\\Users\\\\kmviv\\\\AppData\\\\Local\\\\nvm\\\\v24.15.0\\\\npm.cmd\" run test:e2e -- habits.spec.ts nfc.spec.ts)",
+      "PowerShell($env:Path = \"C:\\\\Users\\\\kmviv\\\\AppData\\\\Local\\\\nvm\\\\v24.15.0;\" + $env:Path; $env:DATABASE_URL = \"file:./prisma/test.db\"; $env:TEST_AUTH_BYPASS = \"true\"; $env:NEXTAUTH_SECRET = \"test-secret-for-playwright\"; $env:NEXTAUTH_URL = \"http://localhost:3000\"; & \"C:\\\\Users\\\\kmviv\\\\AppData\\\\Local\\\\nvm\\\\v24.15.0\\\\npm.cmd\" run dev)",
+      "PowerShell($env:Path = \"C:\\\\Users\\\\kmviv\\\\AppData\\\\Local\\\\nvm\\\\v24.15.0;\" + $env:Path; node tmp-screenshot.mjs)",
+      "PowerShell(Get-NetTCPConnection *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
