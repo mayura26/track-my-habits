@@ -1,6 +1,7 @@
 import { Chrome } from "lucide-react";
 import Image from "next/image";
 import { signIn } from "@/auth";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
 export default function SignInPage() {
   return (
@@ -17,13 +18,21 @@ export default function SignInPage() {
           </p>
 
           <div className="mt-10 max-w-sm rounded-[30px] border border-[rgba(216,196,160,0.14)] bg-[rgba(8,12,10,0.24)] p-6">
-            <div className="mb-8">
-              <h2 className="display-title text-3xl font-semibold text-[#f7f0e1]">
-                Track My Habits
-              </h2>
-              <p className="mt-2 text-sm text-[#b4a58a]">
-                Sign in to continue your reset.
-              </p>
+            <div className="mb-8 flex items-center gap-3">
+              <BrandLogo
+                alt=""
+                size={48}
+                className="h-12 w-12 border border-[rgba(230,196,139,0.28)]"
+                priority
+              />
+              <div className="min-w-0">
+                <h2 className="display-title text-3xl font-semibold leading-tight text-[#f7f0e1]">
+                  Track My Habits
+                </h2>
+                <p className="mt-1 text-sm text-[#b4a58a]">
+                  Sign in to continue your reset.
+                </p>
+              </div>
             </div>
 
             <form

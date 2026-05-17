@@ -8,10 +8,10 @@ import {
   Settings,
   Tag,
   Trophy,
-  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -31,9 +31,12 @@ export function Sidebar() {
       <div className="surface-panel flex h-full flex-col overflow-hidden rounded-[30px]">
         <div className="border-b border-[rgba(216,196,160,0.14)] px-5 py-5">
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[rgba(230,196,139,0.3)] bg-[linear-gradient(135deg,#d8b16b,#7d9c73)] shadow-[0_16px_35px_rgba(0,0,0,0.25)]">
-              <Zap className="h-5 w-5 text-[#111814]" />
-            </div>
+            <BrandLogo
+              alt=""
+              size={48}
+              className="mt-0.5 h-12 w-12 border border-[rgba(230,196,139,0.28)]"
+              priority
+            />
             <div className="min-w-0">
               <p className="section-kicker">Daily Reset</p>
               <h1 className="display-title mt-2 text-[1.15rem] font-semibold leading-tight text-[#f9f1e2]">

@@ -13,7 +13,7 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body: payload.body || "",
-    icon: "/web-app-manifest-192x192.png",
+    icon: "/icons/icon-192.png",
     badge: "/icons/notification-badge.png",
     data: { url: payload.url || "/dashboard" },
   };

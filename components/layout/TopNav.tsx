@@ -2,6 +2,7 @@ import { LogOut, User } from "lucide-react";
 import Image from "next/image";
 import type { Session } from "next-auth";
 import { signOut } from "@/auth";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { xpForLevel } from "@/lib/gamification";
 
@@ -28,6 +29,12 @@ export function TopNav({ session }: TopNavProps) {
   return (
     <header className="sticky top-0 z-20 mx-4 mt-3 flex min-h-[76px] items-center justify-between rounded-[28px] border border-[rgba(216,196,160,0.14)] bg-[rgba(12,17,16,0.78)] px-4 py-4 shadow-[0_20px_45px_rgba(0,0,0,0.22)] backdrop-blur-xl md:mx-8 md:mt-4 md:px-6">
       <div className="flex min-w-0 items-center gap-3 md:gap-4">
+        <BrandLogo
+          alt=""
+          size={42}
+          className="h-10 w-10 border border-[rgba(230,196,139,0.24)] md:h-11 md:w-11"
+          priority
+        />
         <div className="min-w-0">
           <p className="section-kicker">Today</p>
           <span className="display-title mt-1 block text-[1.15rem] font-semibold leading-tight text-[#f7f0e1] md:text-2xl">
