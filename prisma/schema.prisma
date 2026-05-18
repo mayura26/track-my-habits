@@ -100,6 +100,9 @@ model Habit {
   countIncrement  Float?
   nfcToken            String?  @unique
   nfcValue            String?
+  /// Optional CSV weekdays (SUN,MON,TUE,WED,THU,FRI,SAT). Null means all days.
+  scheduledWeekdays   String?
+  bucket              String?  @default("DAY")
   reminderEnabled     Boolean  @default(false)
   reminderTime        String?
   lastReminderSentAt  DateTime?

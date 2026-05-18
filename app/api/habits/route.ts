@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { serializeScheduledWeekdays } from "@/lib/task-helpers";
 import { createHabitSchema } from "@/lib/validations";
 
 export async function GET() {
@@ -36,11 +37,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { startDate: startDateStr, ...rest } = parsed.data;
+  const { startDate: startDateStr, scheduledWeekdays, ...rest } = parsed.data;
   const habit = await db.habit.create({
     data: {
       userId: session.user.id,
       ...rest,
+      scheduledWeekdays: serializeScheduledWeekdays(scheduledWeekdays),
       ...(startDateStr ? { startDate: new Date(startDateStr) } : {}),
     },
     include: { category: true },

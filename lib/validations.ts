@@ -14,6 +14,22 @@ const timezoneSchema = z
     "Invalid timezone",
   );
 
+export const BUCKET_VALUES = [
+  "MORNING",
+  "DAY",
+  "EVENING",
+  "BEFORE_BED",
+] as const;
+export const WEEKDAY_VALUES = [
+  "SUN",
+  "MON",
+  "TUE",
+  "WED",
+  "THU",
+  "FRI",
+  "SAT",
+] as const;
+
 export const createHabitSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
@@ -26,6 +42,15 @@ export const createHabitSchema = z.object({
   startDate: z.string().datetime().optional(),
   imageUrl: z.string().nullable().optional(),
   imagePrompt: z.string().max(2000).nullable().optional(),
+  scheduledWeekdays: z
+    .array(z.enum(WEEKDAY_VALUES))
+    .min(1)
+    .max(7)
+    .optional()
+    .transform((value) => (value ? [...new Set(value)] : value)),
+  // No Zod default — `.partial()` for updates keeps defaults, which would
+  // reset an omitted bucket. The Prisma column default ("DAY") covers create.
+  bucket: z.enum(BUCKET_VALUES).optional(),
   reminderEnabled: z.boolean().optional().default(false),
   reminderTime: z
     .string()
@@ -63,22 +88,6 @@ export type CreateHabitInput = z.infer<typeof createHabitSchema>;
 export type UpdateHabitInput = z.infer<typeof updateHabitSchema>;
 export type LogHabitInput = z.infer<typeof logHabitSchema>;
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
-
-export const BUCKET_VALUES = [
-  "MORNING",
-  "DAY",
-  "EVENING",
-  "BEFORE_BED",
-] as const;
-export const WEEKDAY_VALUES = [
-  "SUN",
-  "MON",
-  "TUE",
-  "WED",
-  "THU",
-  "FRI",
-  "SAT",
-] as const;
 
 export const createTaskSchema = z.object({
   name: z.string().min(1).max(100),

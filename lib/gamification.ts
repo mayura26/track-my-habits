@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { parseScheduledWeekdays, WEEKDAY_ORDER } from "@/lib/task-helpers";
 import {
   getLocalDateKey,
   getTimePartsInTimezone,
@@ -33,6 +34,7 @@ interface HabitForStreak {
   thresholdType: string;
   thresholdValue: number;
   thresholdWindow: number | null;
+  scheduledWeekdays: string | null;
 }
 
 export async function calculateStreak(
@@ -66,15 +68,34 @@ export async function calculateStreak(
     byDate.set(key, (byDate.get(key) ?? 0) + log.value);
   }
 
+  // Weekday restriction (DAILY only): non-scheduled days are skipped, not
+  // counted as misses — a Mon–Fri habit keeps its streak across the weekend.
+  const scheduledDays = parseScheduledWeekdays(habit.scheduledWeekdays);
+  // Termination guard: nothing can be completed before the oldest log.
+  const oldestDay = startOfDayInTimezone(
+    new Date(logs[logs.length - 1].loggedAt),
+    zone,
+  );
+
   let streak = 0;
   const cursor = new Date(today);
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
+    if (cursor.getTime() < oldestDay.getTime()) break;
+
     const key = getLocalDateKey(new Date(cursor), zone);
     const daySum = byDate.get(key) ?? 0;
 
     if (habit.thresholdType === "DAILY") {
+      if (scheduledDays) {
+        const weekday =
+          WEEKDAY_ORDER[getTimePartsInTimezone(cursor, zone).weekdayIndex];
+        if (!scheduledDays.includes(weekday)) {
+          cursor.setTime(cursor.getTime() - MS_PER_DAY);
+          continue;
+        }
+      }
       if (daySum >= habit.thresholdValue) {
         streak++;
       } else if (cursor.getTime() === today.getTime()) {

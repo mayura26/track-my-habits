@@ -3,6 +3,7 @@ import { HabitForm } from "@/components/habits/HabitForm";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
+import { parseScheduledWeekdays } from "@/lib/task-helpers";
 
 interface EditHabitPageProps {
   params: Promise<{ id: string }>;
@@ -55,6 +56,9 @@ export default async function EditHabitPage({ params }: EditHabitPageProps) {
               thresholdValue: habit.thresholdValue,
               thresholdWindow: habit.thresholdWindow ?? undefined,
               countIncrement: habit.countIncrement,
+              bucket: habit.bucket ?? "DAY",
+              scheduledWeekdays:
+                parseScheduledWeekdays(habit.scheduledWeekdays) ?? undefined,
               reminderEnabled: habit.reminderEnabled,
               reminderTime: habit.reminderTime ?? undefined,
             }}

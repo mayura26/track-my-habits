@@ -1,9 +1,9 @@
 import { ArrowRight, CalendarClock, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { TodaySection } from "@/components/dashboard/TodaySection";
 import { XPBar } from "@/components/gamification/XPBar";
 import { HabitCardList } from "@/components/habits/HabitCardList";
-import { DueTasksSection } from "@/components/tasks/DueTasksSection";
 import { Button, linkButtonClassName } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { SectionArtwork } from "@/components/ui/SectionArtwork";
@@ -21,6 +21,9 @@ import {
   bucketOrderFromNow,
   getPeriodRange,
   isLogicallyDue,
+  isScheduledForToday,
+  parseScheduledWeekdays,
+  WEEKDAY_ORDER,
 } from "@/lib/task-helpers";
 import {
   getLocalDateKey,
@@ -114,6 +117,28 @@ export default async function DashboardPage() {
       .reduce((s, l) => s + l.value, 0);
   }
 
+  function isHabitDoneToday(habit: (typeof habits)[number]): boolean {
+    const sum = todaySum(habit.logs);
+    return habit.thresholdType === "DAILY"
+      ? sum >= habit.thresholdValue
+      : sum > 0;
+  }
+
+  // Habits scheduled for today and not yet done — grouped by time-of-day bucket
+  // for the unified "Today" view. Completed habits drop out so it shows only
+  // what's still outstanding.
+  const todayHabits = habits.filter(
+    (h) => isScheduledForToday(h, now, timezone) && !isHabitDoneToday(h),
+  );
+  const groupedHabits = Object.fromEntries(
+    BUCKETS.map((b) => [
+      b,
+      todayHabits
+        .filter((h) => (h.bucket ?? "DAY") === b)
+        .sort((a, c) => c.currentStreak - a.currentStreak),
+    ]),
+  ) as Record<Bucket, typeof habits>;
+
   // Compute missing days for DAILY habits (last 7 days, excluding today)
   let totalMissingDays = 0;
   let habitsWithGaps = 0;
@@ -125,6 +150,7 @@ export default async function DashboardPage() {
         sevenDaysAgo.getTime(),
       ),
     );
+    const scheduled = parseScheduledWeekdays(habit.scheduledWeekdays);
     const logsByDate = new Map<string, number>();
     for (const log of habit.logs) {
       const key = getLocalDateKey(new Date(log.loggedAt), timezone);
@@ -135,7 +161,15 @@ export default async function DashboardPage() {
     cursor.setDate(cursor.getDate() - 1);
     while (cursor >= startBound) {
       const key = getLocalDateKey(new Date(cursor), timezone);
-      if ((logsByDate.get(key) ?? 0) < habit.thresholdValue) missing++;
+      const weekday =
+        WEEKDAY_ORDER[getTimePartsInTimezone(cursor, timezone).weekdayIndex];
+      // Non-scheduled weekdays are not expected — don't count them as missing.
+      if (
+        (!scheduled || scheduled.includes(weekday)) &&
+        (logsByDate.get(key) ?? 0) < habit.thresholdValue
+      ) {
+        missing++;
+      }
       cursor.setUTCDate(cursor.getUTCDate() - 1);
     }
     if (missing > 0) {
@@ -196,7 +230,7 @@ export default async function DashboardPage() {
                   <StatPanel>
                     <StatGrid columns={4}>
                       <StatItem
-                        value={dueTasks.length}
+                        value={dueTasks.length + todayHabits.length}
                         label="due now"
                         className={statCellClass(4, 0)}
                       />
@@ -237,9 +271,10 @@ export default async function DashboardPage() {
         </Card>
       </section>
 
-      {activeTasks.length > 0 && (
-        <DueTasksSection
-          grouped={grouped}
+      {(activeTasks.length > 0 || habits.length > 0) && (
+        <TodaySection
+          groupedTasks={grouped}
+          groupedHabits={groupedHabits}
           orderedBuckets={orderedBuckets}
           currentBucket={currentBucket}
         />

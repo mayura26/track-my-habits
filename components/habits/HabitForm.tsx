@@ -7,6 +7,17 @@ import { Button } from "@/components/ui/Button";
 import { ChoiceCard } from "@/components/ui/ChoiceCard";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { WEEKDAY_ORDER, type Weekday } from "@/lib/task-helpers";
+
+const WEEKDAY_BUTTONS: { value: Weekday; label: string }[] = [
+  { value: "MON", label: "Mon" },
+  { value: "TUE", label: "Tue" },
+  { value: "WED", label: "Wed" },
+  { value: "THU", label: "Thu" },
+  { value: "FRI", label: "Fri" },
+  { value: "SAT", label: "Sat" },
+  { value: "SUN", label: "Sun" },
+];
 
 interface HabitFormProps {
   categories: HabitCategory[];
@@ -19,6 +30,8 @@ interface HabitFormProps {
     thresholdValue?: number;
     thresholdWindow?: number;
     countIncrement?: number | null;
+    bucket?: string;
+    scheduledWeekdays?: Weekday[];
     reminderEnabled?: boolean;
     reminderTime?: string;
   };
@@ -41,6 +54,10 @@ export function HabitForm({
   );
   const [reminderEnabled, setReminderEnabled] = useState(
     defaultValues?.reminderEnabled ?? false,
+  );
+  const [bucket, setBucket] = useState(defaultValues?.bucket ?? "DAY");
+  const [scheduledWeekdays, setScheduledWeekdays] = useState<Weekday[]>(
+    defaultValues?.scheduledWeekdays ?? [...WEEKDAY_ORDER],
   );
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -79,6 +96,8 @@ export function HabitForm({
         ? { countIncrement }
         : {}),
       ...(trackingType === "BOOLEAN" ? { countIncrement: null } : {}),
+      bucket,
+      scheduledWeekdays,
       reminderEnabled,
       reminderTime: reminderEnabled
         ? (formData.get("reminderTime") as string) || undefined
@@ -265,6 +284,70 @@ export function HabitForm({
         {thresholdType !== "ROLLING_WINDOW" && trackingType === "BOOLEAN" && (
           <input type="hidden" name="thresholdValue" value="1" />
         )}
+      </section>
+
+      <section className="space-y-4 rounded-[26px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.03)] p-4">
+        <div>
+          <p className="section-kicker">Time of day</p>
+          <p className="mt-2 text-sm text-[#b4a58a]">
+            Choose where this ritual belongs in your day.
+          </p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {[
+            ["MORNING", "Morning", "Earlier-day momentum"],
+            ["DAY", "Day", "General daytime rituals"],
+            ["EVENING", "Evening", "Reset before the day ends"],
+            ["BEFORE_BED", "Before bed", "Last touchpoints at night"],
+          ].map(([value, title, body]) => (
+            <ChoiceCard
+              key={value}
+              title={title}
+              body={body}
+              active={bucket === value}
+              onClick={() => setBucket(value)}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-4 rounded-[26px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.03)] p-4">
+        <div>
+          <p className="section-kicker">Active weekdays</p>
+          <p className="mt-2 text-sm text-[#b4a58a]">
+            Only schedule this habit on the selected days.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+          {WEEKDAY_BUTTONS.map(({ value, label }) => {
+            const active = scheduledWeekdays.includes(value);
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  setScheduledWeekdays((current) => {
+                    if (current.includes(value)) {
+                      if (current.length === 1) return current;
+                      return current.filter((day) => day !== value);
+                    }
+                    return [...current, value];
+                  });
+                }}
+                className={`rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
+                  active
+                    ? "border-[rgba(230,196,139,0.42)] bg-[rgba(199,154,82,0.18)] text-[#f7f0e1]"
+                    : "border-[rgba(216,196,160,0.16)] bg-[rgba(247,240,225,0.04)] text-[#b4a58a]"
+                }`}
+                aria-pressed={active}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
       </section>
 
       <section className="space-y-4 rounded-[26px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.03)] p-4">

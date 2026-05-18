@@ -18,6 +18,7 @@ import {
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { loadHabitHistory } from "@/lib/habit-history";
+import { BUCKET_LABELS, parseScheduledWeekdays } from "@/lib/task-helpers";
 import { normalizeTimezone, startOfDayInTimezone } from "@/lib/timezone";
 import { HabitDetailClient } from "./HabitDetailClient";
 
@@ -35,6 +36,22 @@ const THRESHOLD_LABELS: Record<string, string> = {
   WEEKLY_TOTAL: "Weekly total",
   ROLLING_WINDOW: "Rolling window",
 };
+
+const WEEKDAY_LABELS: Record<string, string> = {
+  SUN: "Sun",
+  MON: "Mon",
+  TUE: "Tue",
+  WED: "Wed",
+  THU: "Thu",
+  FRI: "Fri",
+  SAT: "Sat",
+};
+
+function activeDaysLabel(scheduledWeekdays: string | null): string {
+  const days = parseScheduledWeekdays(scheduledWeekdays);
+  if (!days) return "Every day";
+  return days.map((d) => WEEKDAY_LABELS[d]).join(", ");
+}
 
 export default async function HabitDetailPage({
   params,
@@ -190,6 +207,20 @@ export default async function HabitDetailPage({
                 <dd className="text-[#f7f0e1]">{habit.thresholdWindow} days</dd>
               </div>
             )}
+            <div>
+              <dt className="text-[#b4a58a]">Time of day</dt>
+              <dd className="text-[#f7f0e1]">
+                {BUCKET_LABELS[
+                  (habit.bucket ?? "DAY") as keyof typeof BUCKET_LABELS
+                ] ?? "Day"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[#b4a58a]">Active days</dt>
+              <dd className="text-[#f7f0e1]">
+                {activeDaysLabel(habit.scheduledWeekdays)}
+              </dd>
+            </div>
           </dl>
           <Link href={`/habits/${id}/edit`} className="inline-block">
             <Button variant="secondary" size="sm">

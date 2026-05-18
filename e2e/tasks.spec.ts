@@ -41,7 +41,7 @@ test.describe("Tasks", () => {
 
     await page.goto("/dashboard");
     await expect(
-      page.getByRole("heading", { name: "Due Tasks" }),
+      page.getByRole("heading", { name: "Today", exact: true }),
     ).toBeVisible();
     await expect(page.getByText("Dashboard Task E2E").first()).toBeVisible();
   });
@@ -103,7 +103,9 @@ test.describe("Tasks", () => {
 
     // Go to dashboard — task should not be in due section
     await page.goto("/dashboard");
-    const dueSection = page.locator("text=Due Tasks").first();
+    const dueSection = page
+      .getByRole("heading", { name: "Today", exact: true })
+      .first();
     if (await dueSection.isVisible()) {
       // Task might still show if other tasks exist; check Done badge
       const completedCard = page
@@ -143,7 +145,7 @@ test.describe("Tasks", () => {
 
     await page.goto("/dashboard");
     await expect(
-      page.getByRole("heading", { name: "Due Tasks" }),
+      page.getByRole("heading", { name: "Today", exact: true }),
     ).toBeVisible();
     // Both tasks should appear under their bucket sections
     await expect(page.getByText("Morning Routine E2E").first()).toBeVisible();
