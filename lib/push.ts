@@ -11,6 +11,8 @@ interface PushPayload {
   title: string;
   body: string;
   url?: string;
+  entityType?: "task" | "habit";
+  entityId?: string;
 }
 
 export async function sendPushToUser(

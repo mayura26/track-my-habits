@@ -106,6 +106,7 @@ model Habit {
   reminderEnabled     Boolean  @default(false)
   reminderTime        String?
   lastReminderSentAt  DateTime?
+  reminderSnoozedUntil DateTime?
   currentStreak       Int      @default(0)
   bestStreak          Int      @default(0)
   imageUrl            String?
@@ -175,6 +176,7 @@ model Task {
   reminderEnabled     Boolean   @default(false)
   reminderTime        String?
   lastReminderSentAt  DateTime?
+  reminderSnoozedUntil DateTime?
   imageUrl            String?
   imagePrompt         String?
   isActive            Boolean   @default(true)

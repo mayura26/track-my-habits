@@ -1,8 +1,33 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendPushToUser } from "@/lib/push";
-import { isReminderDue, isSameLocalDay } from "@/lib/task-helpers";
-import { getTimePartsInTimezone } from "@/lib/timezone";
+import {
+  isReminderDue,
+  isSameLocalDay,
+  isScheduledForToday,
+} from "@/lib/task-helpers";
+import { getLocalDateKey, getTimePartsInTimezone } from "@/lib/timezone";
+
+function isHabitDoneToday(
+  habit: {
+    thresholdType: string;
+    thresholdValue: number;
+    logs: { loggedAt: Date; value: number }[];
+  },
+  now: Date,
+  timezone: string,
+): boolean {
+  const todayKey = getLocalDateKey(now, timezone);
+  const sum = habit.logs
+    .filter(
+      (log) => getLocalDateKey(new Date(log.loggedAt), timezone) === todayKey,
+    )
+    .reduce((total, log) => total + log.value, 0);
+
+  return habit.thresholdType === "DAILY"
+    ? sum >= habit.thresholdValue
+    : sum > 0;
+}
 
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
@@ -19,8 +44,12 @@ export async function GET(req: Request) {
       isActive: true,
       reminderEnabled: true,
       reminderTime: { not: null },
+      OR: [
+        { reminderSnoozedUntil: null },
+        { reminderSnoozedUntil: { lte: now } },
+      ],
     },
-    include: { user: { select: { timezone: true } } },
+    include: { logs: true, user: { select: { timezone: true } } },
   });
 
   // Find habits with reminders due
@@ -29,8 +58,12 @@ export async function GET(req: Request) {
       isActive: true,
       reminderEnabled: true,
       reminderTime: { not: null },
+      OR: [
+        { reminderSnoozedUntil: null },
+        { reminderSnoozedUntil: { lte: now } },
+      ],
     },
-    include: { user: { select: { timezone: true } } },
+    include: { logs: true, user: { select: { timezone: true } } },
   });
 
   let sent = 0;
@@ -47,15 +80,17 @@ export async function GET(req: Request) {
       continue;
 
     const count = await sendPushToUser(task.userId, {
-      title: `Task reminder: ${task.name}`,
-      body: task.description ?? "Don't forget to complete this task!",
+      title: "Task reminder",
+      body: task.name,
       url: "/tasks",
+      entityType: "task",
+      entityId: task.id,
     });
 
     if (count > 0) {
       await db.task.update({
         where: { id: task.id },
-        data: { lastReminderSentAt: now },
+        data: { lastReminderSentAt: now, reminderSnoozedUntil: null },
       });
       sent += count;
     }
@@ -63,6 +98,8 @@ export async function GET(req: Request) {
 
   for (const habit of habits) {
     const timezone = habit.user.timezone ?? "UTC";
+    if (!isScheduledForToday(habit, now, timezone)) continue;
+    if (isHabitDoneToday(habit, now, timezone)) continue;
     if (!habit.reminderTime) continue;
     const [h, m] = habit.reminderTime.split(":").map(Number);
     const local = getTimePartsInTimezone(now, timezone);
@@ -77,15 +114,17 @@ export async function GET(req: Request) {
       continue;
 
     const count = await sendPushToUser(habit.userId, {
-      title: `Habit reminder: ${habit.name}`,
-      body: habit.description ?? "Time to keep your streak going!",
+      title: "Habit reminder",
+      body: habit.name,
       url: "/habits",
+      entityType: "habit",
+      entityId: habit.id,
     });
 
     if (count > 0) {
       await db.habit.update({
         where: { id: habit.id },
-        data: { lastReminderSentAt: now },
+        data: { lastReminderSentAt: now, reminderSnoozedUntil: null },
       });
       sent += count;
     }

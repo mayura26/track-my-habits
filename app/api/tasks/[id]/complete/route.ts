@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { awardXP, calcLevel, checkAndAwardBadges } from "@/lib/gamification";
+import { calcLevel } from "@/lib/gamification";
+import { completeTaskForUser } from "@/lib/task-completion";
 import { getPeriodRange } from "@/lib/task-helpers";
 
 export async function POST(
@@ -14,31 +15,12 @@ export async function POST(
   }
 
   const { id } = await params;
-  const task = await db.task.findFirst({
-    where: { id, userId: session.user.id, isActive: true },
-  });
-  if (!task) {
+  const result = await completeTaskForUser(id, session.user.id);
+  if (!result) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  const log = await db.taskLog.create({
-    data: {
-      taskId: id,
-      userId: session.user.id,
-    },
-  });
 
-  await awardXP(session.user.id, 10);
-  const newBadges = await checkAndAwardBadges(session.user.id);
-
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { xp: true, level: true },
-  });
-
-  return NextResponse.json(
-    { log, xp: user?.xp, level: user?.level, newBadges },
-    { status: 201 },
-  );
+  return NextResponse.json(result, { status: 201 });
 }
 
 export async function DELETE(

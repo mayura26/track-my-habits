@@ -15,29 +15,72 @@ self.addEventListener("push", (event) => {
     body: payload.body || "",
     icon: "/icons/icon-192.png",
     badge: "/icons/notification-badge.png",
-    data: { url: payload.url || "/dashboard" },
+    data: {
+      url: payload.url || "/dashboard",
+      entityType: payload.entityType,
+      entityId: payload.entityId,
+    },
   };
+
+  if (payload.entityType && payload.entityId) {
+    options.actions = [
+      { action: "complete", title: "Done" },
+      { action: "snooze", title: "Snooze" },
+    ];
+  }
 
   event.waitUntil(self.registration.showNotification(payload.title, options));
 });
+
+async function openAppUrl(url) {
+  const windowClients = await clients.matchAll({
+    type: "window",
+    includeUncontrolled: true,
+  });
+
+  for (const client of windowClients) {
+    if (client.url.includes(self.location.origin) && "focus" in client) {
+      client.navigate(url);
+      return client.focus();
+    }
+  }
+
+  return clients.openWindow(url);
+}
+
+async function sendReminderAction(notification, action) {
+  const data = notification.data || {};
+  if (!data.entityType || !data.entityId) {
+    await openAppUrl(data.url || "/dashboard");
+    return;
+  }
+
+  const res = await fetch("/api/reminders/actions", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      entityType: data.entityType,
+      entityId: data.entityId,
+      action,
+    }),
+  });
+
+  if (!res.ok) {
+    await openAppUrl(data.url || "/dashboard");
+  }
+}
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = event.notification.data?.url || "/dashboard";
 
-  event.waitUntil(
-    clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((windowClients) => {
-        for (const client of windowClients) {
-          if (client.url.includes(self.location.origin) && "focus" in client) {
-            client.navigate(url);
-            return client.focus();
-          }
-        }
-        return clients.openWindow(url);
-      }),
-  );
+  if (event.action === "complete" || event.action === "snooze") {
+    event.waitUntil(sendReminderAction(event.notification, event.action));
+    return;
+  }
+
+  event.waitUntil(openAppUrl(url));
 });
 
 self.addEventListener("pushsubscriptionchange", (event) => {
