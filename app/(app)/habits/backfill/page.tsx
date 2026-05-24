@@ -3,9 +3,10 @@ import Link from "next/link";
 import { BackfillClient } from "@/components/habits/BackfillClient";
 import { Card, CardContent } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
-import { addDays, labelFor } from "@/lib/date-keys";
+import { addDays, labelFor, weekdayIndexOf } from "@/lib/date-keys";
 import { db } from "@/lib/db";
 import { dailyThresholdDayState } from "@/lib/habit-day-state";
+import { parseScheduledWeekdays, WEEKDAY_ORDER } from "@/lib/task-helpers";
 import { getLocalDateKey } from "@/lib/timezone";
 
 export default async function BackfillPage() {
@@ -54,7 +55,12 @@ export default async function BackfillPage() {
       // Clip the window to the habit's own start date (also as a date key).
       const startParts = new Date(habit.startDate);
       const habitStartKey = getLocalDateKey(startParts, timezone);
-      const effectiveKeys = windowKeys.filter((k) => k >= habitStartKey);
+      const scheduled = parseScheduledWeekdays(habit.scheduledWeekdays);
+      const effectiveKeys = windowKeys.filter(
+        (k) =>
+          k >= habitStartKey &&
+          (!scheduled || scheduled.includes(WEEKDAY_ORDER[weekdayIndexOf(k)])),
+      );
 
       const completedByDate = new Map<string, number>();
       const completedLogCountByDate = new Map<string, number>();

@@ -57,7 +57,20 @@
       "PowerShell($env:Path = \"C:\\\\Users\\\\kmviv\\\\AppData\\\\Local\\\\nvm\\\\v24.15.0;\" + $env:Path; $env:DATABASE_URL = \"file:./prisma/test.db\"; $env:TEST_AUTH_BYPASS = \"true\"; $env:NEXTAUTH_SECRET = \"test-secret-for-playwright\"; $env:NEXTAUTH_URL = \"http://localhost:3000\"; & \"C:\\\\Users\\\\kmviv\\\\AppData\\\\Local\\\\nvm\\\\v24.15.0\\\\npm.cmd\" run dev)",
       "PowerShell($env:Path = \"C:\\\\Users\\\\kmviv\\\\AppData\\\\Local\\\\nvm\\\\v24.15.0;\" + $env:Path; node tmp-screenshot.mjs)",
       "PowerShell(Get-NetTCPConnection *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(export PATH=\"/c/Users/kmviv/AppData/Local/nvm/v24.15.0:$PATH\")",
+      "PowerShell(Get-Process *)",
+      "PowerShell(Stop-Process *)",
+      "Bash(git stash *)",
+      "Bash(export PATH=\"/c/Users/kmviv/AppData/Local/nvm/v24.15.0:$PATH\" DATABASE_URL=\"file:./prisma/test.db\" TEST_AUTH_BYPASS=\"true\" NEXTAUTH_SECRET=\"test-secret-for-playwright\" NEXTAUTH_URL=\"http://localhost:3000\")",
+      "Bash(npm run *)",
+      "Bash(cp playwright.config.ts /tmp/pw.config.bak)",
+      "Bash(sed -i 's#http://localhost:3000#http://localhost:3001#g' playwright.config.ts)",
+      "Bash(cp e2e/global-setup.ts /tmp/global-setup.bak)",
+      "Bash(sed -i 's#http://localhost:3000#http://localhost:3001#g' e2e/global-setup.ts)",
+      "Bash(mv e2e/habit-scheduling.spec.ts /tmp/habit-scheduling.spec.ts)",
+      "Bash(sed -i 's#http://localhost:3000#http://localhost:3001#g' playwright.config.ts e2e/global-setup.ts)",
+      "Bash(git checkout *)"
     ]
   }
 }
