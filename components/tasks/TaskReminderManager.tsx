@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import {
   registerServiceWorker,
@@ -147,6 +148,23 @@ async function showReminderNotification(
 }
 
 export function TaskReminderManager() {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "reminder-action-complete") {
+        router.refresh();
+      }
+    };
+
+    navigator.serviceWorker.addEventListener("message", handleMessage);
+    return () => {
+      navigator.serviceWorker.removeEventListener("message", handleMessage);
+    };
+  }, [router]);
+
   useEffect(() => {
     async function setupPush(): Promise<ServiceWorkerRegistration | null> {
       try {

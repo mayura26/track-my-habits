@@ -1,13 +1,13 @@
 import { expect, test } from "./fixtures";
 
 test.describe("Reminder notification actions", () => {
-  test("snoozes and completes a task reminder", async ({ page }) => {
+  test("snoozes and finishes a multi-count task reminder", async ({ page }) => {
     const name = `Reminder Task ${Date.now()}`;
     const createRes = await page.request.post("/api/tasks", {
       data: {
         name,
         frequency: "DAILY",
-        frequencyValue: 1,
+        frequencyValue: 3,
         bucket: "DAY",
         reminderEnabled: true,
         reminderTime: "00:00",
@@ -41,13 +41,27 @@ test.describe("Reminder notification actions", () => {
     tasks = await page.request.get("/api/tasks").then((res) => res.json());
     updatedTask = tasks.find((item: { id: string }) => item.id === task.id);
     expect(updatedTask.reminderSnoozedUntil).toBeNull();
-    expect(updatedTask.logs.length).toBeGreaterThan(0);
+    expect(updatedTask.logs).toHaveLength(3);
     expect(updatedTask.isDue).toBe(false);
+
+    const secondCompleteRes = await page.request.post(
+      "/api/reminders/actions",
+      {
+        data: {
+          entityType: "task",
+          entityId: task.id,
+          action: "complete",
+        },
+      },
+    );
+    expect(secondCompleteRes.ok()).toBeTruthy();
+
+    tasks = await page.request.get("/api/tasks").then((res) => res.json());
+    updatedTask = tasks.find((item: { id: string }) => item.id === task.id);
+    expect(updatedTask.logs).toHaveLength(3);
   });
 
-  test("snoozes and logs one increment for a count habit reminder", async ({
-    page,
-  }) => {
+  test("snoozes and finishes a count habit reminder", async ({ page }) => {
     const categoriesRes = await page.request.get("/api/categories");
     expect(categoriesRes.ok()).toBeTruthy();
     const categories = await categoriesRes.json();
@@ -100,7 +114,28 @@ test.describe("Reminder notification actions", () => {
     updatedHabit = habits.find((item: { id: string }) => item.id === habit.id);
     expect(updatedHabit.reminderSnoozedUntil).toBeNull();
     expect(updatedHabit.logs).toHaveLength(1);
-    expect(updatedHabit.logs[0].value).toBe(1);
+    expect(updatedHabit.logs[0].value).toBe(10);
     expect(updatedHabit.logs[0].source).toBe("MANUAL");
+
+    const secondCompleteRes = await page.request.post(
+      "/api/reminders/actions",
+      {
+        data: {
+          entityType: "habit",
+          entityId: habit.id,
+          action: "complete",
+        },
+      },
+    );
+    expect(secondCompleteRes.ok()).toBeTruthy();
+
+    habits = await page.request.get("/api/habits").then((res) => res.json());
+    updatedHabit = habits.find((item: { id: string }) => item.id === habit.id);
+    expect(updatedHabit.logs).toHaveLength(1);
+    const todaySum = updatedHabit.logs.reduce(
+      (sum: number, log: { value: number }) => sum + log.value,
+      0,
+    );
+    expect(todaySum).toBeGreaterThanOrEqual(10);
   });
 });

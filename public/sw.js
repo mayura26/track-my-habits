@@ -48,6 +48,24 @@ async function openAppUrl(url) {
   return clients.openWindow(url);
 }
 
+async function postReminderActionMessage(data, action) {
+  const windowClients = await clients.matchAll({
+    type: "window",
+    includeUncontrolled: true,
+  });
+
+  for (const client of windowClients) {
+    if (client.url.includes(self.location.origin) && "postMessage" in client) {
+      client.postMessage({
+        type: "reminder-action-complete",
+        action,
+        entityType: data.entityType,
+        entityId: data.entityId,
+      });
+    }
+  }
+}
+
 async function sendReminderAction(notification, action) {
   const data = notification.data || {};
   if (!data.entityType || !data.entityId) {
@@ -68,7 +86,10 @@ async function sendReminderAction(notification, action) {
 
   if (!res.ok) {
     await openAppUrl(data.url || "/dashboard");
+    return;
   }
+
+  await postReminderActionMessage(data, action);
 }
 
 self.addEventListener("notificationclick", (event) => {

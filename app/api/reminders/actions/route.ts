@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { completeHabitForUser } from "@/lib/habit-completion";
-import { completeTaskForUser } from "@/lib/task-completion";
+import { completeHabitReminderForUser } from "@/lib/habit-completion";
+import { completeTaskReminderForUser } from "@/lib/task-completion";
 import { reminderActionSchema } from "@/lib/validations";
 
 const SNOOZE_MS = 30 * 60 * 1000;
@@ -28,8 +28,8 @@ export async function POST(req: NextRequest) {
   if (action === "complete") {
     const result =
       entityType === "task"
-        ? await completeTaskForUser(entityId, userId)
-        : await completeHabitForUser(entityId, userId);
+        ? await completeTaskReminderForUser(entityId, userId)
+        : await completeHabitReminderForUser(entityId, userId);
 
     if (!result) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
