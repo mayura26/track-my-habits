@@ -19,6 +19,7 @@ self.addEventListener("push", (event) => {
       url: payload.url || "/dashboard",
       entityType: payload.entityType,
       entityId: payload.entityId,
+      actionToken: payload.actionToken,
     },
   };
 
@@ -81,6 +82,7 @@ async function sendReminderAction(notification, action) {
       entityType: data.entityType,
       entityId: data.entityId,
       action,
+      actionToken: data.actionToken,
     }),
   });
 

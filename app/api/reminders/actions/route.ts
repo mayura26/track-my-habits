@@ -2,17 +2,13 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { completeHabitReminderForUser } from "@/lib/habit-completion";
+import { verifyReminderActionToken } from "@/lib/reminder-action-token";
 import { completeTaskReminderForUser } from "@/lib/task-completion";
 import { reminderActionSchema } from "@/lib/validations";
 
 const SNOOZE_MS = 30 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const body = await req.json().catch(() => ({}));
   const parsed = reminderActionSchema.safeParse(body);
   if (!parsed.success) {
@@ -22,8 +18,37 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { entityType, entityId, action } = parsed.data;
-  const userId = session.user.id;
+  const { entityType, entityId, action, actionToken } = parsed.data;
+  const session = await auth();
+  let userId = session?.user?.id ?? null;
+
+  if (!userId) {
+    const tokenPayload = actionToken
+      ? verifyReminderActionToken(actionToken)
+      : null;
+
+    if (
+      !tokenPayload ||
+      tokenPayload.entityType !== entityType ||
+      tokenPayload.entityId !== entityId
+    ) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const subscription = await db.pushSubscription.findFirst({
+      where: {
+        id: tokenPayload.subscriptionId,
+        userId: tokenPayload.userId,
+      },
+      select: { id: true },
+    });
+
+    if (!subscription) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    userId = tokenPayload.userId;
+  }
 
   if (action === "complete") {
     const result =

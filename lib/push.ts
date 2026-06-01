@@ -1,5 +1,6 @@
 import webpush from "web-push";
 import { db } from "@/lib/db";
+import { signReminderActionToken } from "@/lib/reminder-action-token";
 
 webpush.setVapidDetails(
   process.env.VAPID_SUBJECT ?? "mailto:noreply@example.com",
@@ -15,6 +16,10 @@ interface PushPayload {
   entityId?: string;
 }
 
+interface PushPayloadWithActionToken extends PushPayload {
+  actionToken?: string;
+}
+
 export async function sendPushToUser(
   userId: string,
   payload: PushPayload,
@@ -27,12 +32,25 @@ export async function sendPushToUser(
 
   for (const sub of subscriptions) {
     try {
+      const notificationPayload: PushPayloadWithActionToken =
+        payload.entityType && payload.entityId
+          ? {
+              ...payload,
+              actionToken: signReminderActionToken({
+                userId,
+                subscriptionId: sub.id,
+                entityType: payload.entityType,
+                entityId: payload.entityId,
+              }),
+            }
+          : payload;
+
       await webpush.sendNotification(
         {
           endpoint: sub.endpoint,
           keys: { p256dh: sub.p256dh, auth: sub.auth },
         },
-        JSON.stringify(payload),
+        JSON.stringify(notificationPayload),
       );
       sent++;
     } catch (err: unknown) {

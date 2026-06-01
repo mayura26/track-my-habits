@@ -25,6 +25,7 @@ export default async function dbSetup() {
     await db.task.deleteMany({});
     await db.habitLog.deleteMany({});
     await db.userBadge.deleteMany({});
+    await db.pushSubscription.deleteMany({});
     await db.session.deleteMany({});
     await db.account.deleteMany({});
     await db.habit.deleteMany({});

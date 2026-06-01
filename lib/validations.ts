@@ -136,6 +136,7 @@ export const reminderActionSchema = z.object({
   entityType: z.enum(["task", "habit"]),
   entityId: z.string().min(1),
   action: z.enum(["complete", "snooze"]),
+  actionToken: z.string().min(1).optional(),
 });
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;

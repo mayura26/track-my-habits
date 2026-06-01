@@ -15,6 +15,7 @@ export default auth((req) => {
     pathname.startsWith("/api/uploads/") ||
     pathname.startsWith("/api/test/") ||
     pathname.startsWith("/api/cron/") ||
+    pathname === "/api/reminders/actions" ||
     pathname.startsWith("/artifacts/") ||
     pathname === "/signin" ||
     pathname === "/manifest.webmanifest" ||
