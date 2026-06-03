@@ -1,6 +1,22 @@
 // Service Worker for PWA Push Notifications
 // No fetch interception — only push + notification handling
 
+self.addEventListener("install", (event) => {
+  event.waitUntil(self.skipWaiting());
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
+function sameOriginUrl(path) {
+  return new URL(path, self.location.origin).toString();
+}
+
+function isSameOriginClient(client) {
+  return client.url.startsWith(self.location.origin);
+}
+
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -40,13 +56,13 @@ async function openAppUrl(url) {
   });
 
   for (const client of windowClients) {
-    if (client.url.includes(self.location.origin) && "focus" in client) {
-      client.navigate(url);
+    if (isSameOriginClient(client) && "focus" in client) {
+      client.navigate(sameOriginUrl(url));
       return client.focus();
     }
   }
 
-  return clients.openWindow(url);
+  return clients.openWindow(sameOriginUrl(url));
 }
 
 async function postReminderActionMessage(data, action) {
@@ -56,7 +72,7 @@ async function postReminderActionMessage(data, action) {
   });
 
   for (const client of windowClients) {
-    if (client.url.includes(self.location.origin) && "postMessage" in client) {
+    if (isSameOriginClient(client) && "postMessage" in client) {
       client.postMessage({
         type: "reminder-action-complete",
         action,
@@ -74,17 +90,24 @@ async function sendReminderAction(notification, action) {
     return;
   }
 
-  const res = await fetch("/api/reminders/actions", {
-    method: "POST",
-    credentials: "same-origin",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      entityType: data.entityType,
-      entityId: data.entityId,
-      action,
-      actionToken: data.actionToken,
-    }),
-  });
+  let res;
+  try {
+    res = await fetch(sameOriginUrl("/api/reminders/actions"), {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        entityType: data.entityType,
+        entityId: data.entityId,
+        action,
+        actionToken: data.actionToken,
+      }),
+    });
+  } catch {
+    await openAppUrl(data.url || "/dashboard");
+    return;
+  }
 
   if (!res.ok) {
     await openAppUrl(data.url || "/dashboard");

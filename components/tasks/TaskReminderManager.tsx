@@ -25,6 +25,10 @@ interface ReminderBase {
   scheduledWeekdays: string | null;
 }
 
+interface ReminderActionTokenResponse {
+  actionToken?: string;
+}
+
 interface ReminderTask extends ReminderBase {
   isDue?: boolean;
 }
@@ -126,6 +130,28 @@ async function showReminderNotification(
   entityType: ReminderEntityType,
   item: ReminderBase,
 ) {
+  let actionToken: string | undefined;
+  try {
+    const subscription = await registration.pushManager.getSubscription();
+    const json = subscription?.toJSON();
+    const res = await fetch("/api/reminders/action-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        entityType,
+        entityId: item.id,
+        subscriptionEndpoint: json?.endpoint,
+      }),
+    });
+
+    if (res.ok) {
+      const data = (await res.json()) as ReminderActionTokenResponse;
+      actionToken = data.actionToken;
+    }
+  } catch {
+    actionToken = undefined;
+  }
+
   const options: NotificationOptionsWithActions = {
     body: item.name,
     icon: "/icons/icon-192.png",
@@ -134,6 +160,7 @@ async function showReminderNotification(
       url: entityType === "task" ? "/tasks" : "/habits",
       entityType,
       entityId: item.id,
+      actionToken,
     },
     actions: [
       { action: "complete", title: "Done" },

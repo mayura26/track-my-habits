@@ -7,7 +7,7 @@ export const REMINDER_ACTION_TOKEN_TTL_MS = 48 * 60 * 60 * 1000;
 export interface ReminderActionTokenPayload {
   v: 1;
   userId: string;
-  subscriptionId: string;
+  subscriptionId?: string;
   entityType: ReminderActionEntityType;
   entityId: string;
   expiresAt: number;
@@ -15,7 +15,7 @@ export interface ReminderActionTokenPayload {
 
 interface SignReminderActionTokenInput {
   userId: string;
-  subscriptionId: string;
+  subscriptionId?: string;
   entityType: ReminderActionEntityType;
   entityId: string;
   expiresAt?: number;
@@ -46,8 +46,9 @@ function isReminderActionTokenPayload(
     payload.v === 1 &&
     typeof payload.userId === "string" &&
     payload.userId.length > 0 &&
-    typeof payload.subscriptionId === "string" &&
-    payload.subscriptionId.length > 0 &&
+    (payload.subscriptionId === undefined ||
+      (typeof payload.subscriptionId === "string" &&
+        payload.subscriptionId.length > 0)) &&
     (payload.entityType === "task" || payload.entityType === "habit") &&
     typeof payload.entityId === "string" &&
     payload.entityId.length > 0 &&
@@ -62,7 +63,7 @@ export function signReminderActionToken(
   const payload: ReminderActionTokenPayload = {
     v: 1,
     userId: input.userId,
-    subscriptionId: input.subscriptionId,
+    ...(input.subscriptionId ? { subscriptionId: input.subscriptionId } : {}),
     entityType: input.entityType,
     entityId: input.entityId,
     expiresAt: input.expiresAt ?? Date.now() + REMINDER_ACTION_TOKEN_TTL_MS,

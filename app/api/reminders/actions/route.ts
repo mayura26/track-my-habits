@@ -35,15 +35,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const subscription = await db.pushSubscription.findFirst({
-      where: {
-        id: tokenPayload.subscriptionId,
-        userId: tokenPayload.userId,
-      },
-      select: { id: true },
-    });
+    const subscription = tokenPayload.subscriptionId
+      ? await db.pushSubscription.findFirst({
+          where: {
+            id: tokenPayload.subscriptionId,
+            userId: tokenPayload.userId,
+          },
+          select: { id: true },
+        })
+      : null;
 
-    if (!subscription) {
+    if (tokenPayload.subscriptionId && !subscription) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

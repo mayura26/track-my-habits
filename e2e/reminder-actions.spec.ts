@@ -232,6 +232,48 @@ test.describe("Reminder notification actions", () => {
     expect(updatedHabit.logs[0].value).toBe(10);
   });
 
+  test("completes a local habit reminder token with no session", async ({
+    page,
+  }) => {
+    const habit = await createCountHabit(page);
+    const tokenRes = await page.request.post("/api/reminders/action-token", {
+      data: {
+        entityType: "habit",
+        entityId: habit.id,
+      },
+    });
+    expect(tokenRes.ok()).toBeTruthy();
+    const { actionToken } = await tokenRes.json();
+    expect(actionToken).toBeTruthy();
+
+    const unauthenticated = await request.newContext({
+      baseURL: TEST_BASE_URL,
+    });
+
+    try {
+      const completeRes = await unauthenticated.post("/api/reminders/actions", {
+        data: {
+          entityType: "habit",
+          entityId: habit.id,
+          action: "complete",
+          actionToken,
+        },
+      });
+      expect(completeRes.ok()).toBeTruthy();
+    } finally {
+      await unauthenticated.dispose();
+    }
+
+    const habits = await page.request
+      .get("/api/habits")
+      .then((res) => res.json());
+    const updatedHabit = habits.find(
+      (item: { id: string }) => item.id === habit.id,
+    );
+    expect(updatedHabit.logs).toHaveLength(1);
+    expect(updatedHabit.logs[0].value).toBe(10);
+  });
+
   test("snoozes a task reminder with a valid action token and no session", async ({
     page,
   }) => {
