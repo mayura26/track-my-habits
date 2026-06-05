@@ -27,6 +27,10 @@ interface ReminderBase {
 
 interface ReminderActionTokenResponse {
   actionToken?: string;
+  actionUrls?: {
+    complete: string;
+    snooze: string;
+  };
 }
 
 interface ReminderTask extends ReminderBase {
@@ -131,6 +135,7 @@ async function showReminderNotification(
   item: ReminderBase,
 ) {
   let actionToken: string | undefined;
+  let actionUrls: ReminderActionTokenResponse["actionUrls"];
   try {
     const subscription = await registration.pushManager.getSubscription();
     const json = subscription?.toJSON();
@@ -147,9 +152,11 @@ async function showReminderNotification(
     if (res.ok) {
       const data = (await res.json()) as ReminderActionTokenResponse;
       actionToken = data.actionToken;
+      actionUrls = data.actionUrls;
     }
   } catch {
     actionToken = undefined;
+    actionUrls = undefined;
   }
 
   const options: NotificationOptionsWithActions = {
@@ -161,12 +168,16 @@ async function showReminderNotification(
       entityType,
       entityId: item.id,
       actionToken,
+      actionUrls,
     },
-    actions: [
+  };
+
+  if (actionToken && actionUrls) {
+    options.actions = [
       { action: "complete", title: "Done" },
       { action: "snooze", title: "Snooze" },
-    ],
-  };
+    ];
+  }
 
   await registration.showNotification(
     entityType === "task" ? "Task reminder" : "Habit reminder",

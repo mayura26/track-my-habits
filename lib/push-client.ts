@@ -13,7 +13,11 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!("serviceWorker" in navigator)) return null;
   try {
-    return await navigator.serviceWorker.register("/sw.js");
+    const registration = await navigator.serviceWorker.register("/sw.js", {
+      updateViaCache: "none",
+    });
+    await registration.update().catch(() => undefined);
+    return await navigator.serviceWorker.ready;
   } catch (err) {
     console.warn("SW registration failed:", err);
     return null;

@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { parseScheduledWeekdays, WEEKDAY_ORDER } from "@/lib/task-helpers";
 import {
@@ -223,10 +224,20 @@ export async function checkAndAwardBadges(userId: string): Promise<string[]> {
     }
 
     if (earned) {
-      await db.userBadge.create({
-        data: { userId, badgeId: badge.id },
-      });
-      newlyEarned.push(badge.name);
+      try {
+        await db.userBadge.create({
+          data: { userId, badgeId: badge.id },
+        });
+        newlyEarned.push(badge.name);
+      } catch (err) {
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === "P2002"
+        ) {
+          continue;
+        }
+        throw err;
+      }
     }
   }
 

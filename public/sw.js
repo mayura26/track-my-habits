@@ -10,7 +10,11 @@ self.addEventListener("activate", (event) => {
 });
 
 function sameOriginUrl(path) {
-  return new URL(path, self.location.origin).toString();
+  const url = new URL(path, self.location.origin);
+  if (url.origin !== self.location.origin) {
+    return new URL("/dashboard", self.location.origin).toString();
+  }
+  return url.toString();
 }
 
 function isSameOriginClient(client) {
@@ -36,6 +40,7 @@ self.addEventListener("push", (event) => {
       entityType: payload.entityType,
       entityId: payload.entityId,
       actionToken: payload.actionToken,
+      actionUrls: payload.actionUrls,
     },
   };
 
@@ -83,16 +88,43 @@ async function postReminderActionMessage(data, action) {
   }
 }
 
-async function sendReminderAction(notification, action) {
-  const data = notification.data || {};
-  if (!data.entityType || !data.entityId) {
-    await openAppUrl(data.url || "/dashboard");
-    return;
+function getReminderActionUrl(data, action) {
+  if (data.actionUrls?.[action]) {
+    return sameOriginUrl(data.actionUrls[action]);
   }
 
-  let res;
+  if (!data.actionToken) return null;
+
+  const params = new URLSearchParams({
+    entityType: data.entityType,
+    entityId: data.entityId,
+    action,
+    actionToken: data.actionToken,
+  });
+  return sameOriginUrl(`/api/reminders/actions?${params.toString()}`);
+}
+
+async function sendActionUrl(actionUrl) {
   try {
-    res = await fetch(sameOriginUrl("/api/reminders/actions"), {
+    const res = await fetch(actionUrl, {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function sendJsonAction(data, action) {
+  if (!data.entityType || !data.entityId) {
+    return false;
+  }
+
+  try {
+    const res = await fetch(sameOriginUrl("/api/reminders/actions"), {
       method: "POST",
       credentials: "include",
       cache: "no-store",
@@ -104,12 +136,26 @@ async function sendReminderAction(notification, action) {
         actionToken: data.actionToken,
       }),
     });
+    return res.ok;
   } catch {
+    return false;
+  }
+}
+
+async function sendReminderAction(notification, action) {
+  const data = notification.data || {};
+  if (!data.entityType || !data.entityId) {
     await openAppUrl(data.url || "/dashboard");
     return;
   }
 
-  if (!res.ok) {
+  const actionUrl = getReminderActionUrl(data, action);
+  const sent = actionUrl
+    ? await sendActionUrl(actionUrl)
+    : await sendJsonAction(data, action);
+  const fallbackSent = sent || (await sendJsonAction(data, action));
+
+  if (!fallbackSent) {
     await openAppUrl(data.url || "/dashboard");
     return;
   }

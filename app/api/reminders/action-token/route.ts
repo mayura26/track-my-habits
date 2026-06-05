@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { signReminderActionToken } from "@/lib/reminder-action-token";
+import { buildReminderActionPaths } from "@/lib/reminder-action-urls";
 import { reminderActionTokenSchema } from "@/lib/validations";
 
 export async function POST(req: NextRequest) {
@@ -52,5 +53,12 @@ export async function POST(req: NextRequest) {
     entityId,
   });
 
-  return NextResponse.json({ actionToken });
+  return NextResponse.json({
+    actionToken,
+    actionUrls: buildReminderActionPaths({
+      entityType,
+      entityId,
+      actionToken,
+    }),
+  });
 }

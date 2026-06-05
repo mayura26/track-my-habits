@@ -9,8 +9,18 @@ import { reminderActionSchema } from "@/lib/validations";
 const SNOOZE_MS = 30 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
+  const searchParams = req.nextUrl.searchParams;
+  const queryBody = {
+    entityType: searchParams.get("entityType"),
+    entityId: searchParams.get("entityId"),
+    action: searchParams.get("action"),
+    actionToken: searchParams.get("actionToken") ?? undefined,
+  };
   const body = await req.json().catch(() => ({}));
-  const parsed = reminderActionSchema.safeParse(body);
+  const parsed = reminderActionSchema.safeParse({
+    ...queryBody,
+    ...body,
+  });
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.flatten() },
