@@ -90,7 +90,10 @@ async function postReminderActionMessage(data, action) {
 
 function getReminderActionUrl(data, action) {
   if (data.actionUrls?.[action]) {
-    return sameOriginUrl(data.actionUrls[action]);
+    const actionUrl = new URL(data.actionUrls[action], self.location.origin);
+    return actionUrl.origin === self.location.origin
+      ? actionUrl.toString()
+      : null;
   }
 
   if (!data.actionToken) return null;
@@ -112,9 +115,10 @@ async function sendActionUrl(actionUrl) {
       cache: "no-store",
       headers: { Accept: "application/json" },
     });
-    return res.ok;
+    if (!res.ok) return null;
+    return await res.json().catch(() => ({ ok: true }));
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -136,9 +140,10 @@ async function sendJsonAction(data, action) {
         actionToken: data.actionToken,
       }),
     });
-    return res.ok;
+    if (!res.ok) return null;
+    return await res.json().catch(() => ({ ok: true }));
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -150,14 +155,26 @@ async function sendReminderAction(notification, action) {
   }
 
   const actionUrl = getReminderActionUrl(data, action);
-  const sent = actionUrl
+  const result = actionUrl
     ? await sendActionUrl(actionUrl)
     : await sendJsonAction(data, action);
-  const fallbackSent = sent || (await sendJsonAction(data, action));
+  const fallbackResult = result || (await sendJsonAction(data, action));
 
-  if (!fallbackSent) {
+  if (!fallbackResult) {
     await openAppUrl(data.url || "/dashboard");
     return;
+  }
+
+  if (data.entityType === "test") {
+    await self.registration.showNotification("Test action confirmed", {
+      body:
+        fallbackResult.result?.message ||
+        `${action === "complete" ? "Done" : "Snooze"} reached the server.`,
+      icon: "/icons/icon-192.png",
+      badge: "/icons/notification-badge.png",
+      tag: `notification-action-test-${action}`,
+      data: { url: "/settings" },
+    });
   }
 
   await postReminderActionMessage(data, action);

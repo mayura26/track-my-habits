@@ -13,7 +13,7 @@ interface PushPayload {
   title: string;
   body: string;
   url?: string;
-  entityType?: "task" | "habit";
+  entityType?: "task" | "habit" | "test";
   entityId?: string;
 }
 

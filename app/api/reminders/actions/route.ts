@@ -62,6 +62,21 @@ export async function POST(req: NextRequest) {
     userId = tokenPayload.userId;
   }
 
+  if (entityType === "test") {
+    return NextResponse.json({
+      ok: true,
+      action,
+      entityType,
+      result: {
+        confirmed: true,
+        message:
+          action === "complete"
+            ? "Done reached the server."
+            : "Snooze reached the server.",
+      },
+    });
+  }
+
   if (action === "complete") {
     const result =
       entityType === "task"

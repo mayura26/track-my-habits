@@ -81,7 +81,8 @@ export default async function SettingsPage() {
         <CardHeader>
           <h2 className="font-medium text-[#f7f0e1]">Push Notifications</h2>
           <p className="text-sm text-[#b4a58a]">
-            Send a test notification to verify push is working on this device.
+            Test notification delivery and the Done/Snooze server actions on
+            every subscribed device.
           </p>
         </CardHeader>
         <CardContent>

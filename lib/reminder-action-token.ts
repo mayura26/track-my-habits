@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export type ReminderActionEntityType = "task" | "habit";
+export type ReminderActionEntityType = "task" | "habit" | "test";
 
 export const REMINDER_ACTION_TOKEN_TTL_MS = 48 * 60 * 60 * 1000;
 
@@ -49,7 +49,9 @@ function isReminderActionTokenPayload(
     (payload.subscriptionId === undefined ||
       (typeof payload.subscriptionId === "string" &&
         payload.subscriptionId.length > 0)) &&
-    (payload.entityType === "task" || payload.entityType === "habit") &&
+    (payload.entityType === "task" ||
+      payload.entityType === "habit" ||
+      payload.entityType === "test") &&
     typeof payload.entityId === "string" &&
     payload.entityId.length > 0 &&
     typeof payload.expiresAt === "number" &&

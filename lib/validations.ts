@@ -133,7 +133,7 @@ export const pushSubscriptionSchema = z.object({
 });
 
 export const reminderActionSchema = z.object({
-  entityType: z.enum(["task", "habit"]),
+  entityType: z.enum(["task", "habit", "test"]),
   entityId: z.string().min(1),
   action: z.enum(["complete", "snooze"]),
   actionToken: z.string().min(1).optional(),

@@ -32,7 +32,9 @@ export function TestPushButton() {
       }
 
       setStatus("success");
-      setMessage(`Notification sent to ${data.sent} device(s)`);
+      setMessage(
+        `Action test sent to ${data.sent} device(s). Tap Done or Snooze; a confirmation notification should follow.`,
+      );
     } catch {
       setStatus("error");
       setMessage("Network error — is the server running?");
@@ -47,7 +49,7 @@ export function TestPushButton() {
         onClick={handleClick}
         disabled={status === "sending"}
       >
-        {status === "sending" ? "Sending..." : "Send Test Notification"}
+        {status === "sending" ? "Sending..." : "Send Action Test"}
       </Button>
 
       {status === "success" && (

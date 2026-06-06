@@ -361,6 +361,41 @@ test.describe("Reminder notification actions", () => {
     expect(updatedTask.reminderSnoozedUntil).toBeTruthy();
   });
 
+  test("confirms test notification buttons with no session", async () => {
+    const userId = await getTestUserId();
+    const subscription = await createPushSubscription(userId);
+    const actionToken = signReminderActionToken({
+      userId,
+      subscriptionId: subscription.id,
+      entityType: "test",
+      entityId: "notification-action-test",
+    });
+    const unauthenticated = await request.newContext({
+      baseURL: TEST_BASE_URL,
+    });
+
+    try {
+      for (const action of ["complete", "snooze"] as const) {
+        const response = await unauthenticated.post("/api/reminders/actions", {
+          data: {
+            entityType: "test",
+            entityId: "notification-action-test",
+            action,
+            actionToken,
+          },
+        });
+        expect(response.ok()).toBeTruthy();
+        const body = await response.json();
+        expect(body.result.confirmed).toBe(true);
+        expect(body.result.message).toContain(
+          action === "complete" ? "Done" : "Snooze",
+        );
+      }
+    } finally {
+      await unauthenticated.dispose();
+    }
+  });
+
   test("rejects missing or invalid action tokens without a session", async () => {
     const unauthenticated = await request.newContext({
       baseURL: TEST_BASE_URL,
