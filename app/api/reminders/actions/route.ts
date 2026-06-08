@@ -1,26 +1,43 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { db } from "@/lib/db";
-import { completeHabitReminderForUser } from "@/lib/habit-completion";
-import { verifyReminderActionToken } from "@/lib/reminder-action-token";
-import { completeTaskReminderForUser } from "@/lib/task-completion";
+import { performReminderAction } from "@/lib/reminder-action-handler";
 import { reminderActionSchema } from "@/lib/validations";
 
-const SNOOZE_MS = 30 * 60 * 1000;
-
-export async function POST(req: NextRequest) {
+function parseReminderActionRequest(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const queryBody = {
-    entityType: searchParams.get("entityType"),
-    entityId: searchParams.get("entityId"),
-    action: searchParams.get("action"),
+    entityType: searchParams.get("entityType") ?? undefined,
+    entityId: searchParams.get("entityId") ?? undefined,
+    action: searchParams.get("action") ?? undefined,
     actionToken: searchParams.get("actionToken") ?? undefined,
   };
+
+  return { queryBody };
+}
+
+async function parseReminderActionBody(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
-  const parsed = reminderActionSchema.safeParse({
-    ...queryBody,
+  return body;
+}
+
+function mergeReminderActionInput(
+  body: Record<string, unknown>,
+  queryBody: Record<string, string | undefined>,
+) {
+  return {
     ...body,
-  });
+    ...Object.fromEntries(
+      Object.entries(queryBody).filter(([, value]) => value !== undefined),
+    ),
+  };
+}
+
+export async function POST(req: NextRequest) {
+  const { queryBody } = parseReminderActionRequest(req);
+  const body = await parseReminderActionBody(req);
+  const parsed = reminderActionSchema.safeParse(
+    mergeReminderActionInput(body, queryBody),
+  );
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.flatten() },
@@ -28,88 +45,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { entityType, entityId, action, actionToken } = parsed.data;
   const session = await auth();
-  let userId = session?.user?.id ?? null;
-
-  if (!userId) {
-    const tokenPayload = actionToken
-      ? verifyReminderActionToken(actionToken)
-      : null;
-
-    if (
-      !tokenPayload ||
-      tokenPayload.entityType !== entityType ||
-      tokenPayload.entityId !== entityId
-    ) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const subscription = tokenPayload.subscriptionId
-      ? await db.pushSubscription.findFirst({
-          where: {
-            id: tokenPayload.subscriptionId,
-            userId: tokenPayload.userId,
-          },
-          select: { id: true },
-        })
-      : null;
-
-    if (tokenPayload.subscriptionId && !subscription) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    userId = tokenPayload.userId;
-  }
-
-  if (entityType === "test") {
-    return NextResponse.json({
-      ok: true,
-      action,
-      entityType,
-      result: {
-        confirmed: true,
-        message:
-          action === "complete"
-            ? "Done reached the server."
-            : "Snooze reached the server.",
-      },
-    });
-  }
-
-  if (action === "complete") {
-    const result =
-      entityType === "task"
-        ? await completeTaskReminderForUser(entityId, userId)
-        : await completeHabitReminderForUser(entityId, userId);
-
-    if (!result) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({ ok: true, action, entityType, result });
-  }
-
-  const reminderSnoozedUntil = new Date(Date.now() + SNOOZE_MS);
-  const update =
-    entityType === "task"
-      ? await db.task.updateMany({
-          where: { id: entityId, userId, isActive: true },
-          data: { reminderSnoozedUntil, lastReminderSentAt: null },
-        })
-      : await db.habit.updateMany({
-          where: { id: entityId, userId, isActive: true },
-          data: { reminderSnoozedUntil, lastReminderSentAt: null },
-        });
-
-  if (update.count === 0) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-
-  return NextResponse.json({
-    ok: true,
-    action,
-    entityType,
-    reminderSnoozedUntil,
+  const outcome = await performReminderAction({
+    ...parsed.data,
+    userId: session?.user?.id ?? null,
   });
+
+  if (!outcome.ok) {
+    const status = outcome.error === "unauthorized" ? 401 : 404;
+    return NextResponse.json({ error: outcome.error }, { status });
+  }
+
+  return NextResponse.json(outcome);
 }

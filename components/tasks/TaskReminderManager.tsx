@@ -13,7 +13,7 @@ import { getLocalDateKey, getTimePartsInTimezone } from "@/lib/timezone";
 type ReminderEntityType = "task" | "habit";
 
 type NotificationOptionsWithActions = NotificationOptions & {
-  actions?: { action: string; title: string; icon?: string }[];
+  actions?: { action: string; title: string; icon?: string; navigate?: string }[];
 };
 
 interface ReminderBase {
@@ -169,13 +169,23 @@ async function showReminderNotification(
       entityId: item.id,
       actionToken,
       actionUrls,
+      completeUrl: actionUrls?.complete,
+      snoozeUrl: actionUrls?.snooze,
     },
   };
 
   if (actionToken && actionUrls) {
     options.actions = [
-      { action: "complete", title: "Done" },
-      { action: "snooze", title: "Snooze" },
+      {
+        action: "complete",
+        title: "Done",
+        navigate: actionUrls.complete,
+      },
+      {
+        action: "snooze",
+        title: "Snooze",
+        navigate: actionUrls.snooze,
+      },
     ];
   }
 

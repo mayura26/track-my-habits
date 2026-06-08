@@ -286,7 +286,7 @@ test.describe("Reminder notification actions", () => {
     });
     expect(tokenRes.ok()).toBeTruthy();
     const { actionUrls } = await tokenRes.json();
-    expect(actionUrls?.complete).toContain("/api/reminders/actions?");
+    expect(actionUrls?.complete).toContain("/reminder/action?");
     expect(actionUrls?.complete).toContain("action=complete");
 
     const unauthenticated = await request.newContext({
@@ -294,7 +294,7 @@ test.describe("Reminder notification actions", () => {
     });
 
     try {
-      const completeRes = await unauthenticated.post(actionUrls.complete);
+      const completeRes = await unauthenticated.get(actionUrls.complete);
       expect(completeRes.ok()).toBeTruthy();
     } finally {
       await unauthenticated.dispose();

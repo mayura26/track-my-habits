@@ -21,6 +21,18 @@ function isSameOriginClient(client) {
   return client.url.startsWith(self.location.origin);
 }
 
+function buildReminderActions(actionUrls) {
+  if (!actionUrls?.complete || !actionUrls?.snooze) return undefined;
+
+  const completeUrl = sameOriginUrl(actionUrls.complete);
+  const snoozeUrl = sameOriginUrl(actionUrls.snooze);
+
+  return [
+    { action: "complete", title: "Done", navigate: completeUrl },
+    { action: "snooze", title: "Snooze", navigate: snoozeUrl },
+  ];
+}
+
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -31,6 +43,7 @@ self.addEventListener("push", (event) => {
     payload = { title: "Track My Habits", body: event.data.text() };
   }
 
+  const actionUrls = payload.actionUrls;
   const options = {
     body: payload.body || "",
     icon: "/icons/icon-192.png",
@@ -40,15 +53,15 @@ self.addEventListener("push", (event) => {
       entityType: payload.entityType,
       entityId: payload.entityId,
       actionToken: payload.actionToken,
-      actionUrls: payload.actionUrls,
+      actionUrls,
+      completeUrl: actionUrls?.complete,
+      snoozeUrl: actionUrls?.snooze,
     },
   };
 
-  if (payload.entityType && payload.entityId) {
-    options.actions = [
-      { action: "complete", title: "Done" },
-      { action: "snooze", title: "Snooze" },
-    ];
+  const actions = buildReminderActions(actionUrls);
+  if (actions) {
+    options.actions = actions;
   }
 
   event.waitUntil(self.registration.showNotification(payload.title, options));
@@ -89,11 +102,14 @@ async function postReminderActionMessage(data, action) {
 }
 
 function getReminderActionUrl(data, action) {
+  const flatUrl =
+    action === "complete" ? data.completeUrl : data.snoozeUrl;
+  if (flatUrl) {
+    return sameOriginUrl(flatUrl);
+  }
+
   if (data.actionUrls?.[action]) {
-    const actionUrl = new URL(data.actionUrls[action], self.location.origin);
-    return actionUrl.origin === self.location.origin
-      ? actionUrl.toString()
-      : null;
+    return sameOriginUrl(data.actionUrls[action]);
   }
 
   if (!data.actionToken) return null;
@@ -104,47 +120,7 @@ function getReminderActionUrl(data, action) {
     action,
     actionToken: data.actionToken,
   });
-  return sameOriginUrl(`/api/reminders/actions?${params.toString()}`);
-}
-
-async function sendActionUrl(actionUrl) {
-  try {
-    const res = await fetch(actionUrl, {
-      method: "POST",
-      credentials: "include",
-      cache: "no-store",
-      headers: { Accept: "application/json" },
-    });
-    if (!res.ok) return null;
-    return await res.json().catch(() => ({ ok: true }));
-  } catch {
-    return null;
-  }
-}
-
-async function sendJsonAction(data, action) {
-  if (!data.entityType || !data.entityId) {
-    return false;
-  }
-
-  try {
-    const res = await fetch(sameOriginUrl("/api/reminders/actions"), {
-      method: "POST",
-      credentials: "include",
-      cache: "no-store",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        entityType: data.entityType,
-        entityId: data.entityId,
-        action,
-        actionToken: data.actionToken,
-      }),
-    });
-    if (!res.ok) return null;
-    return await res.json().catch(() => ({ ok: true }));
-  } catch {
-    return null;
-  }
+  return sameOriginUrl(`/reminder/action?${params.toString()}`);
 }
 
 async function sendReminderAction(notification, action) {
@@ -155,28 +131,12 @@ async function sendReminderAction(notification, action) {
   }
 
   const actionUrl = getReminderActionUrl(data, action);
-  const result = actionUrl
-    ? await sendActionUrl(actionUrl)
-    : await sendJsonAction(data, action);
-  const fallbackResult = result || (await sendJsonAction(data, action));
-
-  if (!fallbackResult) {
+  if (!actionUrl) {
     await openAppUrl(data.url || "/dashboard");
     return;
   }
 
-  if (data.entityType === "test") {
-    await self.registration.showNotification("Test action confirmed", {
-      body:
-        fallbackResult.result?.message ||
-        `${action === "complete" ? "Done" : "Snooze"} reached the server.`,
-      icon: "/icons/icon-192.png",
-      badge: "/icons/notification-badge.png",
-      tag: `notification-action-test-${action}`,
-      data: { url: "/settings" },
-    });
-  }
-
+  await openAppUrl(actionUrl);
   await postReminderActionMessage(data, action);
 }
 

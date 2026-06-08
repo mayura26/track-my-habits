@@ -33,7 +33,7 @@ export function TestPushButton() {
 
       setStatus("success");
       setMessage(
-        `Action test sent to ${data.sent} device(s). Tap Done or Snooze; a confirmation notification should follow.`,
+        `Action test sent to ${data.sent} device(s). Tap Done or Snooze; the app should open to a confirmation page.`,
       );
     } catch {
       setStatus("error");
