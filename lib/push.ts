@@ -1,5 +1,6 @@
 import webpush from "web-push";
 import { db } from "@/lib/db";
+import { shouldUseSingleReminderAction } from "@/lib/notification-platform";
 import { buildReminderActionPaths } from "@/lib/reminder-action-urls";
 
 webpush.setVapidDetails(
@@ -21,6 +22,7 @@ interface PushPayloadWithActionToken extends PushPayload {
     complete: string;
     snooze: string;
   };
+  singleAction?: boolean;
 }
 
 export async function sendPushToUser(
@@ -45,6 +47,7 @@ export async function sendPushToUser(
             entityType: payload.entityType,
             entityId: payload.entityId,
           }),
+          singleAction: shouldUseSingleReminderAction(sub.platform),
         };
       }
 

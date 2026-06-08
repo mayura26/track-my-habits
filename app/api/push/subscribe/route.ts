@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { endpoint, keys } = parsed.data;
+  const { endpoint, keys, platform } = parsed.data;
 
   await db.pushSubscription.upsert({
     where: { endpoint },
@@ -27,11 +27,13 @@ export async function POST(req: NextRequest) {
       endpoint,
       p256dh: keys.p256dh,
       auth: keys.auth,
+      platform,
     },
     update: {
       userId: session.user.id,
       p256dh: keys.p256dh,
       auth: keys.auth,
+      platform,
     },
   });
 

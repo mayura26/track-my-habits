@@ -1,7 +1,7 @@
-// Service Worker for PWA Push Notifications v3
+// Service Worker for PWA Push Notifications v4
 // No fetch interception — only push + notification handling
 
-const SW_VERSION = "3";
+const SW_VERSION = "4";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting());
@@ -19,14 +19,17 @@ function sameOriginUrl(path) {
   return url.toString();
 }
 
-function isSameOriginClient(client) {
-  return client.url.startsWith(self.location.origin);
-}
-
-function buildReminderActions(actionUrls) {
-  if (!actionUrls?.complete || !actionUrls?.snooze) return undefined;
+function buildReminderActions(actionUrls, singleAction) {
+  if (!actionUrls?.complete) return undefined;
 
   const completeUrl = sameOriginUrl(actionUrls.complete);
+
+  if (singleAction) {
+    return [{ action: completeUrl, title: "Done", navigate: completeUrl }];
+  }
+
+  if (!actionUrls?.snooze) return undefined;
+
   const snoozeUrl = sameOriginUrl(actionUrls.snooze);
 
   return [
@@ -46,6 +49,7 @@ self.addEventListener("push", (event) => {
   }
 
   const actionUrls = payload.actionUrls;
+  const singleAction = Boolean(payload.singleAction);
   const options = {
     body: payload.body || "",
     icon: "/icons/icon-192.png",
@@ -57,11 +61,12 @@ self.addEventListener("push", (event) => {
       actionUrls,
       completeUrl: actionUrls?.complete,
       snoozeUrl: actionUrls?.snooze,
+      singleAction,
       swVersion: SW_VERSION,
     },
   };
 
-  const actions = buildReminderActions(actionUrls);
+  const actions = buildReminderActions(actionUrls, singleAction);
   if (actions) {
     options.actions = actions;
   }
@@ -76,7 +81,7 @@ async function openAppUrl(url) {
   });
 
   for (const client of windowClients) {
-    if (isSameOriginClient(client) && "focus" in client) {
+    if (client.url.startsWith(self.location.origin) && "focus" in client) {
       client.navigate(sameOriginUrl(url));
       return client.focus();
     }
@@ -100,7 +105,7 @@ function resolveNotificationActionTarget(action, data) {
     return sameOriginUrl(data.completeUrl);
   }
 
-  if (action === "snooze" && data.snoozeUrl) {
+  if (!data.singleAction && action === "snooze" && data.snoozeUrl) {
     return sameOriginUrl(data.snoozeUrl);
   }
 

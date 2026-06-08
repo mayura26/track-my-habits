@@ -1,3 +1,5 @@
+import { detectPushPlatform } from "@/lib/notification-platform";
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -10,7 +12,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   return outputArray;
 }
 
-export const SERVICE_WORKER_URL = "/sw.js?v=3";
+export const SERVICE_WORKER_URL = "/sw.js?v=4";
 
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!("serviceWorker" in navigator)) return null;
@@ -62,6 +64,7 @@ export async function sendSubscriptionToServer(
         p256dh: json.keys?.p256dh,
         auth: json.keys?.auth,
       },
+      platform: detectPushPlatform(),
     }),
   });
 }

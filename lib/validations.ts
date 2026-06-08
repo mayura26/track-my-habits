@@ -130,6 +130,7 @@ export const pushSubscriptionSchema = z.object({
     p256dh: z.string().min(1),
     auth: z.string().min(1),
   }),
+  platform: z.enum(["android", "desktop", "ios"]).optional(),
 });
 
 export const reminderActionSchema = z.object({

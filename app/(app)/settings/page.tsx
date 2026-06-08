@@ -81,8 +81,9 @@ export default async function SettingsPage() {
         <CardHeader>
           <h2 className="font-medium text-[#f7f0e1]">Push Notifications</h2>
           <p className="text-sm text-[#b4a58a]">
-            Test notification delivery and the Done/Snooze server actions on
-            every subscribed device.
+            Test notification delivery and reminder actions. Android installs
+            only show a Done button because dual action buttons are unreliable
+            on Chrome.
           </p>
         </CardHeader>
         <CardContent>

@@ -3,6 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import {
+  detectPushPlatform,
+  shouldUseSingleReminderAction,
+} from "@/lib/notification-platform";
+import {
   registerServiceWorker,
   sendSubscriptionToServer,
   subscribeToPush,
@@ -177,18 +181,28 @@ async function showReminderNotification(
   if (actionToken && actionUrls) {
     const completeUrl = actionUrls.complete;
     const snoozeUrl = actionUrls.snooze;
-    options.actions = [
-      {
-        action: completeUrl,
-        title: "Done",
-        navigate: completeUrl,
-      },
-      {
-        action: snoozeUrl,
-        title: "Snooze",
-        navigate: snoozeUrl,
-      },
-    ];
+    const singleAction = shouldUseSingleReminderAction(detectPushPlatform());
+
+    options.actions = singleAction
+      ? [
+          {
+            action: completeUrl,
+            title: "Done",
+            navigate: completeUrl,
+          },
+        ]
+      : [
+          {
+            action: completeUrl,
+            title: "Done",
+            navigate: completeUrl,
+          },
+          {
+            action: snoozeUrl,
+            title: "Snooze",
+            navigate: snoozeUrl,
+          },
+        ];
   }
 
   await registration.showNotification(
