@@ -3,7 +3,9 @@ import { expect, test } from "./fixtures";
 test.describe("Habits CRUD", () => {
   test("dashboard shows habits section", async ({ page }) => {
     await page.goto("/dashboard");
-    await expect(page.getByText("Today's Habits")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Good (morning|afternoon|evening)/ }),
+    ).toBeVisible();
   });
 
   test("create a BOOLEAN/DAILY habit", async ({ page }) => {
@@ -82,8 +84,11 @@ test.describe("Habits CRUD", () => {
 
   test("dashboard sorts incomplete habits first", async ({ page }) => {
     await page.goto("/dashboard");
-    // The first habit(s) should not have Done badge if any exist
-    await expect(page.getByText("Today's Habits")).toBeVisible();
+    // Completed habits sink to the bottom of their bucket; the dashboard
+    // header is always present once the page loads.
+    await expect(
+      page.getByRole("heading", { name: /Good (morning|afternoon|evening)/ }),
+    ).toBeVisible();
   });
 
   test("reset habit clears streak and history", async ({ page }) => {

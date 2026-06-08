@@ -27,6 +27,7 @@ interface TodaySectionProps {
   groupedHabits: Record<Bucket, HabitWithRelations[]>;
   orderedBuckets: Bucket[];
   currentBucket: Bucket;
+  outstandingCount: number;
 }
 
 export function TodaySection({
@@ -34,14 +35,10 @@ export function TodaySection({
   groupedHabits,
   orderedBuckets,
   currentBucket,
+  outstandingCount,
 }: TodaySectionProps) {
   const router = useRouter();
   const handleComplete = () => router.refresh();
-
-  const totalItems = orderedBuckets.reduce(
-    (sum, b) => sum + groupedTasks[b].length + groupedHabits[b].length,
-    0,
-  );
 
   return (
     <Card>
@@ -52,9 +49,9 @@ export function TodaySection({
               Today
             </h2>
             <p className="mt-2 text-sm text-[#b4a58a]">
-              {totalItems === 0
+              {outstandingCount === 0
                 ? "All caught up. Keep the rhythm going."
-                : "Tasks due and habits scheduled across each part of your day."}
+                : `${outstandingCount} left to do across your day.`}
             </p>
           </div>
           <Link
@@ -116,6 +113,7 @@ export function TodaySection({
                               task.frequency,
                             )}
                             onComplete={handleComplete}
+                            dimWhenComplete
                           />
                         ))}
                       </div>
@@ -125,7 +123,11 @@ export function TodaySection({
                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#b4a58a]">
                           Habits
                         </p>
-                        <HabitCardList className="space-y-2" habits={habits} />
+                        <HabitCardList
+                          className="space-y-2"
+                          habits={habits}
+                          dimWhenComplete
+                        />
                       </div>
                     )}
                   </div>

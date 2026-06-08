@@ -22,6 +22,7 @@ type HabitWithRelations = Habit & {
 interface HabitCardProps {
   habit: HabitWithRelations;
   onLog?: (result: unknown) => void;
+  dimWhenComplete?: boolean;
 }
 
 function todayLogsSum(logs: HabitLog[]): number {
@@ -36,18 +37,18 @@ function isLoggedToday(logs: HabitLog[], thresholdValue: number): boolean {
   return todayLogsSum(logs) >= thresholdValue;
 }
 
-export function HabitCard({ habit, onLog }: HabitCardProps) {
+export function HabitCard({ habit, onLog, dimWhenComplete }: HabitCardProps) {
   const logged = isLoggedToday(habit.logs, habit.thresholdValue);
   const isCount = habit.trackingType === "COUNT";
   const displayImageUrl = toImageDeliveryUrl(habit.imageUrl);
 
   return (
     <div
-      className={`relative h-39 overflow-hidden rounded-[26px] px-3 pb-3 pt-0 transition-[border-color,background-color] duration-150 hover:bg-[rgba(247,240,225,0.02)] sm:h-39 sm:px-3.5 sm:pb-3.5 sm:pt-0 ${
+      className={`relative h-39 overflow-hidden rounded-[26px] px-3 pb-3 pt-0 transition-[border-color,background-color,opacity,filter] duration-150 hover:bg-[rgba(247,240,225,0.02)] sm:h-39 sm:px-3.5 sm:pb-3.5 sm:pt-0 ${
         logged
           ? "border border-[rgba(125,156,115,0.22)] surface-panel hover:border-[rgba(125,156,115,0.36)]"
           : "surface-panel hover:border-[rgba(230,196,139,0.3)]"
-      }`}
+      } ${dimWhenComplete && logged ? "opacity-60 saturate-50 hover:opacity-100" : ""}`}
     >
       {displayImageUrl && (
         <>

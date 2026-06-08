@@ -26,6 +26,7 @@ interface TaskCardProps {
   periodCount: number;
   timezone?: string;
   onComplete?: () => void;
+  dimWhenComplete?: boolean;
 }
 
 function formatRelative(date: Date, now: Date = new Date()): string {
@@ -44,6 +45,7 @@ export function TaskCard({
   periodCount,
   timezone = "UTC",
   onComplete,
+  dimWhenComplete,
 }: TaskCardProps) {
   const router = useRouter();
   const logicallyDue = isLogicallyDue(task, new Date(), timezone);
@@ -87,11 +89,11 @@ export function TaskCard({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-[28px] p-4 transition-[border-color,background-color] duration-150 hover:bg-[rgba(247,240,225,0.02)] sm:p-5 ${
+      className={`relative overflow-hidden rounded-[28px] p-4 transition-[border-color,background-color,opacity,filter] duration-150 hover:bg-[rgba(247,240,225,0.02)] sm:p-5 ${
         periodFull
           ? "border border-[rgba(125,156,115,0.22)] surface-panel hover:border-[rgba(125,156,115,0.36)]"
           : "surface-panel hover:border-[rgba(230,196,139,0.3)]"
-      }`}
+      } ${dimWhenComplete && periodFull ? "opacity-60 saturate-50 hover:opacity-100" : ""}`}
     >
       {displayImageUrl && (
         <>

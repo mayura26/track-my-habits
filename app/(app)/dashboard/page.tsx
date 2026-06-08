@@ -1,18 +1,9 @@
-import { ArrowRight, CalendarClock, Plus } from "lucide-react";
-import Image from "next/image";
+import { ArrowRight, Award, CalendarClock, Flame, Plus } from "lucide-react";
 import Link from "next/link";
 import { TodaySection } from "@/components/dashboard/TodaySection";
 import { XPBar } from "@/components/gamification/XPBar";
-import { HabitCardList } from "@/components/habits/HabitCardList";
-import { Button, linkButtonClassName } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
-import { SectionArtwork } from "@/components/ui/SectionArtwork";
-import {
-  StatGrid,
-  StatItem,
-  StatPanel,
-  statCellClass,
-} from "@/components/ui/StatPanel";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import {
@@ -22,6 +13,7 @@ import {
   getPeriodRange,
   isLogicallyDue,
   isScheduledForToday,
+  logsInPeriod,
   parseScheduledWeekdays,
   WEEKDAY_ORDER,
 } from "@/lib/task-helpers";
@@ -96,6 +88,15 @@ export default async function DashboardPage() {
     isLogicallyDue(t, now, timezone),
   );
 
+  // Today's tasks: scheduled for today and either still due or already completed
+  // this period — so finished items stay visible (sunk to the bottom + dimmed).
+  const todaysTasks = tasksWithLogs.filter(
+    (t) =>
+      isScheduledForToday(t, now, timezone) &&
+      (isLogicallyDue(t, now, timezone) ||
+        logsInPeriod(t.logs, t.frequency) > 0),
+  );
+
   const bucketPrefs = {
     bucketMorningStart: user?.bucketMorningStart ?? 5,
     bucketDayStart: user?.bucketDayStart ?? 11,
@@ -105,8 +106,18 @@ export default async function DashboardPage() {
   const orderedBuckets = bucketOrderFromNow(bucketPrefs, now, timezone);
   const currentBucket = orderedBuckets[0];
   const grouped = Object.fromEntries(
-    BUCKETS.map((b) => [b, dueTasks.filter((t) => (t.bucket ?? "DAY") === b)]),
-  ) as Record<Bucket, typeof dueTasks>;
+    BUCKETS.map((b) => [
+      b,
+      todaysTasks
+        .filter((t) => (t.bucket ?? "DAY") === b)
+        .sort((a, c) => {
+          const aDone = logsInPeriod(a.logs, a.frequency) >= a.frequencyValue;
+          const cDone = logsInPeriod(c.logs, c.frequency) >= c.frequencyValue;
+          if (aDone === cDone) return 0;
+          return aDone ? 1 : -1;
+        }),
+    ]),
+  ) as Record<Bucket, typeof todaysTasks>;
 
   function todaySum(logs: { loggedAt: Date; value: number }[]) {
     const todayKey = getLocalDateKey(now, timezone);
@@ -124,18 +135,23 @@ export default async function DashboardPage() {
       : sum > 0;
   }
 
-  // Habits scheduled for today and not yet done — grouped by time-of-day bucket
-  // for the unified "Today" view. Completed habits drop out so it shows only
-  // what's still outstanding.
-  const todayHabits = habits.filter(
-    (h) => isScheduledForToday(h, now, timezone) && !isHabitDoneToday(h),
+  // Habits scheduled for today — grouped by time-of-day bucket for the unified
+  // "Today" view. Completed habits stay visible but sink to the bottom of their
+  // bucket (dimmed), so the next outstanding action is always on top.
+  const todayHabits = habits.filter((h) =>
+    isScheduledForToday(h, now, timezone),
   );
   const groupedHabits = Object.fromEntries(
     BUCKETS.map((b) => [
       b,
       todayHabits
         .filter((h) => (h.bucket ?? "DAY") === b)
-        .sort((a, c) => c.currentStreak - a.currentStreak),
+        .sort((a, c) => {
+          const aDone = isHabitDoneToday(a);
+          const cDone = isHabitDoneToday(c);
+          if (aDone === cDone) return c.currentStreak - a.currentStreak;
+          return aDone ? 1 : -1;
+        }),
     ]),
   ) as Record<Bucket, typeof habits>;
 
@@ -178,106 +194,80 @@ export default async function DashboardPage() {
     }
   }
 
-  const sortedHabits = [...habits].sort((a, b) => {
-    const aLogged = todaySum(a.logs) >= a.thresholdValue;
-    const bLogged = todaySum(b.logs) >= b.thresholdValue;
-    if (aLogged === bLogged) return b.currentStreak - a.currentStreak;
-    return aLogged ? 1 : -1;
-  });
-
   const completedToday = habits.filter(
     (h) => todaySum(h.logs) >= h.thresholdValue,
   ).length;
   const topStreak = Math.max(0, ...habits.map((h) => h.currentStreak));
+  // Outstanding = habits scheduled today but not yet done + tasks still due.
+  const outstandingCount =
+    todayHabits.filter((h) => !isHabitDoneToday(h)).length + dueTasks.length;
 
   return (
     <div className="space-y-6 md:space-y-8">
-      <section>
-        <Card className="overflow-hidden ring-1 ring-inset ring-[rgba(216,196,160,0.14)]">
-          <div className="relative isolate min-h-[280px] md:min-h-[300px]">
-            <Image
-              src="/artifacts/dashboard-hero.png"
-              alt=""
-              fill
-              className="dashboard-hero-photo object-cover object-[center_28%]"
-              sizes="(max-width: 1280px) 100vw, 1152px"
-              priority
-            />
-            <div className="dashboard-hero-scrim" aria-hidden />
-            <CardContent className="relative z-[2] px-6 py-6 md:px-8 md:py-8">
-              <div className="space-y-6">
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div className="max-w-2xl">
-                    <p className="section-kicker">Today</p>
-                    <h1 className="display-title mt-3 text-4xl font-semibold leading-none text-[#fff7ea] md:text-6xl">
-                      Good {getTimeOfDay(timezone)},{" "}
-                      {user?.name?.split(" ")[0] ?? "there"}.
-                    </h1>
-                    <p className="mt-4 max-w-xl text-base leading-7 text-[#e8dcc8] text-balance drop-shadow-[0_1px_12px_rgba(0,0,0,0.45)]">
-                      Start with what is due now, then keep the rest of the day
-                      easy to maintain.
-                    </p>
-                  </div>
-                  <Link href="/habits/new">
-                    <Button className="w-full md:w-auto">
-                      <Plus className="h-4 w-4" />
-                      Add a habit
-                    </Button>
-                  </Link>
-                </div>
-
-                <div className="space-y-4">
-                  <StatPanel>
-                    <StatGrid columns={4}>
-                      <StatItem
-                        value={dueTasks.length + todayHabits.length}
-                        label="due now"
-                        className={statCellClass(4, 0)}
-                      />
-                      <StatItem
-                        value={`${completedToday}/${habits.length || 0}`}
-                        label="today"
-                        className={statCellClass(4, 1)}
-                      />
-                      <StatItem
-                        value={topStreak}
-                        label="top streak"
-                        className={statCellClass(4, 2)}
-                      />
-                      <Link
-                        href="/achievements"
-                        className={`group rounded-xl transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-light ${statCellClass(4, 3)}`}
-                      >
-                        <StatItem
-                          value={totalBadges}
-                          label="badges"
-                          accent
-                          className=""
-                        />
-                      </Link>
-                    </StatGrid>
-                  </StatPanel>
-                  {user && (
-                    <XPBar
-                      xp={user.xp}
-                      level={user.level}
-                      className="max-w-md"
-                    />
-                  )}
-                </div>
-              </div>
-            </CardContent>
+      <Card>
+        <CardContent className="space-y-3 py-4 md:py-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <h1 className="display-title text-2xl font-semibold text-[#fff7ea] md:text-3xl">
+                Good {getTimeOfDay(timezone)},{" "}
+                {user?.name?.split(" ")[0] ?? "there"}.
+              </h1>
+              <p className="mt-1 text-sm text-[#b4a58a]">
+                {habits.length > 0
+                  ? `${completedToday} of ${habits.length} habits done today`
+                  : "No habits yet"}
+                {outstandingCount > 0
+                  ? ` · ${outstandingCount} left to do`
+                  : ""}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(216,196,160,0.18)] bg-[rgba(8,12,10,0.4)] px-3 py-1.5 text-sm font-semibold text-[#f7f0e1]"
+                title="Top streak"
+              >
+                <Flame className="h-4 w-4 text-[#e6a23c]" />
+                {topStreak}
+              </span>
+              <Link
+                href="/achievements"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(216,196,160,0.18)] bg-[rgba(8,12,10,0.4)] px-3 py-1.5 text-sm font-semibold text-[#f7f0e1] transition-colors hover:border-[rgba(230,196,139,0.4)]"
+                title="Badges"
+              >
+                <Award className="h-4 w-4 text-[#e6c48b]" />
+                {totalBadges}
+              </Link>
+              <Link href="/habits/new">
+                <Button size="sm">
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Add</span>
+                </Button>
+              </Link>
+            </div>
           </div>
-        </Card>
-      </section>
+          {user && <XPBar xp={user.xp} level={user.level} />}
+        </CardContent>
+      </Card>
 
-      {(activeTasks.length > 0 || habits.length > 0) && (
+      {activeTasks.length > 0 || habits.length > 0 ? (
         <TodaySection
           groupedTasks={grouped}
           groupedHabits={groupedHabits}
           orderedBuckets={orderedBuckets}
           currentBucket={currentBucket}
+          outstandingCount={outstandingCount}
         />
+      ) : (
+        <Card>
+          <CardContent className="flex flex-col items-center py-10 text-center md:py-12">
+            <p className="text-[#e8dcc8]">
+              Nothing here yet. Add a habit or task to start your day.
+            </p>
+            <Link href="/habits/new" className="mt-4 inline-block">
+              <Button>Create your first habit</Button>
+            </Link>
+          </CardContent>
+        </Card>
       )}
 
       {totalMissingDays > 0 && (
@@ -301,84 +291,6 @@ export default async function DashboardPage() {
           <ArrowRight className="h-4 w-4 shrink-0 text-[#e6c48b]" />
         </Link>
       )}
-
-      <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <Card>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="display-title text-3xl font-semibold text-[#fff7ea]">
-                  Today&apos;s Habits
-                </h2>
-                <p className="mt-2 text-sm text-[#b4a58a]">
-                  Keep the next action obvious and the list short enough to
-                  trust.
-                </p>
-              </div>
-              <Link
-                href="/habits"
-                className={linkButtonClassName(
-                  "subtle",
-                  "sm",
-                  "shrink-0 whitespace-nowrap",
-                )}
-              >
-                View all
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
-            {sortedHabits.length === 0 ? (
-              <SectionArtwork
-                artifactId="emptyStateDawn"
-                variant="banner"
-                dimmed
-                className="border border-dashed border-[rgba(216,196,160,0.22)]"
-              >
-                <div className="flex flex-col items-center py-8 text-center md:py-10">
-                  <p className="text-[#e8dcc8]">No habits yet.</p>
-                  <Link href="/habits/new" className="mt-4 inline-block">
-                    <Button>Create your first habit</Button>
-                  </Link>
-                </div>
-              </SectionArtwork>
-            ) : (
-              <HabitCardList
-                className="space-y-2"
-                habits={
-                  sortedHabits as Parameters<typeof HabitCardList>[0]["habits"]
-                }
-              />
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="space-y-4">
-          <Card elevated>
-            <CardContent className="space-y-3">
-              <p className="section-kicker">Focus</p>
-              <p className="text-lg font-semibold text-[#f7f0e1]">
-                Consistency compounds faster than intensity.
-              </p>
-              <p className="text-sm leading-6 text-[#b4a58a]">
-                Protect the minimum version of your routine. That is what keeps
-                momentum alive.
-              </p>
-              <Link
-                href="/stats"
-                className={linkButtonClassName(
-                  "subtle",
-                  "sm",
-                  "shrink-0 whitespace-nowrap",
-                )}
-              >
-                Review progress
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
     </div>
   );
 }

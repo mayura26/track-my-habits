@@ -314,8 +314,8 @@ test.describe("Tasks", () => {
     });
 
     await page.goto("/dashboard");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(
-      `Good ${expected}`,
-    );
+    await expect(
+      page.getByRole("heading", { name: /^Good / }),
+    ).toContainText(`Good ${expected}`);
   });
 });
