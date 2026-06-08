@@ -1,9 +1,11 @@
 import { db } from "@/lib/db";
 import { completeHabitReminderForUser } from "@/lib/habit-completion";
-import { verifyReminderActionToken } from "@/lib/reminder-action-token";
-import type { ReminderNotificationAction } from "@/lib/reminder-action-urls";
+import {
+  verifyReminderActionToken,
+  type ReminderActionEntityType,
+  type ReminderNotificationAction,
+} from "@/lib/reminder-action-token";
 import { completeTaskReminderForUser } from "@/lib/task-completion";
-import type { ReminderActionEntityType } from "@/lib/reminder-action-token";
 
 const SNOOZE_MS = 30 * 60 * 1000;
 
@@ -76,12 +78,23 @@ export async function resolveReminderActionUserId(
 export async function performReminderAction(
   input: PerformReminderActionInput,
 ): Promise<ReminderActionOutcome> {
+  let action = input.action;
+  if (input.actionToken) {
+    const tokenPayload = verifyReminderActionToken(input.actionToken);
+    if (tokenPayload?.action) {
+      if (action && action !== tokenPayload.action) {
+        return { ok: false, error: "unauthorized" };
+      }
+      action = tokenPayload.action;
+    }
+  }
+
   const userId = await resolveReminderActionUserId(input);
   if (!userId) {
     return { ok: false, error: "unauthorized" };
   }
 
-  const { entityType, entityId, action } = input;
+  const { entityType, entityId } = input;
 
   if (entityType === "test") {
     return {
@@ -138,4 +151,20 @@ export async function performReminderAction(
     reminderSnoozedUntil,
     message: "Snoozed for 30 minutes.",
   };
+}
+
+export async function performReminderActionFromToken(
+  token: string,
+): Promise<ReminderActionOutcome> {
+  const tokenPayload = verifyReminderActionToken(token);
+  if (!tokenPayload?.action) {
+    return { ok: false, error: "invalid" };
+  }
+
+  return performReminderAction({
+    entityType: tokenPayload.entityType,
+    entityId: tokenPayload.entityId,
+    action: tokenPayload.action,
+    actionToken: token,
+  });
 }

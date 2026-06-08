@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { signReminderActionToken } from "@/lib/reminder-action-token";
 import { buildReminderActionPaths } from "@/lib/reminder-action-urls";
 import { reminderActionTokenSchema } from "@/lib/validations";
 
@@ -46,7 +45,7 @@ export async function POST(req: NextRequest) {
       })
     : null;
 
-  const actionToken = signReminderActionToken({
+  const actionUrls = buildReminderActionPaths({
     userId: session.user.id,
     subscriptionId: subscription?.id,
     entityType,
@@ -54,11 +53,7 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({
-    actionToken,
-    actionUrls: buildReminderActionPaths({
-      entityType,
-      entityId,
-      actionToken,
-    }),
+    actionToken: actionUrls.complete.replace("/reminder/a/", ""),
+    actionUrls,
   });
 }

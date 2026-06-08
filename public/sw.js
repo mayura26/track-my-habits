@@ -1,5 +1,7 @@
-// Service Worker for PWA Push Notifications
+// Service Worker for PWA Push Notifications v3
 // No fetch interception — only push + notification handling
+
+const SW_VERSION = "3";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting());
@@ -28,8 +30,8 @@ function buildReminderActions(actionUrls) {
   const snoozeUrl = sameOriginUrl(actionUrls.snooze);
 
   return [
-    { action: "complete", title: "Done", navigate: completeUrl },
-    { action: "snooze", title: "Snooze", navigate: snoozeUrl },
+    { action: completeUrl, title: "Done", navigate: completeUrl },
+    { action: snoozeUrl, title: "Snooze", navigate: snoozeUrl },
   ];
 }
 
@@ -52,10 +54,10 @@ self.addEventListener("push", (event) => {
       url: payload.url || "/dashboard",
       entityType: payload.entityType,
       entityId: payload.entityId,
-      actionToken: payload.actionToken,
       actionUrls,
       completeUrl: actionUrls?.complete,
       snoozeUrl: actionUrls?.snooze,
+      swVersion: SW_VERSION,
     },
   };
 
@@ -83,73 +85,40 @@ async function openAppUrl(url) {
   return clients.openWindow(sameOriginUrl(url));
 }
 
-async function postReminderActionMessage(data, action) {
-  const windowClients = await clients.matchAll({
-    type: "window",
-    includeUncontrolled: true,
-  });
+function resolveNotificationActionTarget(action, data) {
+  if (typeof action !== "string" || !action) return null;
 
-  for (const client of windowClients) {
-    if (isSameOriginClient(client) && "postMessage" in client) {
-      client.postMessage({
-        type: "reminder-action-complete",
-        action,
-        entityType: data.entityType,
-        entityId: data.entityId,
-      });
-    }
-  }
-}
-
-function getReminderActionUrl(data, action) {
-  const flatUrl =
-    action === "complete" ? data.completeUrl : data.snoozeUrl;
-  if (flatUrl) {
-    return sameOriginUrl(flatUrl);
+  if (action.startsWith("http://") || action.startsWith("https://")) {
+    return action;
   }
 
-  if (data.actionUrls?.[action]) {
-    return sameOriginUrl(data.actionUrls[action]);
+  if (action.startsWith("/reminder/")) {
+    return sameOriginUrl(action);
   }
 
-  if (!data.actionToken) return null;
-
-  const params = new URLSearchParams({
-    entityType: data.entityType,
-    entityId: data.entityId,
-    action,
-    actionToken: data.actionToken,
-  });
-  return sameOriginUrl(`/reminder/action?${params.toString()}`);
-}
-
-async function sendReminderAction(notification, action) {
-  const data = notification.data || {};
-  if (!data.entityType || !data.entityId) {
-    await openAppUrl(data.url || "/dashboard");
-    return;
+  if (action === "complete" && data.completeUrl) {
+    return sameOriginUrl(data.completeUrl);
   }
 
-  const actionUrl = getReminderActionUrl(data, action);
-  if (!actionUrl) {
-    await openAppUrl(data.url || "/dashboard");
-    return;
+  if (action === "snooze" && data.snoozeUrl) {
+    return sameOriginUrl(data.snoozeUrl);
   }
 
-  await openAppUrl(actionUrl);
-  await postReminderActionMessage(data, action);
+  return null;
 }
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || "/dashboard";
+  const data = event.notification.data || {};
+  const fallbackUrl = data.url || "/dashboard";
+  const actionTarget = resolveNotificationActionTarget(event.action, data);
 
-  if (event.action === "complete" || event.action === "snooze") {
-    event.waitUntil(sendReminderAction(event.notification, event.action));
+  if (actionTarget) {
+    event.waitUntil(openAppUrl(actionTarget));
     return;
   }
 
-  event.waitUntil(openAppUrl(url));
+  event.waitUntil(openAppUrl(fallbackUrl));
 });
 
 self.addEventListener("pushsubscriptionchange", (event) => {

@@ -203,6 +203,7 @@ test.describe("Reminder notification actions", () => {
       subscriptionId: subscription.id,
       entityType: "habit",
       entityId: habit.id,
+      action: "complete",
     });
     const unauthenticated = await request.newContext({
       baseURL: TEST_BASE_URL,
@@ -286,8 +287,8 @@ test.describe("Reminder notification actions", () => {
     });
     expect(tokenRes.ok()).toBeTruthy();
     const { actionUrls } = await tokenRes.json();
-    expect(actionUrls?.complete).toContain("/reminder/action?");
-    expect(actionUrls?.complete).toContain("action=complete");
+    expect(actionUrls?.complete).toContain("/reminder/a/");
+    expect(actionUrls?.snooze).toContain("/reminder/a/");
 
     const unauthenticated = await request.newContext({
       baseURL: TEST_BASE_URL,

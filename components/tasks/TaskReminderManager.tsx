@@ -175,16 +175,18 @@ async function showReminderNotification(
   };
 
   if (actionToken && actionUrls) {
+    const completeUrl = actionUrls.complete;
+    const snoozeUrl = actionUrls.snooze;
     options.actions = [
       {
-        action: "complete",
+        action: completeUrl,
         title: "Done",
-        navigate: actionUrls.complete,
+        navigate: completeUrl,
       },
       {
-        action: "snooze",
+        action: snoozeUrl,
         title: "Snooze",
-        navigate: actionUrls.snooze,
+        navigate: snoozeUrl,
       },
     ];
   }

@@ -1,4 +1,8 @@
-import type { ReminderActionEntityType } from "@/lib/reminder-action-token";
+import {
+  type ReminderActionEntityType,
+  type SignReminderActionTokenInput,
+  signReminderActionToken,
+} from "@/lib/reminder-action-token";
 
 export type ReminderNotificationAction = "complete" | "snooze";
 
@@ -7,6 +11,10 @@ interface ReminderActionUrlInput {
   entityId: string;
   actionToken: string;
   action: ReminderNotificationAction;
+}
+
+export function buildReminderActionTokenPath(token: string): string {
+  return `/reminder/a/${token}`;
 }
 
 export function buildReminderActionPath({
@@ -40,11 +48,17 @@ export function buildReminderActionApiPath({
 }
 
 export function buildReminderActionPaths(
-  input: Omit<ReminderActionUrlInput, "action">,
+  input: Omit<SignReminderActionTokenInput, "action">,
 ): Record<ReminderNotificationAction, string> {
+  const completeToken = signReminderActionToken({
+    ...input,
+    action: "complete",
+  });
+  const snoozeToken = signReminderActionToken({ ...input, action: "snooze" });
+
   return {
-    complete: buildReminderActionPath({ ...input, action: "complete" }),
-    snooze: buildReminderActionPath({ ...input, action: "snooze" }),
+    complete: buildReminderActionTokenPath(completeToken),
+    snooze: buildReminderActionTokenPath(snoozeToken),
   };
 }
 

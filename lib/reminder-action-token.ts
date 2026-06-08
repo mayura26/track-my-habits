@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 export type ReminderActionEntityType = "task" | "habit" | "test";
+export type ReminderNotificationAction = "complete" | "snooze";
 
 export const REMINDER_ACTION_TOKEN_TTL_MS = 48 * 60 * 60 * 1000;
 
@@ -10,14 +11,16 @@ export interface ReminderActionTokenPayload {
   subscriptionId?: string;
   entityType: ReminderActionEntityType;
   entityId: string;
+  action?: ReminderNotificationAction;
   expiresAt: number;
 }
 
-interface SignReminderActionTokenInput {
+export interface SignReminderActionTokenInput {
   userId: string;
   subscriptionId?: string;
   entityType: ReminderActionEntityType;
   entityId: string;
+  action?: ReminderNotificationAction;
   expiresAt?: number;
 }
 
@@ -54,6 +57,9 @@ function isReminderActionTokenPayload(
       payload.entityType === "test") &&
     typeof payload.entityId === "string" &&
     payload.entityId.length > 0 &&
+    (payload.action === undefined ||
+      payload.action === "complete" ||
+      payload.action === "snooze") &&
     typeof payload.expiresAt === "number" &&
     Number.isFinite(payload.expiresAt)
   );
@@ -68,6 +74,7 @@ export function signReminderActionToken(
     ...(input.subscriptionId ? { subscriptionId: input.subscriptionId } : {}),
     entityType: input.entityType,
     entityId: input.entityId,
+    ...(input.action ? { action: input.action } : {}),
     expiresAt: input.expiresAt ?? Date.now() + REMINDER_ACTION_TOKEN_TTL_MS,
   };
   const encodedPayload = Buffer.from(JSON.stringify(payload)).toString(

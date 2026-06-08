@@ -10,12 +10,17 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   return outputArray;
 }
 
+export const SERVICE_WORKER_URL = "/sw.js?v=3";
+
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!("serviceWorker" in navigator)) return null;
   try {
-    const registration = await navigator.serviceWorker.register("/sw.js", {
-      updateViaCache: "none",
-    });
+    const registration = await navigator.serviceWorker.register(
+      SERVICE_WORKER_URL,
+      {
+        updateViaCache: "none",
+      },
+    );
     await registration.update().catch(() => undefined);
     return await navigator.serviceWorker.ready;
   } catch (err) {
