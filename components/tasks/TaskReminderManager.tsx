@@ -3,6 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import {
+  evaluateDeadlineHabitDay,
+  isTimeDeadlineHabit,
+} from "@/lib/habit-deadline";
+import {
   detectPushPlatform,
   shouldUseSingleReminderAction,
 } from "@/lib/notification-platform";
@@ -17,7 +21,12 @@ import { getLocalDateKey, getTimePartsInTimezone } from "@/lib/timezone";
 type ReminderEntityType = "task" | "habit";
 
 type NotificationOptionsWithActions = NotificationOptions & {
-  actions?: { action: string; title: string; icon?: string; navigate?: string }[];
+  actions?: {
+    action: string;
+    title: string;
+    icon?: string;
+    navigate?: string;
+  }[];
 };
 
 interface ReminderBase {
@@ -42,10 +51,17 @@ interface ReminderTask extends ReminderBase {
 }
 
 interface ReminderHabit extends ReminderBase {
+  trackingType: string;
   thresholdType: string;
   thresholdValue: number;
-  logs: { loggedAt: string; value: number }[];
+  deadlineTime: string | null;
+  deadlineGraceMinutes: number;
+  reminderLeadMinutes: number;
+  logs: { loggedAt: string; value: number; status: string }[];
 }
+
+type DeadlineHabitArg = Parameters<typeof evaluateDeadlineHabitDay>[0];
+type DeadlineLogArg = Parameters<typeof evaluateDeadlineHabitDay>[1];
 
 function getFiredKey(
   entityType: ReminderEntityType,
@@ -124,7 +140,9 @@ function isHabitDoneToday(
   const todayKey = getLocalDateKey(now, timezone);
   const sum = habit.logs
     .filter(
-      (log) => getLocalDateKey(new Date(log.loggedAt), timezone) === todayKey,
+      (log) =>
+        log.status === "COMPLETED" &&
+        getLocalDateKey(new Date(log.loggedAt), timezone) === todayKey,
     )
     .reduce((total, log) => total + log.value, 0);
 
@@ -293,8 +311,21 @@ export function TaskReminderManager() {
 
       for (const habit of habits) {
         if (isSnoozed(habit, now)) continue;
-        if (!isReminderTimeReached(habit, now, timezone)) continue;
-        if (isHabitDoneToday(habit, now, timezone)) continue;
+
+        if (isTimeDeadlineHabit(habit as DeadlineHabitArg)) {
+          const deadline = evaluateDeadlineHabitDay(
+            habit as DeadlineHabitArg,
+            habit.logs as DeadlineLogArg,
+            now,
+            timezone,
+          );
+          if (deadline.status !== "pending") continue;
+          if (!deadline.reminderAt || now < deadline.reminderAt) continue;
+        } else {
+          if (!isReminderTimeReached(habit, now, timezone)) continue;
+          if (isHabitDoneToday(habit, now, timezone)) continue;
+        }
+
         if (shouldSuppressLocalReminder("habit", habit, timezone, now))
           continue;
 

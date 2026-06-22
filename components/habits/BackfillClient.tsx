@@ -140,7 +140,7 @@ function BackfillHabitRow({ habit }: { habit: BackfillHabit }) {
     });
   };
 
-  const allowFail = habit.trackingType === "BOOLEAN";
+  const allowFail = habit.trackingType !== "COUNT";
 
   const editingDay = editingDayKey
     ? days.find((d) => d.dateKey === editingDayKey)
@@ -181,7 +181,7 @@ function BackfillHabitRow({ habit }: { habit: BackfillHabit }) {
                 }}
                 title="Tap to undo"
               >
-                {day.value}/{habit.thresholdValue} · {day.label}
+                {day.value}/{habit.thresholdValue} Â· {day.label}
               </button>
             );
           }
@@ -209,7 +209,7 @@ function BackfillHabitRow({ habit }: { habit: BackfillHabit }) {
                 onClick={() => undo(day)}
                 disabled={isPending}
                 className="rounded-full border border-[#b66b5a] bg-[rgba(182,107,90,0.2)] px-3.5 py-2 text-xs font-semibold text-[#f1c4b8] line-through transition-[background-color,border-color,color] duration-150 active:scale-95 motion-reduce:active:scale-100 disabled:cursor-wait disabled:opacity-60"
-                title="Marked failed — tap to undo"
+                title="Marked failed â€” tap to undo"
               >
                 {day.label}
               </button>
@@ -227,7 +227,7 @@ function BackfillHabitRow({ habit }: { habit: BackfillHabit }) {
                 className="rounded-full border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.04)] px-3.5 py-2 text-xs font-semibold text-[#b4a58a] transition-colors duration-150 hover:border-[rgba(230,196,139,0.35)] hover:text-[#f7f0e1] active:scale-95 motion-reduce:active:scale-100 disabled:cursor-wait disabled:opacity-60"
                 title="Log value for this day"
               >
-                Log · {day.label}
+                Log Â· {day.label}
               </button>
             );
           }
@@ -244,7 +244,7 @@ function BackfillHabitRow({ habit }: { habit: BackfillHabit }) {
                 className="px-3.5 py-2 text-xs font-semibold text-[#5c5348] transition-colors duration-150 hover:text-[#b4a58a] active:scale-95 motion-reduce:active:scale-100 disabled:cursor-wait disabled:opacity-60"
                 title="Mark completed"
               >
-                ✓ {day.label}
+                âœ“ {day.label}
               </button>
               {allowFail && (
                 <button
@@ -255,7 +255,7 @@ function BackfillHabitRow({ habit }: { habit: BackfillHabit }) {
                   className="border-l border-[rgba(216,196,160,0.14)] px-2.5 py-2 text-xs font-semibold text-[#8a6257] transition-colors duration-150 hover:bg-[rgba(182,107,90,0.15)] hover:text-[#e29e8f] active:scale-95 motion-reduce:active:scale-100 disabled:cursor-wait disabled:opacity-60"
                   title="Mark failed"
                 >
-                  ✗
+                  âœ—
                 </button>
               )}
             </div>
@@ -296,7 +296,7 @@ function BackfillHabitRow({ habit }: { habit: BackfillHabit }) {
                 className="text-sm text-[#8d826d] hover:text-[#f7f0e1]"
                 aria-label="Close"
               >
-                ✕
+                âœ•
               </button>
             </div>
             <div className="mt-5">

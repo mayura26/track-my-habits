@@ -61,6 +61,9 @@ export default async function EditHabitPage({ params }: EditHabitPageProps) {
                 parseScheduledWeekdays(habit.scheduledWeekdays) ?? undefined,
               reminderEnabled: habit.reminderEnabled,
               reminderTime: habit.reminderTime ?? undefined,
+              deadlineTime: habit.deadlineTime,
+              deadlineGraceMinutes: habit.deadlineGraceMinutes,
+              reminderLeadMinutes: habit.reminderLeadMinutes,
             }}
           />
         </CardContent>

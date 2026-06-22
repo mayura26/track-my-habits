@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
+import { getDeadlineCutoffAt, isTimeDeadlineHabit } from "@/lib/habit-deadline";
 import { parseScheduledWeekdays, WEEKDAY_ORDER } from "@/lib/task-helpers";
 import {
   getLocalDateKey,
@@ -10,7 +11,7 @@ import {
 
 const MS_PER_DAY = 86_400_000;
 
-// ─── XP & Level ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ XP & Level â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function calcLevel(totalXP: number): number {
   return Math.max(1, Math.floor(Math.sqrt(totalXP / 100)));
@@ -28,14 +29,17 @@ export function calcXPGain(streak: number, source: string): number {
   return base + streakBonus + nfcBonus;
 }
 
-// ─── Streak Algorithm ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Streak Algorithm â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface HabitForStreak {
   id: string;
+  trackingType: string;
   thresholdType: string;
   thresholdValue: number;
   thresholdWindow: number | null;
   scheduledWeekdays: string | null;
+  deadlineTime: string | null;
+  deadlineGraceMinutes: number;
 }
 
 export async function calculateStreak(
@@ -50,7 +54,8 @@ export async function calculateStreak(
 
   if (logs.length === 0) return 0;
 
-  const today = startOfDayInTimezone(new Date(), zone);
+  const now = new Date();
+  const today = startOfDayInTimezone(now, zone);
 
   if (habit.thresholdType === "ROLLING_WINDOW") {
     const windowDays = habit.thresholdWindow ?? 7;
@@ -70,7 +75,7 @@ export async function calculateStreak(
   }
 
   // Weekday restriction (DAILY only): non-scheduled days are skipped, not
-  // counted as misses — a Mon–Fri habit keeps its streak across the weekend.
+  // counted as misses â€” a Monâ€“Fri habit keeps its streak across the weekend.
   const scheduledDays = parseScheduledWeekdays(habit.scheduledWeekdays);
   // Termination guard: nothing can be completed before the oldest log.
   const oldestDay = startOfDayInTimezone(
@@ -100,9 +105,15 @@ export async function calculateStreak(
       if (daySum >= habit.thresholdValue) {
         streak++;
       } else if (cursor.getTime() === today.getTime()) {
-        // today hasn't been completed yet — don't break streak
-        cursor.setTime(cursor.getTime() - MS_PER_DAY);
-        continue;
+        const cutoffAt = isTimeDeadlineHabit(habit)
+          ? getDeadlineCutoffAt(habit, now, zone)
+          : null;
+        if (!cutoffAt || now <= cutoffAt) {
+          // Today has not been completed yet; do not break streak before the cutoff.
+          cursor.setTime(cursor.getTime() - MS_PER_DAY);
+          continue;
+        }
+        break;
       } else {
         break;
       }
@@ -144,7 +155,7 @@ export async function calculateStreak(
   return streak;
 }
 
-// ─── Badge Condition Evaluator ────────────────────────────────────────────────
+// â”€â”€â”€ Badge Condition Evaluator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface BadgeCondition {
   type: string;
@@ -244,7 +255,7 @@ export async function checkAndAwardBadges(userId: string): Promise<string[]> {
   return newlyEarned;
 }
 
-// ─── Simple XP Award (for Tasks) ─────────────────────────────────────────────
+// â”€â”€â”€ Simple XP Award (for Tasks) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function awardXP(userId: string, amount: number): Promise<void> {
   const user = await db.user.findUniqueOrThrow({ where: { id: userId } });
@@ -256,7 +267,7 @@ export async function awardXP(userId: string, amount: number): Promise<void> {
   });
 }
 
-// ─── Main Pipeline ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Main Pipeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface ProcessResult {
   streak: number;

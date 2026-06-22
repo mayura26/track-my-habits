@@ -34,6 +34,9 @@ interface HabitFormProps {
     scheduledWeekdays?: Weekday[];
     reminderEnabled?: boolean;
     reminderTime?: string;
+    deadlineTime?: string | null;
+    deadlineGraceMinutes?: number;
+    reminderLeadMinutes?: number;
   };
   habitId?: string;
 }
@@ -59,6 +62,7 @@ export function HabitForm({
   const [scheduledWeekdays, setScheduledWeekdays] = useState<Weekday[]>(
     defaultValues?.scheduledWeekdays ?? [...WEEKDAY_ORDER],
   );
+  const isTimeDeadline = trackingType === "TIME_DEADLINE";
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -84,24 +88,37 @@ export function HabitForm({
       description: formData.get("description") || undefined,
       categoryId: formData.get("categoryId"),
       trackingType,
-      thresholdType,
-      thresholdValue: Number(formData.get("thresholdValue")) || 1,
-      thresholdWindow: formData.get("thresholdWindow")
-        ? Number(formData.get("thresholdWindow"))
-        : undefined,
+      thresholdType: isTimeDeadline ? "DAILY" : thresholdType,
+      thresholdValue: isTimeDeadline
+        ? 1
+        : Number(formData.get("thresholdValue")) || 1,
+      thresholdWindow:
+        !isTimeDeadline && formData.get("thresholdWindow")
+          ? Number(formData.get("thresholdWindow"))
+          : undefined,
       ...(startDateVal
         ? { startDate: new Date(startDateVal).toISOString() }
         : {}),
       ...(trackingType === "COUNT" && countIncrement !== undefined
         ? { countIncrement }
         : {}),
-      ...(trackingType === "BOOLEAN" ? { countIncrement: null } : {}),
+      ...(trackingType !== "COUNT" ? { countIncrement: null } : {}),
       bucket,
       scheduledWeekdays,
       reminderEnabled,
-      reminderTime: reminderEnabled
-        ? (formData.get("reminderTime") as string) || undefined
-        : undefined,
+      reminderTime:
+        !isTimeDeadline && reminderEnabled
+          ? (formData.get("reminderTime") as string) || undefined
+          : undefined,
+      deadlineTime: isTimeDeadline
+        ? (formData.get("deadlineTime") as string) || undefined
+        : null,
+      deadlineGraceMinutes: isTimeDeadline
+        ? Number(formData.get("deadlineGraceMinutes")) || 0
+        : 0,
+      reminderLeadMinutes: isTimeDeadline
+        ? Number(formData.get("reminderLeadMinutes")) || 10
+        : 10,
     };
 
     const url = habitId ? `/api/habits/${habitId}` : "/api/habits";
@@ -185,7 +202,7 @@ export function HabitForm({
           </p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
           <ChoiceCard
             title="Done / not done"
             body="Best for simple rituals you complete once."
@@ -198,93 +215,135 @@ export function HabitForm({
             active={trackingType === "COUNT"}
             onClick={() => setTrackingType("COUNT")}
           />
+          <ChoiceCard
+            title="Time deadline"
+            body="Best for habits that must happen before a set time."
+            active={trackingType === "TIME_DEADLINE"}
+            onClick={() => {
+              setTrackingType("TIME_DEADLINE");
+              setThresholdType("DAILY");
+              setReminderEnabled(true);
+            }}
+          />
         </div>
       </section>
 
-      <section className="space-y-4 rounded-[26px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.03)] p-4">
-        <div>
-          <p className="section-kicker">Cadence</p>
-          <p className="mt-2 text-sm text-[#b4a58a]">
-            Decide how this habit should be evaluated.
-          </p>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-3">
-          <ChoiceCard
-            title="Daily"
-            body="A fresh check-in every day."
-            active={thresholdType === "DAILY"}
-            onClick={() => setThresholdType("DAILY")}
-          />
-          <ChoiceCard
-            title="Weekly total"
-            body="Hit a target over the course of a week."
-            active={thresholdType === "WEEKLY_TOTAL"}
-            onClick={() => setThresholdType("WEEKLY_TOTAL")}
-          />
-          <ChoiceCard
-            title="Rolling window"
-            body="Stay consistent over the last few days."
-            active={thresholdType === "ROLLING_WINDOW"}
-            onClick={() => setThresholdType("ROLLING_WINDOW")}
-          />
-        </div>
-
-        {trackingType === "COUNT" && (
-          <>
-            <Input
-              label={
-                thresholdType === "DAILY"
-                  ? "Target per day"
-                  : thresholdType === "WEEKLY_TOTAL"
-                    ? "Target per week"
-                    : "Times required"
-              }
-              name="thresholdValue"
-              id="thresholdValue"
-              type="number"
-              min="1"
-              step="any"
-              defaultValue={defaultValues?.thresholdValue ?? 1}
-              required
-            />
-            <Input
-              label="Add per tap (optional)"
-              name="countIncrement"
-              id="countIncrement"
-              type="number"
-              min="0.1"
-              step="any"
-              placeholder="Auto from goal"
-              defaultValue={
-                defaultValues?.countIncrement != null
-                  ? String(defaultValues.countIncrement)
-                  : ""
-              }
-            />
-            <p className="text-xs text-[#8d826d]">
-              Leave blank to pick step size on the habit card (recommended), or
-              set a fixed amount for every + tap.
+      {!isTimeDeadline && (
+        <section className="space-y-4 rounded-[26px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.03)] p-4">
+          <div>
+            <p className="section-kicker">Cadence</p>
+            <p className="mt-2 text-sm text-[#b4a58a]">
+              Decide how this habit should be evaluated.
             </p>
-          </>
-        )}
+          </div>
 
-        {thresholdType === "ROLLING_WINDOW" && (
+          <div className="grid gap-3 sm:grid-cols-3">
+            <ChoiceCard
+              title="Daily"
+              body="A fresh check-in every day."
+              active={thresholdType === "DAILY"}
+              onClick={() => setThresholdType("DAILY")}
+            />
+            <ChoiceCard
+              title="Weekly total"
+              body="Hit a target over the course of a week."
+              active={thresholdType === "WEEKLY_TOTAL"}
+              onClick={() => setThresholdType("WEEKLY_TOTAL")}
+            />
+            <ChoiceCard
+              title="Rolling window"
+              body="Stay consistent over the last few days."
+              active={thresholdType === "ROLLING_WINDOW"}
+              onClick={() => setThresholdType("ROLLING_WINDOW")}
+            />
+          </div>
+
+          {trackingType === "COUNT" && (
+            <>
+              <Input
+                label={
+                  thresholdType === "DAILY"
+                    ? "Target per day"
+                    : thresholdType === "WEEKLY_TOTAL"
+                      ? "Target per week"
+                      : "Times required"
+                }
+                name="thresholdValue"
+                id="thresholdValue"
+                type="number"
+                min="1"
+                step="any"
+                defaultValue={defaultValues?.thresholdValue ?? 1}
+                required
+              />
+              <Input
+                label="Add per tap (optional)"
+                name="countIncrement"
+                id="countIncrement"
+                type="number"
+                min="0.1"
+                step="any"
+                placeholder="Auto from goal"
+                defaultValue={
+                  defaultValues?.countIncrement != null
+                    ? String(defaultValues.countIncrement)
+                    : ""
+                }
+              />
+              <p className="text-xs text-[#8d826d]">
+                Leave blank to pick step size on the habit card (recommended),
+                or set a fixed amount for every + tap.
+              </p>
+            </>
+          )}
+
+          {thresholdType === "ROLLING_WINDOW" && (
+            <Input
+              label="Window size in days"
+              name="thresholdWindow"
+              id="thresholdWindow"
+              type="number"
+              min="2"
+              placeholder="7"
+              defaultValue={defaultValues?.thresholdWindow}
+            />
+          )}
+
+          {thresholdType !== "ROLLING_WINDOW" && trackingType === "BOOLEAN" && (
+            <input type="hidden" name="thresholdValue" value="1" />
+          )}
+        </section>
+      )}
+
+      {isTimeDeadline && (
+        <section className="space-y-4 rounded-[26px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.03)] p-4">
+          <div>
+            <p className="section-kicker">Deadline</p>
+            <p className="mt-2 text-sm text-[#b4a58a]">
+              Log before the cutoff to pass. Late logs are recorded as missed.
+            </p>
+          </div>
           <Input
-            label="Window size in days"
-            name="thresholdWindow"
-            id="thresholdWindow"
-            type="number"
-            min="2"
-            placeholder="7"
-            defaultValue={defaultValues?.thresholdWindow}
+            label="Do this by"
+            name="deadlineTime"
+            id="deadlineTime"
+            type="time"
+            defaultValue={defaultValues?.deadlineTime ?? "22:00"}
+            required
           />
-        )}
-
-        {thresholdType !== "ROLLING_WINDOW" && trackingType === "BOOLEAN" && (
+          <Input
+            label="Grace minutes"
+            name="deadlineGraceMinutes"
+            id="deadlineGraceMinutes"
+            type="number"
+            min="0"
+            max="240"
+            step="1"
+            defaultValue={defaultValues?.deadlineGraceMinutes ?? 0}
+          />
           <input type="hidden" name="thresholdValue" value="1" />
-        )}
-      </section>
+        </section>
+      )}
 
       <section className="space-y-4 rounded-[26px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.03)] p-4">
         <div>
@@ -294,7 +353,7 @@ export function HabitForm({
           </p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
           {[
             ["MORNING", "Morning", "Earlier-day momentum"],
             ["DAY", "Day", "General daytime rituals"],
@@ -353,9 +412,13 @@ export function HabitForm({
       <section className="space-y-4 rounded-[26px] border border-[rgba(216,196,160,0.14)] bg-[rgba(247,240,225,0.03)] p-4">
         <div className="flex items-center justify-between gap-3 rounded-[22px] border border-[rgba(216,196,160,0.14)] bg-[rgba(12,17,16,0.45)] p-4">
           <div>
-            <p className="font-semibold text-[#f7f0e1]">Daily reminder</p>
+            <p className="font-semibold text-[#f7f0e1]">
+              {isTimeDeadline ? "Deadline reminder" : "Daily reminder"}
+            </p>
             <p className="mt-1 text-sm text-[#b4a58a]">
-              Turn on a gentle nudge so this does not fall off your radar.
+              {isTimeDeadline
+                ? "Get a nudge before the cutoff arrives."
+                : "Turn on a gentle nudge so this does not fall off your radar."}
             </p>
           </div>
           <button
@@ -376,15 +439,27 @@ export function HabitForm({
           </button>
         </div>
 
-        {reminderEnabled && (
-          <Input
-            label="Reminder time"
-            name="reminderTime"
-            id="reminderTime"
-            type="time"
-            defaultValue={defaultValues?.reminderTime ?? "09:00"}
-          />
-        )}
+        {reminderEnabled &&
+          (isTimeDeadline ? (
+            <Input
+              label="Remind me minutes before"
+              name="reminderLeadMinutes"
+              id="reminderLeadMinutes"
+              type="number"
+              min="0"
+              max="1440"
+              step="1"
+              defaultValue={defaultValues?.reminderLeadMinutes ?? 10}
+            />
+          ) : (
+            <Input
+              label="Reminder time"
+              name="reminderTime"
+              id="reminderTime"
+              type="time"
+              defaultValue={defaultValues?.reminderTime ?? "09:00"}
+            />
+          ))}
       </section>
 
       {error && (

@@ -7,6 +7,10 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import {
+  evaluateDeadlineHabitDay,
+  isTimeDeadlineHabit,
+} from "@/lib/habit-deadline";
+import {
   BUCKETS,
   type Bucket,
   bucketOrderFromNow,
@@ -89,7 +93,7 @@ export default async function DashboardPage() {
   );
 
   // Today's tasks: scheduled for today and either still due or already completed
-  // this period — so finished items stay visible (sunk to the bottom + dimmed).
+  // this period â€” so finished items stay visible (sunk to the bottom + dimmed).
   const todaysTasks = tasksWithLogs.filter(
     (t) =>
       isScheduledForToday(t, now, timezone) &&
@@ -119,23 +123,40 @@ export default async function DashboardPage() {
     ]),
   ) as Record<Bucket, typeof todaysTasks>;
 
-  function todaySum(logs: { loggedAt: Date; value: number }[]) {
+  function todaySum(logs: { loggedAt: Date; value: number; status: string }[]) {
     const todayKey = getLocalDateKey(now, timezone);
     return logs
       .filter(
-        (l) => getLocalDateKey(new Date(l.loggedAt), timezone) === todayKey,
+        (l) =>
+          l.status === "COMPLETED" &&
+          getLocalDateKey(new Date(l.loggedAt), timezone) === todayKey,
       )
       .reduce((s, l) => s + l.value, 0);
   }
 
-  function isHabitDoneToday(habit: (typeof habits)[number]): boolean {
+  function isHabitCompletedToday(habit: (typeof habits)[number]): boolean {
+    if (isTimeDeadlineHabit(habit)) {
+      return (
+        evaluateDeadlineHabitDay(habit, habit.logs, now, timezone).status ===
+        "completed"
+      );
+    }
     const sum = todaySum(habit.logs);
     return habit.thresholdType === "DAILY"
       ? sum >= habit.thresholdValue
       : sum > 0;
   }
 
-  // Habits scheduled for today — grouped by time-of-day bucket for the unified
+  function isHabitDoneToday(habit: (typeof habits)[number]): boolean {
+    if (isTimeDeadlineHabit(habit)) {
+      return (
+        evaluateDeadlineHabitDay(habit, habit.logs, now, timezone).status !==
+        "pending"
+      );
+    }
+    return isHabitCompletedToday(habit);
+  }
+  // Habits scheduled for today â€” grouped by time-of-day bucket for the unified
   // "Today" view. Completed habits stay visible but sink to the bottom of their
   // bucket (dimmed), so the next outstanding action is always on top.
   const todayHabits = habits.filter((h) =>
@@ -169,6 +190,7 @@ export default async function DashboardPage() {
     const scheduled = parseScheduledWeekdays(habit.scheduledWeekdays);
     const logsByDate = new Map<string, number>();
     for (const log of habit.logs) {
+      if (log.status !== "COMPLETED") continue;
       const key = getLocalDateKey(new Date(log.loggedAt), timezone);
       logsByDate.set(key, (logsByDate.get(key) ?? 0) + log.value);
     }
@@ -179,7 +201,7 @@ export default async function DashboardPage() {
       const key = getLocalDateKey(new Date(cursor), timezone);
       const weekday =
         WEEKDAY_ORDER[getTimePartsInTimezone(cursor, timezone).weekdayIndex];
-      // Non-scheduled weekdays are not expected — don't count them as missing.
+      // Non-scheduled weekdays are not expected â€” don't count them as missing.
       if (
         (!scheduled || scheduled.includes(weekday)) &&
         (logsByDate.get(key) ?? 0) < habit.thresholdValue
@@ -194,9 +216,7 @@ export default async function DashboardPage() {
     }
   }
 
-  const completedToday = habits.filter(
-    (h) => todaySum(h.logs) >= h.thresholdValue,
-  ).length;
+  const completedToday = habits.filter((h) => isHabitCompletedToday(h)).length;
   const topStreak = Math.max(0, ...habits.map((h) => h.currentStreak));
   // Outstanding = habits scheduled today but not yet done + tasks still due.
   const outstandingCount =
@@ -217,7 +237,7 @@ export default async function DashboardPage() {
                   ? `${completedToday} of ${habits.length} habits done today`
                   : "No habits yet"}
                 {outstandingCount > 0
-                  ? ` · ${outstandingCount} left to do`
+                  ? ` Â· ${outstandingCount} left to do`
                   : ""}
               </p>
             </div>
@@ -256,6 +276,7 @@ export default async function DashboardPage() {
           orderedBuckets={orderedBuckets}
           currentBucket={currentBucket}
           outstandingCount={outstandingCount}
+          timezone={timezone}
         />
       ) : (
         <Card>

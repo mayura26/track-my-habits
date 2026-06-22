@@ -103,6 +103,9 @@ model Habit {
   /// Optional CSV weekdays (SUN,MON,TUE,WED,THU,FRI,SAT). Null means all days.
   scheduledWeekdays   String?
   bucket              String?  @default("DAY")
+  deadlineTime        String?
+  deadlineGraceMinutes Int     @default(0)
+  reminderLeadMinutes  Int     @default(10)
   reminderEnabled     Boolean  @default(false)
   reminderTime        String?
   lastReminderSentAt  DateTime?

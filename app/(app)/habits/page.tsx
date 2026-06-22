@@ -22,7 +22,7 @@ export default async function HabitsPage({ searchParams }: HabitsPageProps) {
   const session = await requireAuth();
   const params = await searchParams;
 
-  const [habits, categories] = await Promise.all([
+  const [habits, categories, user] = await Promise.all([
     db.habit.findMany({
       where: {
         userId: session.user.id,
@@ -39,6 +39,10 @@ export default async function HabitsPage({ searchParams }: HabitsPageProps) {
     db.habitCategory.findMany({
       where: { OR: [{ isDefault: true }, { userId: session.user.id }] },
       orderBy: { name: "asc" },
+    }),
+    db.user.findUnique({
+      where: { id: session.user.id },
+      select: { timezone: true },
     }),
   ]);
 
@@ -171,6 +175,7 @@ export default async function HabitsPage({ searchParams }: HabitsPageProps) {
             <HabitCardList
               className="space-y-2"
               habits={habits as Parameters<typeof HabitCardList>[0]["habits"]}
+              timezone={user?.timezone ?? "UTC"}
             />
           </CardContent>
         </Card>

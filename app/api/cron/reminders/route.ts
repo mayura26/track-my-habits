@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import {
+  evaluateDeadlineHabitDay,
+  isTimeDeadlineHabit,
+} from "@/lib/habit-deadline";
 import { sendPushToUser } from "@/lib/push";
 import {
   isReminderDue,
@@ -12,7 +16,7 @@ function isHabitDoneToday(
   habit: {
     thresholdType: string;
     thresholdValue: number;
-    logs: { loggedAt: Date; value: number }[];
+    logs: { loggedAt: Date; value: number; status: string }[];
   },
   now: Date,
   timezone: string,
@@ -20,7 +24,9 @@ function isHabitDoneToday(
   const todayKey = getLocalDateKey(now, timezone);
   const sum = habit.logs
     .filter(
-      (log) => getLocalDateKey(new Date(log.loggedAt), timezone) === todayKey,
+      (log) =>
+        log.status === "COMPLETED" &&
+        getLocalDateKey(new Date(log.loggedAt), timezone) === todayKey,
     )
     .reduce((total, log) => total + log.value, 0);
 
@@ -57,10 +63,19 @@ export async function GET(req: Request) {
     where: {
       isActive: true,
       reminderEnabled: true,
-      reminderTime: { not: null },
-      OR: [
-        { reminderSnoozedUntil: null },
-        { reminderSnoozedUntil: { lte: now } },
+      AND: [
+        {
+          OR: [
+            { reminderTime: { not: null } },
+            { trackingType: "TIME_DEADLINE" },
+          ],
+        },
+        {
+          OR: [
+            { reminderSnoozedUntil: null },
+            { reminderSnoozedUntil: { lte: now } },
+          ],
+        },
       ],
     },
     include: { logs: true, user: { select: { timezone: true } } },
@@ -99,12 +114,23 @@ export async function GET(req: Request) {
   for (const habit of habits) {
     const timezone = habit.user.timezone ?? "UTC";
     if (!isScheduledForToday(habit, now, timezone)) continue;
-    if (isHabitDoneToday(habit, now, timezone)) continue;
-    if (!habit.reminderTime) continue;
-    const [h, m] = habit.reminderTime.split(":").map(Number);
-    const local = getTimePartsInTimezone(now, timezone);
-    const currentMinutes = local.hour * 60 + local.minute;
-    if (currentMinutes < h * 60 + m) continue;
+    if (isTimeDeadlineHabit(habit)) {
+      const deadline = evaluateDeadlineHabitDay(
+        habit,
+        habit.logs,
+        now,
+        timezone,
+      );
+      if (deadline.status !== "pending") continue;
+      if (!deadline.reminderAt || now < deadline.reminderAt) continue;
+    } else {
+      if (isHabitDoneToday(habit, now, timezone)) continue;
+      if (!habit.reminderTime) continue;
+      const [h, m] = habit.reminderTime.split(":").map(Number);
+      const local = getTimePartsInTimezone(now, timezone);
+      const currentMinutes = local.hour * 60 + local.minute;
+      if (currentMinutes < h * 60 + m) continue;
+    }
 
     // Skip if already sent today
     if (

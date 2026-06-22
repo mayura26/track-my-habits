@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { TIME_DEADLINE_TRACKING_TYPE } from "@/lib/habit-deadline";
+
 const supportedTimeZones =
   typeof Intl.supportedValuesOf === "function"
     ? new Set(Intl.supportedValuesOf("timeZone"))
@@ -30,11 +32,13 @@ export const WEEKDAY_VALUES = [
   "SAT",
 ] as const;
 
-export const createHabitSchema = z.object({
+const timeStringSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+
+const habitSchemaBase = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
   categoryId: z.string().min(1),
-  trackingType: z.enum(["BOOLEAN", "COUNT"]),
+  trackingType: z.enum(["BOOLEAN", "COUNT", TIME_DEADLINE_TRACKING_TYPE]),
   thresholdType: z.enum(["DAILY", "WEEKLY_TOTAL", "ROLLING_WINDOW"]),
   thresholdValue: z.number().positive(),
   thresholdWindow: z.number().int().positive().optional(),
@@ -51,17 +55,90 @@ export const createHabitSchema = z.object({
   // No Zod default — `.partial()` for updates keeps defaults, which would
   // reset an omitted bucket. The Prisma column default ("DAY") covers create.
   bucket: z.enum(BUCKET_VALUES).optional(),
-  reminderEnabled: z.boolean().optional().default(false),
-  reminderTime: z
-    .string()
-    .regex(/^\d{2}:\d{2}$/)
-    .optional(),
+  deadlineTime: timeStringSchema.nullable().optional(),
+  deadlineGraceMinutes: z.number().int().min(0).max(240).optional(),
+  reminderLeadMinutes: z.number().int().min(0).max(1440).optional(),
+  reminderEnabled: z.boolean().optional(),
+  reminderTime: timeStringSchema.optional(),
 });
 
-export const updateHabitSchema = createHabitSchema.partial().extend({
-  isActive: z.boolean().optional(),
-});
+function addDeadlineRequirementIssue(
+  ctx: z.RefinementCtx,
+  path: string[],
+  message: string,
+) {
+  ctx.addIssue({ code: "custom", path, message });
+}
 
+export const createHabitSchema = habitSchemaBase
+  .superRefine((data, ctx) => {
+    if (
+      data.trackingType === TIME_DEADLINE_TRACKING_TYPE &&
+      !data.deadlineTime
+    ) {
+      addDeadlineRequirementIssue(
+        ctx,
+        ["deadlineTime"],
+        "Deadline time is required",
+      );
+    }
+  })
+  .transform((data) => {
+    if (data.trackingType !== TIME_DEADLINE_TRACKING_TYPE) {
+      return {
+        ...data,
+        reminderEnabled: data.reminderEnabled ?? false,
+        deadlineTime: null,
+        deadlineGraceMinutes: 0,
+        reminderLeadMinutes: 10,
+      };
+    }
+
+    return {
+      ...data,
+      thresholdType: "DAILY" as const,
+      thresholdValue: 1,
+      thresholdWindow: undefined,
+      countIncrement: null,
+      deadlineGraceMinutes: data.deadlineGraceMinutes ?? 0,
+      reminderLeadMinutes: data.reminderLeadMinutes ?? 10,
+      reminderEnabled: data.reminderEnabled ?? true,
+      reminderTime: undefined,
+    };
+  });
+
+export const updateHabitSchema = habitSchemaBase
+  .partial()
+  .extend({
+    isActive: z.boolean().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (
+      data.trackingType === TIME_DEADLINE_TRACKING_TYPE &&
+      !data.deadlineTime
+    ) {
+      addDeadlineRequirementIssue(
+        ctx,
+        ["deadlineTime"],
+        "Deadline time is required",
+      );
+    }
+  })
+  .transform((data) => {
+    if (data.trackingType !== TIME_DEADLINE_TRACKING_TYPE) return data;
+
+    return {
+      ...data,
+      thresholdType: "DAILY" as const,
+      thresholdValue: 1,
+      thresholdWindow: null,
+      countIncrement: null,
+      deadlineGraceMinutes: data.deadlineGraceMinutes ?? 0,
+      reminderLeadMinutes: data.reminderLeadMinutes ?? 10,
+      reminderEnabled: data.reminderEnabled ?? true,
+      reminderTime: undefined,
+    };
+  });
 export const logHabitSchema = z.object({
   // Omitted value is treated as 1 in the log route (explicit 0 is allowed).
   value: z.number().min(0).optional(),

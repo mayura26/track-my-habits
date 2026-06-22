@@ -3,7 +3,8 @@ import Link from "next/link";
 import { NfcAutoRedirect } from "@/components/nfc/NfcAutoRedirect";
 import { SectionArtwork } from "@/components/ui/SectionArtwork";
 import { db } from "@/lib/db";
-import { processHabitLog } from "@/lib/gamification";
+import { calculateStreak, processHabitLog } from "@/lib/gamification";
+import { isDeadlineLogOnTime, isTimeDeadlineHabit } from "@/lib/habit-deadline";
 
 interface NfcPageProps {
   params: Promise<{ token: string }>;
@@ -42,23 +43,41 @@ export default async function NfcLandingPage({ params }: NfcPageProps) {
     );
   }
 
-  // Log the habit via NFC
+  const now = new Date();
+  const timezone = habit.user.timezone ?? "UTC";
+  const status =
+    isTimeDeadlineHabit(habit) && !isDeadlineLogOnTime(habit, now, timezone)
+      ? "FAILED"
+      : "COMPLETED";
+
   await db.habitLog.create({
     data: {
       habitId: habit.id,
       userId: habit.userId,
-      value: 1,
+      value: status === "FAILED" ? 0 : 1,
       source: "NFC",
-      loggedAt: new Date(),
+      status,
+      loggedAt: now,
     },
   });
 
-  const result = await processHabitLog(
-    habit.id,
-    habit.userId,
-    "NFC",
-    habit.user.timezone ?? "UTC",
-  );
+  const result =
+    status === "FAILED"
+      ? {
+          streak: await calculateStreak(habit, timezone),
+          xpGained: 0,
+          leveledUp: false,
+          newLevel: habit.user.level,
+          newBadges: [] as string[],
+        }
+      : await processHabitLog(habit.id, habit.userId, "NFC", timezone);
+
+  if (status === "FAILED") {
+    await db.habit.update({
+      where: { id: habit.id },
+      data: { currentStreak: result.streak },
+    });
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#0c1110] p-6 text-center">
@@ -66,10 +85,17 @@ export default async function NfcLandingPage({ params }: NfcPageProps) {
         className="mb-6 flex h-24 w-24 items-center justify-center rounded-full"
         style={{ backgroundColor: `${habit.category.color}22` }}
       >
-        <CheckCircle
-          className="h-12 w-12"
-          style={{ color: habit.category.color }}
-        />
+        {status === "FAILED" ? (
+          <XCircle
+            className="h-12 w-12"
+            style={{ color: habit.category.color }}
+          />
+        ) : (
+          <CheckCircle
+            className="h-12 w-12"
+            style={{ color: habit.category.color }}
+          />
+        )}
       </div>
 
       <p
@@ -79,7 +105,9 @@ export default async function NfcLandingPage({ params }: NfcPageProps) {
         {habit.category.name}
       </p>
       <h1 className="mt-2 text-3xl font-bold text-[#f7f0e1]">{habit.name}</h1>
-      <p className="mt-2 text-[#b4a58a]">Logged via NFC</p>
+      <p className="mt-2 text-[#b4a58a]">
+        {status === "FAILED" ? "Recorded as missed via NFC" : "Logged via NFC"}
+      </p>
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
         <div className="flex items-center gap-2 rounded-xl border border-[rgba(216,196,160,0.14)] bg-[rgba(28,38,33,0.55)] px-4 py-3">
@@ -107,7 +135,7 @@ export default async function NfcLandingPage({ params }: NfcPageProps) {
       {result.leveledUp && (
         <div className="mt-4 rounded-xl border border-[rgba(230,196,139,0.28)] bg-[rgba(199,154,82,0.18)] px-6 py-3">
           <p className="font-bold text-[#f3ddb0]">
-            Level Up! → Level {result.newLevel}
+            Level Up! ? Level {result.newLevel}
           </p>
         </div>
       )}
@@ -120,7 +148,7 @@ export default async function NfcLandingPage({ params }: NfcPageProps) {
               className="rounded-xl border border-[rgba(216,196,160,0.14)] bg-[rgba(28,38,33,0.55)] px-4 py-2"
             >
               <p className="text-sm text-[#f7f0e1]">
-                🏆 Badge unlocked: <strong>{badge}</strong>
+                Badge unlocked: <strong>{badge}</strong>
               </p>
             </div>
           ))}

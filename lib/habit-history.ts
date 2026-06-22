@@ -6,9 +6,14 @@ import type {
 import { addDays, weekdayIndexOf } from "@/lib/date-keys";
 import { db } from "@/lib/db";
 import { dailyThresholdDayState } from "@/lib/habit-day-state";
+import {
+  getDeadlineCutoffForDateKey,
+  isTimeDeadlineHabit,
+} from "@/lib/habit-deadline";
+import { parseScheduledWeekdays, WEEKDAY_ORDER } from "@/lib/task-helpers";
 import { getLocalDateKey } from "@/lib/timezone";
 
-// 13 weeks × 7 rows = 91 cells. Long enough for meaningful completion-rate
+// 13 weeks Ã— 7 rows = 91 cells. Long enough for meaningful completion-rate
 // stats, short enough to keep cells tappable in the detail card.
 const WINDOW_WEEKS = 13;
 const WINDOW_DAYS = WINDOW_WEEKS * 7;
@@ -46,7 +51,7 @@ export async function loadHabitHistory(
 
   const habitStartKey = getLocalDateKey(new Date(habit.startDate), timezone);
 
-  // Fetch logs with a generous ±2 day buffer around the window so timezone
+  // Fetch logs with a generous Â±2 day buffer around the window so timezone
   // bucketing can't miss edge-of-day rows. Same pattern as backfill/page.tsx.
   const earliestKey = windowKeys[0];
   const earliestMoment = new Date(`${earliestKey}T00:00:00.000Z`);
@@ -86,6 +91,9 @@ export async function loadHabitHistory(
   const dailyThreshold = habit.thresholdType === "DAILY";
   const threshold = habit.thresholdValue;
   const isCount = habit.trackingType === "COUNT";
+  const isDeadline = isTimeDeadlineHabit(habit);
+  const scheduledDays = parseScheduledWeekdays(habit.scheduledWeekdays);
+  const now = new Date();
 
   const days: DayCell[] = windowKeys.map((key) => {
     const sum = completedByDate.get(key) ?? 0;
@@ -93,10 +101,19 @@ export async function loadHabitHistory(
     const isToday = key === todayKey;
 
     let state: DayCell["state"];
+    const weekday = WEEKDAY_ORDER[weekdayIndexOf(key)];
+    const isScheduled = !scheduledDays || scheduledDays.includes(weekday);
+
     if (key > todayKey) {
       state = "future";
-    } else if (key < habitStartKey) {
+    } else if (key < habitStartKey || !isScheduled) {
       state = "out-of-range";
+    } else if (isDeadline) {
+      const cutoffAt = getDeadlineCutoffForDateKey(habit, key, timezone);
+      if (sum >= threshold) state = "completed";
+      else if (failedDates.has(key)) state = "failed";
+      else if (key < todayKey || (cutoffAt && now > cutoffAt)) state = "failed";
+      else state = "missing";
     } else if (dailyThreshold) {
       state = dailyThresholdDayState(
         sum,

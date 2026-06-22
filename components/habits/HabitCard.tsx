@@ -7,6 +7,12 @@ import Link from "next/link";
 import { CategoryIcon } from "@/components/categories/CategoryIcon";
 import { Badge } from "@/components/ui/Badge";
 import {
+  evaluateDeadlineHabitDay,
+  formatDeadlineSummary,
+  isTimeDeadlineHabit,
+} from "@/lib/habit-deadline";
+import { getLocalDateKey } from "@/lib/timezone";
+import {
   isDeliveryImageUnoptimized,
   toImageDeliveryUrl,
 } from "@/lib/upload-paths";
@@ -23,32 +29,65 @@ interface HabitCardProps {
   habit: HabitWithRelations;
   onLog?: (result: unknown) => void;
   dimWhenComplete?: boolean;
+  timezone?: string;
 }
 
-function todayLogsSum(logs: HabitLog[]): number {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+function todayLogsSum(logs: HabitLog[], timezone: string): number {
+  const todayKey = getLocalDateKey(new Date(), timezone);
   return logs
-    .filter((l) => new Date(l.loggedAt) >= today)
+    .filter(
+      (l) =>
+        l.status === "COMPLETED" &&
+        getLocalDateKey(new Date(l.loggedAt), timezone) === todayKey,
+    )
     .reduce((s, l) => s + l.value, 0);
 }
 
-function isLoggedToday(logs: HabitLog[], thresholdValue: number): boolean {
-  return todayLogsSum(logs) >= thresholdValue;
+function isLoggedToday(
+  logs: HabitLog[],
+  thresholdValue: number,
+  timezone: string,
+): boolean {
+  return todayLogsSum(logs, timezone) >= thresholdValue;
 }
 
-export function HabitCard({ habit, onLog, dimWhenComplete }: HabitCardProps) {
-  const logged = isLoggedToday(habit.logs, habit.thresholdValue);
+function statusLabel(status: string | undefined): string {
+  if (status === "completed") return "done";
+  if (status === "failed" || status === "late-failed") return "missed";
+  return "deadline";
+}
+
+export function HabitCard({
+  habit,
+  onLog,
+  dimWhenComplete,
+  timezone,
+}: HabitCardProps) {
+  const resolvedTimezone =
+    timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC";
   const isCount = habit.trackingType === "COUNT";
+  const isDeadline = isTimeDeadlineHabit(habit);
+  const deadlineEvaluation = isDeadline
+    ? evaluateDeadlineHabitDay(habit, habit.logs, new Date(), resolvedTimezone)
+    : null;
+  const logged = isDeadline
+    ? deadlineEvaluation?.status === "completed"
+    : isLoggedToday(habit.logs, habit.thresholdValue, resolvedTimezone);
+  const closed = isDeadline ? deadlineEvaluation?.status !== "pending" : logged;
+  const missed =
+    deadlineEvaluation?.status === "failed" ||
+    deadlineEvaluation?.status === "late-failed";
   const displayImageUrl = toImageDeliveryUrl(habit.imageUrl);
 
   return (
     <div
       className={`relative h-39 overflow-hidden rounded-[26px] px-3 pb-3 pt-0 transition-[border-color,background-color,opacity,filter] duration-150 hover:bg-[rgba(247,240,225,0.02)] sm:h-39 sm:px-3.5 sm:pb-3.5 sm:pt-0 ${
-        logged
-          ? "border border-[rgba(125,156,115,0.22)] surface-panel hover:border-[rgba(125,156,115,0.36)]"
-          : "surface-panel hover:border-[rgba(230,196,139,0.3)]"
-      } ${dimWhenComplete && logged ? "opacity-60 saturate-50 hover:opacity-100" : ""}`}
+        missed
+          ? "border border-[rgba(182,107,90,0.42)] surface-panel hover:border-[rgba(182,107,90,0.56)]"
+          : logged
+            ? "border border-[rgba(125,156,115,0.22)] surface-panel hover:border-[rgba(125,156,115,0.36)]"
+            : "surface-panel hover:border-[rgba(230,196,139,0.3)]"
+      } ${dimWhenComplete && closed ? "opacity-60 saturate-50 hover:opacity-100" : ""}`}
     >
       {displayImageUrl && (
         <>
@@ -101,6 +140,7 @@ export function HabitCard({ habit, onLog, dimWhenComplete }: HabitCardProps) {
               <HabitLogButton
                 habitId={habit.id}
                 isLoggedToday={logged}
+                deadlineStatus={deadlineEvaluation?.status}
                 onLog={onLog}
               />
             )}
@@ -111,9 +151,16 @@ export function HabitCard({ habit, onLog, dimWhenComplete }: HabitCardProps) {
               <div className="flex shrink-0 flex-col items-end gap-1">
                 <div className="inline-flex items-center px-2 py-0.5">
                   <span className="text-[10px] italic font-medium uppercase tracking-[0.12em] text-[#c4b59a]">
-                    {habit.thresholdType.toLowerCase()}
+                    {isDeadline
+                      ? statusLabel(deadlineEvaluation?.status)
+                      : habit.thresholdType.toLowerCase()}
                   </span>
                 </div>
+                {isDeadline && (
+                  <span className="max-w-[10rem] truncate px-2 text-right text-[11px] text-[#b4a58a]">
+                    {formatDeadlineSummary(habit)}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -121,6 +168,7 @@ export function HabitCard({ habit, onLog, dimWhenComplete }: HabitCardProps) {
           <div className="min-w-0 flex items-end justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2 overflow-hidden">
               {habit.nfcToken && <Badge variant="info">NFC</Badge>}
+              {missed && <Badge variant="error">Missed</Badge>}
             </div>
             <div className="-mb-3 -mr-3 ml-auto flex shrink-0 items-center gap-2 sm:-mb-3.5 sm:-mr-3.5">
               <StreakBadge streak={habit.currentStreak} size="sm" />

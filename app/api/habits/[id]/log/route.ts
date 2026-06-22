@@ -6,6 +6,7 @@ import {
   calculateStreak,
   processHabitLog,
 } from "@/lib/gamification";
+import { isDeadlineLogOnTime, isTimeDeadlineHabit } from "@/lib/habit-deadline";
 import {
   endOfDayInTimezone,
   startOfDayInTimezone,
@@ -59,13 +60,22 @@ export async function POST(
       ? new Date(parsed.data.loggedAt)
       : new Date();
 
+  const source = parsed.data.source;
+  const status =
+    isTimeDeadlineHabit(habit) && source !== "BACKFILL"
+      ? isDeadlineLogOnTime(habit, loggedAt, timezone)
+        ? "COMPLETED"
+        : "FAILED"
+      : parsed.data.status;
+
   // When the client omits `value`, behave like a single full increment (1).
-  // Explicit 0 is stored as-is (COUNT replace / zero-day logs).
-  const value = parsed.data.value ?? 1;
+  // Explicit 0 is stored as-is (COUNT replace / zero-day logs). Failed logs
+  // carry no completion value so they never satisfy daily totals.
+  const value = status === "FAILED" ? 0 : (parsed.data.value ?? 1);
 
   // COUNT history editor: replace the day's logs in one atomic step. Delete
   // everything on the day, create the requested log, recalc streak. Only
-  // meaningful for BACKFILL — no XP pipeline, no totalLogsCount changes.
+  // meaningful for BACKFILL â€” no XP pipeline, no totalLogsCount changes.
   if (parsed.data.replace === true && parsed.data.source === "BACKFILL") {
     const dayStart = startOfDayInTimezone(loggedAt, timezone);
     const dayEnd = new Date(
@@ -84,8 +94,8 @@ export async function POST(
           habitId: id,
           userId: session.user.id,
           value,
-          source: parsed.data.source,
-          status: parsed.data.status,
+          source,
+          status,
           loggedAt,
         },
       }),
@@ -115,7 +125,7 @@ export async function POST(
   // double-clicks and retries (a real user just had 5 duplicate FAILED rows
   // pile up from frantic clicking when an earlier bug made buttons look
   // unresponsive).
-  if (parsed.data.source === "BACKFILL") {
+  if (source === "BACKFILL") {
     const dayStart = startOfDayInTimezone(loggedAt, timezone);
     const dayEnd = new Date(
       endOfDayInTimezone(loggedAt, timezone).getTime() + 1,
@@ -125,7 +135,7 @@ export async function POST(
         habitId: id,
         userId: session.user.id,
         loggedAt: { gte: dayStart, lt: dayEnd },
-        status: parsed.data.status,
+        status,
       },
     });
     if (existing) {
@@ -150,16 +160,16 @@ export async function POST(
       habitId: id,
       userId: session.user.id,
       value,
-      source: parsed.data.source,
-      status: parsed.data.status,
+      source,
+      status,
       loggedAt,
     },
   });
 
-  // FAILED logs bypass the XP pipeline entirely — we only recompute the streak
+  // FAILED logs bypass the XP pipeline entirely â€” we only recompute the streak
   // (which already excludes FAILED rows) so the habit's currentStreak reflects
   // the broken chain. No XP, no totalLogsCount bump, no badge check.
-  if (parsed.data.status === "FAILED") {
+  if (status === "FAILED") {
     const newStreak = await calculateStreak(habit, timezone);
     const bestStreak = Math.max(habit.bestStreak, newStreak);
     await db.habit.update({
@@ -179,12 +189,7 @@ export async function POST(
     );
   }
 
-  const result = await processHabitLog(
-    id,
-    session.user.id,
-    parsed.data.source,
-    timezone,
-  );
+  const result = await processHabitLog(id, session.user.id, source, timezone);
 
   // Store actual XP awarded so undo can reverse the correct amount
   if (result.xpGained > 0) {
@@ -243,7 +248,7 @@ export async function DELETE(
 
   if (allParam) {
     // Wipe every log on the day. Intended for BACKFILL-style editing of COUNT
-    // habits, so we deliberately skip XP reversal — COUNT history editing
+    // habits, so we deliberately skip XP reversal â€” COUNT history editing
     // goes through the BACKFILL source which never awards XP in the first
     // place. Any non-BACKFILL logs caught by this sweep were MANUAL/NFC and
     // their XP stays on the user's account; this is an acceptable trade since

@@ -13,12 +13,14 @@ interface HabitCardListProps {
   habits: HabitWithRelations[];
   className?: string;
   dimWhenComplete?: boolean;
+  timezone?: string;
 }
 
 export function HabitCardList({
   habits,
   className,
   dimWhenComplete,
+  timezone,
 }: HabitCardListProps) {
   const [parent] = useAutoAnimate<HTMLDivElement>({
     duration: 420,
@@ -32,6 +34,7 @@ export function HabitCardList({
           key={habit.id}
           habit={habit as Parameters<typeof HabitCard>[0]["habit"]}
           dimWhenComplete={dimWhenComplete}
+          timezone={timezone}
         />
       ))}
     </div>

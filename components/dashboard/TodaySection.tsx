@@ -28,6 +28,7 @@ interface TodaySectionProps {
   orderedBuckets: Bucket[];
   currentBucket: Bucket;
   outstandingCount: number;
+  timezone: string;
 }
 
 export function TodaySection({
@@ -36,6 +37,7 @@ export function TodaySection({
   orderedBuckets,
   currentBucket,
   outstandingCount,
+  timezone,
 }: TodaySectionProps) {
   const router = useRouter();
   const handleComplete = () => router.refresh();
@@ -127,6 +129,7 @@ export function TodaySection({
                           className="space-y-2"
                           habits={habits}
                           dimWhenComplete
+                          timezone={timezone}
                         />
                       </div>
                     )}

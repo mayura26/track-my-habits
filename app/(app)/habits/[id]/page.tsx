@@ -29,6 +29,7 @@ interface HabitDetailPageProps {
 const TRACKING_LABELS: Record<string, string> = {
   BOOLEAN: "Yes / No",
   COUNT: "Count toward goal",
+  TIME_DEADLINE: "Time deadline",
 };
 
 const THRESHOLD_LABELS: Record<string, string> = {
@@ -201,12 +202,39 @@ export default async function HabitDetailPage({
               <dt className="text-[#b4a58a]">Target</dt>
               <dd className="text-[#f7f0e1]">{habit.thresholdValue}</dd>
             </div>
-            {habit.thresholdWindow && (
-              <div>
-                <dt className="text-[#b4a58a]">Window</dt>
-                <dd className="text-[#f7f0e1]">{habit.thresholdWindow} days</dd>
-              </div>
+            {habit.trackingType === "TIME_DEADLINE" && (
+              <>
+                <div>
+                  <dt className="text-[#b4a58a]">Deadline</dt>
+                  <dd className="text-[#f7f0e1]">
+                    {habit.deadlineTime ?? "Not set"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[#b4a58a]">Grace</dt>
+                  <dd className="text-[#f7f0e1]">
+                    {habit.deadlineGraceMinutes} min
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[#b4a58a]">Reminder lead</dt>
+                  <dd className="text-[#f7f0e1]">
+                    {habit.reminderEnabled
+                      ? `${habit.reminderLeadMinutes} min before`
+                      : "Off"}
+                  </dd>
+                </div>
+              </>
             )}
+            {habit.thresholdWindow &&
+              habit.trackingType !== "TIME_DEADLINE" && (
+                <div>
+                  <dt className="text-[#b4a58a]">Window</dt>
+                  <dd className="text-[#f7f0e1]">
+                    {habit.thresholdWindow} days
+                  </dd>
+                </div>
+              )}
             <div>
               <dt className="text-[#b4a58a]">Time of day</dt>
               <dd className="text-[#f7f0e1]">
